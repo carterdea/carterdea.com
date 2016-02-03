@@ -1,0 +1,111 @@
+html {
+  box-sizing: border-box;
+}
+
+*,
+*:before,
+*:after {
+  box-sizing: inherit;
+}
+
+body {
+  background-color: #222;
+  color: #fff;
+  font: 500 100%/1.5 'Reader', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-smooth: always;
+}
+
+.container {
+  width: 100%;
+  padding: 5%;
+}
+
+h1,
+h2 {
+  font-size: 100%;
+  font-weight: 500;
+  margin: 0;
+}
+
+ul {
+  list-style: none;
+  list-style-position: inside;
+  padding-left: 0;
+}
+
+a {
+  border-bottom: 2px solid #222;
+  color: #fff;
+  text-decoration: none;
+  transition: border-color 0.5s ease;
+}
+
+a:hover {
+  border-color: #555;
+}
+
+/* Media Queries */
+
+/* Larger than mobile */
+
+@media (min-width: 400px) {
+}
+
+
+/* Larger than phablet (also point when grid becomes active) */
+
+@media (min-width: 560px) {
+  body {
+    font-size: 110%;
+  }
+
+  .container {
+    padding: 6%;
+  }
+
+
+  h2 {
+    margin-bottom: 2%;
+  }
+
+  li {
+    margin-bottom: .5%;
+  }
+}
+
+
+/* Larger than tablet */
+
+@media (min-width: 720px) {
+  body {
+    font-size: 120%;
+  }
+
+  .container {
+    padding: 7%;
+  }
+}
+
+
+/* Larger than desktop */
+
+@media (min-width: 960px) {
+  body {
+    font-size: 130%;
+  }
+
+  h2 {
+    margin-bottom: 3%;
+  }
+}
+
+
+/* Larger than Desktop HD */
+
+@media (min-width: 1200px) {
+  body {
+    font-size: 140%;
+  }
+}
