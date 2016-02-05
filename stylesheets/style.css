@@ -8,10 +8,17 @@ html {
   box-sizing: inherit;
 }
 
+@font-face {
+  font-family: 'Carterdea Medium';
+  src:  url('//s3-us-west-2.amazonaws.com/carterdea/fonts/carterdea_medium.woff2') format('woff2'),
+        url('//s3-us-west-2.amazonaws.com/carterdea/fonts/carterdea_medium.woff') format('woff');
+}
+
+
 body {
   background-color: #222;
   color: #fff;
-  font: 500 100%/1.5 'Reader', sans-serif;
+  font: 500 100%/1.5 'Carterdea Medium', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-smooth: always;
