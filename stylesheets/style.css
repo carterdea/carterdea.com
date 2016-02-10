@@ -18,7 +18,7 @@ html {
 body {
   background-color: #222;
   color: #fff;
-  font: 500 100%/1.5 'Carterdea Medium', sans-serif;
+  font: normal 100%/1.5 'Carterdea Medium', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-smooth: always;
@@ -32,7 +32,7 @@ body {
 h1,
 h2 {
   font-size: 100%;
-  font-weight: 500;
+  font-weight: normal;
   margin: 0;
 }
 
