@@ -1,15 +1,21 @@
 ---
+interface Props {
+  actionHref?: string;
+  actionLabel?: string;
+}
 
+const { actionHref = '/contact', actionLabel = 'Contact Us' } = Astro.props;
 ---
 
-<header class="flex items-center justify-between px-4 pt-[26px] pb-4 md:px-8 md:pt-8 md:pb-6">
-  <img src="/logo.svg" alt="Carterdea - Digital Design & Development" class="h-[29px] w-auto" />
+<header transition:name="header" class="flex items-center justify-between px-4 pt-[26px] pb-4 md:px-8 md:pt-8 md:pb-6">
+  <a href="/">
+    <img src="/logo.svg" alt="Carterdea - Digital Design & Development" class="h-[29px] w-auto" />
+  </a>
 
-  <button
-    id="contact-btn"
-    type="button"
+  <a
+    href={actionHref}
     class="bg-white/10 border-[0.5px] border-white/5 rounded-[3px] px-3 pt-2 pb-1.5 text-xs text-white tracking-[-0.24px] hover:bg-white/15 hover:border-white/10 active:bg-white/5 active:border-white/5 active:text-white/70 transition-colors"
   >
-    Contact Us
-  </button>
+    {actionLabel}
+  </a>
 </header>
