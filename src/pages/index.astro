@@ -1,9 +1,23 @@
 ---
-import Layout from "../layouts/Layout.astro";
+import ContactButton from '../components/ContactButton';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+import Hero from '../components/Hero.astro';
+import LogoMarquee from '../components/LogoMarquee.astro';
+import Layout from '../layouts/Layout.astro';
 ---
 
-<Layout title="Carter DeAngelis">
-  <main class="min-h-screen flex items-center justify-center">
-    <h1 class="text-4xl">Carter DeAngelis</h1>
-  </main>
+<Layout title="Carter DeAngelis — Digital Design & Development">
+  <div class="h-screen flex flex-col overflow-hidden">
+    <Header />
+
+    <main class="flex-1 flex flex-col min-h-0">
+      <Hero />
+      <LogoMarquee />
+    </main>
+
+    <Footer />
+  </div>
+
+  <ContactButton client:load />
 </Layout>
