@@ -1,6 +1,7 @@
-import { type FormEvent, useState } from 'react';
+import { type FormEvent, useEffect, useState } from 'react';
 
 type FormState = 'idle' | 'submitting' | 'success' | 'error';
+type TransitionState = 'form-visible' | 'form-hiding' | 'success-visible';
 
 const BUDGET_OPTIONS = [
   { value: '', label: 'Select budget' },
@@ -18,9 +19,10 @@ const LABEL_CLASS = 'block text-sm text-white/70 tracking-[-0.14px] mb-2';
 const BUTTON_CLASS =
   'px-3 pt-2 pb-1.5 bg-white/10 border border-white/5 rounded text-white text-xs tracking-[-0.24px] hover:bg-white/15 transition-colors';
 
-export default function ContactForm(): JSX.Element {
+export default function ContactForm() {
   const [formState, setFormState] = useState<FormState>('idle');
   const [errorMessage, setErrorMessage] = useState('');
+  const [transitionState, setTransitionState] = useState<TransitionState>('form-visible');
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -55,29 +57,44 @@ export default function ContactForm(): JSX.Element {
       }
 
       setFormState('success');
+      setTransitionState('form-hiding');
     } catch {
       setFormState('error');
       setErrorMessage('Something went wrong. Please try again.');
     }
   }
 
-  if (formState === 'success') {
+  // Handle fade transition timing
+  useEffect(() => {
+    if (transitionState === 'form-hiding') {
+      const timer = setTimeout(() => {
+        setTransitionState('success-visible');
+      }, 300); // Match CSS transition duration
+      return () => clearTimeout(timer);
+    }
+  }, [transitionState]);
+
+  // Show success view after form fades out
+  if (transitionState === 'success-visible') {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center">
-        <h3 className="text-xl text-white mb-2">Message sent</h3>
-        <p className="text-white/50 text-sm mb-6">We'll get back to you soon.</p>
-        <a href="/" className={BUTTON_CLASS}>
-          Back to Home
-        </a>
+      <div className="flex-1 flex flex-col pt-32 animate-fade-in">
+        <h3 className="text-lg text-white mb-2">Thank you for your message</h3>
+        <p className="text-neutral-400 text-sm tracking-[-0.28px]">
+          We look forward to speaking with you. We will be in touch soon.
+        </p>
       </div>
     );
   }
 
   return (
-    <>
+    <div
+      className={`flex-1 flex flex-col transition-opacity duration-300 ${
+        transitionState === 'form-hiding' ? 'opacity-0' : 'opacity-100'
+      }`}
+    >
       <h1 className="text-white text-lg pt-32 mb-16">Contact Us</h1>
 
-      <form onSubmit={handleSubmit} className="flex-1 flex flex-col">
+      <form onSubmit={handleSubmit} className="flex flex-col">
         {/* Honeypot field */}
         <input
           type="text"
@@ -88,7 +105,7 @@ export default function ContactForm(): JSX.Element {
           aria-hidden="true"
         />
 
-        <div className="space-y-6">
+        <div className="space-y-5">
           <div>
             <label htmlFor="name" className={LABEL_CLASS}>
               Name
@@ -166,7 +183,7 @@ export default function ContactForm(): JSX.Element {
           <p className="text-red-400 text-sm mt-4">{errorMessage}</p>
         )}
 
-        <div className="mt-auto pt-6">
+        <div className="mt-3">
           <button
             type="submit"
             disabled={formState === 'submitting'}
@@ -176,6 +193,6 @@ export default function ContactForm(): JSX.Element {
           </button>
         </div>
       </form>
-    </>
+    </div>
   );
 }

@@ -1,0 +1,57 @@
+{
+  "hero": {
+    "title": "Product design and engineering for companies shaping what's next",
+    "subtitle": "A small, distributed studio building AI products and ecommerce systems."
+  },
+  "clients": [
+    {
+      "id": "code-climate",
+      "name": "Code Climate",
+      "description": "Dashboard for engineering team performance and PR velocity",
+      "logoSrc": "/logos/code-climate.svg",
+      "logoHeight": 30
+    },
+    {
+      "id": "ap",
+      "name": "Associated Press",
+      "description": "Redesigned AP Stylebook web platform",
+      "logoSrc": "/logos/ap.svg",
+      "logoHeight": 80
+    },
+    {
+      "id": "stussy",
+      "name": "Stussy",
+      "description": "4x revenue growth after ecommerce redesign",
+      "logoSrc": "/logos/stussy.svg",
+      "logoHeight": 80
+    },
+    {
+      "id": "new-era",
+      "name": "New Era",
+      "description": "3x revenue growth after platform redesign",
+      "logoSrc": "/logos/new-era.svg",
+      "logoHeight": 50
+    },
+    {
+      "id": "oracle",
+      "name": "Oracle",
+      "description": "Redesigned data science platform, acquired by Oracle",
+      "logoSrc": "/logos/oracle.svg",
+      "logoHeight": 23
+    },
+    {
+      "id": "ford",
+      "name": "Ford",
+      "description": "Infotainment UX concepts for vehicle service scheduling",
+      "logoSrc": "/logos/ford.svg",
+      "logoHeight": 48
+    },
+    {
+      "id": "grasshopper",
+      "name": "Grasshopper",
+      "description": "Redesigned mobile and desktop apps",
+      "logoSrc": "/logos/grasshopper.svg",
+      "logoHeight": 30
+    }
+  ]
+}
