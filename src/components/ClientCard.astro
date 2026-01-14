@@ -3,20 +3,37 @@ interface Props {
   name: string;
   description: string;
   logoSrc: string;
-  logoAlt?: string;
 }
 
-const { name, description, logoSrc, logoAlt = name } = Astro.props;
+const { name, description, logoSrc } = Astro.props;
 ---
 
-<div class="shrink-0 w-[370px] h-[340px] bg-white/5 rounded flex flex-col items-center pt-24 pb-12 px-8 snap-center snap-always md:w-72 md:h-64 md:pt-16 md:pb-8">
+<div class="client-card shrink-0 w-[370px] h-[340px] rounded shadow-[0px_12px_24px_0px_rgba(0,0,0,0.16),0px_4px_4px_0px_rgba(0,0,0,0.1)] flex flex-col items-center pt-24 pb-12 px-8 snap-center snap-always">
   <img
     src={logoSrc}
-    alt={logoAlt}
-    class="h-20 w-auto object-contain"
+    alt={name}
+    class="h-20 w-auto max-w-[200px] object-contain relative z-10"
     loading="lazy"
   />
-  <p class="mt-auto text-sm text-white/70 text-center max-w-[270px] tracking-[-0.14px]">
+  <p class="mt-auto text-sm text-white/70 text-center max-w-[270px] tracking-[-0.14px] relative z-10">
     {description}
   </p>
 </div>
+
+<style>
+  .client-card {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .client-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.15);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+    z-index: 0;
+  }
+</style>

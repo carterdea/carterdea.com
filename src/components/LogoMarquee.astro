@@ -1,47 +1,21 @@
 ---
+import type { CollectionEntry } from 'astro:content';
 import ClientCard from './ClientCard.astro';
 
-interface Client {
-  name: string;
-  description: string;
-  logoSrc: string;
+type Client = CollectionEntry<'site'>['data']['clients'][number];
+
+interface Props {
+  clients?: Client[];
 }
 
-const clients: Client[] = [
-  {
-    name: 'Stussy',
-    description: '4x revenue growth after redesign',
-    logoSrc: '/logos/stussy.svg',
-  },
-  {
-    name: 'Associated Press',
-    description: 'Rebuilt newsroom digital infrastructure',
-    logoSrc: '/logos/ap.svg',
-  },
-  {
-    name: 'GoToMeeting',
-    description: 'Designed next-gen video conferencing UI',
-    logoSrc: '/logos/gotomeeting.svg',
-  },
-  {
-    name: 'Grasshopper',
-    description: 'Led product design for mobile app',
-    logoSrc: '/logos/grasshopper.svg',
-  },
-  {
-    name: 'Code Climate',
-    description: 'Built developer analytics dashboard',
-    logoSrc: '/logos/code-climate.svg',
-  },
-];
+const { clients = [] } = Astro.props;
 ---
 
 <!-- Mobile: Swipeable carousel -->
-<section class="relative md:hidden">
+<section class="relative md:hidden overflow-hidden">
   <div
     id="mobile-carousel"
-    class="flex gap-4 overflow-x-auto px-4 pb-4 snap-x snap-mandatory overscroll-x-contain scrollbar-hide"
-    style="-webkit-overflow-scrolling: touch;"
+    class="flex gap-4 overflow-x-auto px-4 pb-4 snap-x snap-mandatory scrollbar-hide carousel-elastic"
   >
     {clients.map((client) => (
       <ClientCard
@@ -53,11 +27,13 @@ const clients: Client[] = [
   </div>
 
   <!-- Pagination dots -->
-  <div class="flex justify-center gap-[7px] mt-3">
+  <div class="flex justify-center gap-[7px]">
     {clients.map((_, index) => (
-      <div
+      <button
+        type="button"
+        aria-label={`Go to slide ${index + 1}`}
         class:list={[
-          'size-2.5 rounded-full transition-colors',
+          'size-2.5 rounded-full transition-colors cursor-pointer',
           index === 0 ? 'bg-white' : 'bg-white/20',
         ]}
         data-dot={index}
@@ -66,27 +42,28 @@ const clients: Client[] = [
   </div>
 </section>
 
-<!-- Desktop: Auto-scrolling marquee -->
-<section class="hidden md:block relative overflow-hidden">
-  <div class="marquee-mask">
-    <div class="marquee-track flex gap-6 py-8">
-      <!-- First set -->
-      {clients.map((client) => (
-        <ClientCard
-          name={client.name}
-          description={client.description}
-          logoSrc={client.logoSrc}
-        />
-      ))}
-      <!-- Duplicate for seamless loop -->
-      {clients.map((client) => (
-        <ClientCard
-          name={client.name}
-          description={client.description}
-          logoSrc={client.logoSrc}
-        />
-      ))}
-    </div>
+<!-- Desktop: Bare logos with descriptions, alpha mask edges -->
+<section class="hidden md:block relative overflow-hidden desktop-marquee-mask">
+  <div id="marquee-track" class="marquee-track flex items-start gap-[74px] py-8">
+    {[0, 1].map(() => (
+      <div class="marquee-content flex items-start gap-[74px]">
+        {clients.map((client) => (
+          <div class="shrink-0 flex flex-col items-center w-[270px]">
+            <div class="h-[80px] flex items-center justify-center">
+              <img
+                src={client.logoSrc}
+                alt={client.name}
+                style={`height: ${client.logoHeight || 80}px`}
+                class="w-auto max-w-full object-contain"
+              />
+            </div>
+            <p class="mt-6 text-[14px] text-white/70 text-center tracking-[-0.14px] leading-normal">
+              {client.description}
+            </p>
+          </div>
+        ))}
+      </div>
+    ))}
   </div>
 </section>
 
@@ -99,29 +76,21 @@ const clients: Client[] = [
     display: none;
   }
 
-  .marquee-mask {
-    mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
-    -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
-  }
-
   .marquee-track {
-    animation: marquee 30s linear infinite;
     will-change: transform;
   }
 
-  @keyframes marquee {
-    from {
-      transform: translateX(0);
-    }
-    to {
-      transform: translateX(-50%);
-    }
+  .carousel-elastic {
+    transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .marquee-track {
-      animation: none;
-    }
+  .carousel-elastic.dragging {
+    transition: none;
+  }
+
+  .desktop-marquee-mask {
+    -webkit-mask-image: linear-gradient(to right, transparent, black 172px, black calc(100% - 172px), transparent);
+    mask-image: linear-gradient(to right, transparent, black 172px, black calc(100% - 172px), transparent);
   }
 </style>
 
@@ -131,10 +100,12 @@ const clients: Client[] = [
   const cards = carousel?.querySelectorAll(':scope > div');
 
   if (carousel && dots.length > 0 && cards && cards.length > 0) {
+    const cardWidth = (cards[0] as HTMLElement).offsetWidth;
+    const gap = 16;
+
+    // Update dots on scroll
     carousel.addEventListener('scroll', () => {
       const scrollLeft = carousel.scrollLeft;
-      const cardWidth = cards[0].offsetWidth;
-      const gap = 16;
       const activeIndex = Math.round(scrollLeft / (cardWidth + gap));
 
       dots.forEach((dot, index) => {
@@ -142,5 +113,81 @@ const clients: Client[] = [
         dot.classList.toggle('bg-white/20', index !== activeIndex);
       });
     });
+
+    // Click dots to scroll to slide
+    dots.forEach((dot) => {
+      dot.addEventListener('click', () => {
+        const index = Number(dot.getAttribute('data-dot'));
+        const scrollPosition = index * (cardWidth + gap);
+        carousel.scrollTo({ left: scrollPosition, behavior: 'smooth' });
+      });
+    });
+
+    // Elastic overscroll effect
+    let touchStartX = 0;
+    let elasticOffset = 0;
+    const maxElastic = 80;
+    const resistance = 0.4;
+
+    carousel.addEventListener('touchstart', (e) => {
+      touchStartX = e.touches[0].clientX;
+      carousel.classList.add('dragging');
+    }, { passive: true });
+
+    carousel.addEventListener('touchmove', (e) => {
+      const touchX = e.touches[0].clientX;
+      const diff = touchX - touchStartX;
+      const maxScroll = carousel.scrollWidth - carousel.clientWidth;
+
+      // At left edge, pulling right
+      if (carousel.scrollLeft <= 0 && diff > 0) {
+        elasticOffset = Math.min(diff * resistance, maxElastic);
+        carousel.style.transform = `translateX(${elasticOffset}px)`;
+      }
+      // At right edge, pulling left
+      else if (carousel.scrollLeft >= maxScroll && diff < 0) {
+        elasticOffset = Math.max(diff * resistance, -maxElastic);
+        carousel.style.transform = `translateX(${elasticOffset}px)`;
+      }
+      else {
+        elasticOffset = 0;
+        carousel.style.transform = '';
+      }
+    }, { passive: true });
+
+    carousel.addEventListener('touchend', () => {
+      carousel.classList.remove('dragging');
+      carousel.style.transform = '';
+      elasticOffset = 0;
+    });
+  }
+
+  // Desktop marquee with JS-calculated animation
+  const marqueeTrack = document.getElementById('marquee-track');
+  const marqueeContent = marqueeTrack?.querySelector('.marquee-content');
+
+  if (marqueeTrack && marqueeContent && window.matchMedia('(min-width: 768px)').matches) {
+    const contentWidth = marqueeContent.getBoundingClientRect().width;
+    const gap = 74;
+    const totalWidth = contentWidth + gap;
+    const duration = totalWidth / 50; // 50px per second
+
+    // Use requestAnimationFrame for smoother animation
+    let startTime: number | null = null;
+
+    const animate = (timestamp: number) => {
+      if (!startTime) startTime = timestamp;
+      const elapsed = timestamp - startTime;
+      const progress = (elapsed / (duration * 1000)) % 1;
+      const translateX = -progress * totalWidth;
+
+      marqueeTrack.style.transform = `translateX(${translateX}px)`;
+      requestAnimationFrame(animate);
+    };
+
+    // Check for reduced motion preference
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      requestAnimationFrame(animate);
+    }
   }
 </script>

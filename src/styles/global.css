@@ -21,5 +21,25 @@ body.bg-image {
   background-image: url("/santa-monica-north.jpg");
   background-size: cover;
   background-position: center;
-  background-attachment: fixed;
+}
+
+/* Fixed background only on desktop - mobile doesn't support it well and it breaks backdrop-filter */
+@media (min-width: 768px) {
+  body.bg-image {
+    background-attachment: fixed;
+  }
+}
+
+/* Fade in animation */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out forwards;
 }

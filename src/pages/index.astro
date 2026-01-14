@@ -1,18 +1,22 @@
 ---
+import { getEntry } from 'astro:content';
 import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
 import Hero from '../components/Hero.astro';
 import LogoMarquee from '../components/LogoMarquee.astro';
 import Layout from '../layouts/Layout.astro';
+
+const siteData = await getEntry('site', 'config');
+const { hero, clients } = siteData?.data ?? {};
 ---
 
 <Layout title="Carter DeAngelis — Digital Design & Development">
   <div class="h-screen flex flex-col overflow-hidden">
     <Header />
 
-    <main transition:name="page-content" class="flex-1 flex flex-col min-h-0">
-      <Hero />
-      <LogoMarquee />
+    <main transition:name="page-content" class="flex-1 flex flex-col min-h-0 md:px-10">
+      <Hero title={hero?.title} subtitle={hero?.subtitle} />
+      <LogoMarquee clients={clients} />
     </main>
 
     <Footer />
