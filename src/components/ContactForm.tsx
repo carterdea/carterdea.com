@@ -204,7 +204,7 @@ export default function ContactForm() {
           </div>
         </div>
 
-        {formState === 'error' && errorMessage && (
+        {errorMessage && (
           <p className="text-red-400 text-sm mt-4">{errorMessage}</p>
         )}
 
