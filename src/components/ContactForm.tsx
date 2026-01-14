@@ -77,9 +77,17 @@ export default function ContactForm() {
   // Show success view after form fades out
   if (transitionState === 'success-visible') {
     return (
-      <div className="flex-1 flex flex-col pt-32 animate-fade-in">
-        <h3 className="text-lg text-white mb-2">Thank you for your message</h3>
-        <p className="text-neutral-400 text-sm tracking-[-0.28px]">
+      <div className="flex-1 flex flex-col pt-32">
+        <h3
+          className="animate-fade-in-up text-lg text-white mb-2"
+          style={{ '--delay': '0ms' } as React.CSSProperties}
+        >
+          Thank you for your message
+        </h3>
+        <p
+          className="animate-fade-in-up text-neutral-400 text-sm tracking-[-0.28px]"
+          style={{ '--delay': '80ms' } as React.CSSProperties}
+        >
           We look forward to speaking with you. We will be in touch soon.
         </p>
       </div>
@@ -92,7 +100,12 @@ export default function ContactForm() {
         transitionState === 'form-hiding' ? 'opacity-0' : 'opacity-100'
       }`}
     >
-      <h1 className="text-white text-lg pt-32 mb-16">Contact Us</h1>
+      <h1
+        className="animate-fade-in-up text-white text-lg pt-32 mb-16"
+        style={{ '--delay': '100ms' } as React.CSSProperties}
+      >
+        Contact Us
+      </h1>
 
       <form onSubmit={handleSubmit} className="flex flex-col">
         {/* Honeypot field */}
@@ -106,7 +119,10 @@ export default function ContactForm() {
         />
 
         <div className="space-y-5">
-          <div>
+          <div
+            className="animate-fade-in-up"
+            style={{ '--delay': '150ms' } as React.CSSProperties}
+          >
             <label htmlFor="name" className={LABEL_CLASS}>
               Name
             </label>
@@ -121,7 +137,10 @@ export default function ContactForm() {
             />
           </div>
 
-          <div>
+          <div
+            className="animate-fade-in-up"
+            style={{ '--delay': '200ms' } as React.CSSProperties}
+          >
             <label htmlFor="email" className={LABEL_CLASS}>
               Email
             </label>
@@ -136,7 +155,10 @@ export default function ContactForm() {
             />
           </div>
 
-          <div>
+          <div
+            className="animate-fade-in-up"
+            style={{ '--delay': '250ms' } as React.CSSProperties}
+          >
             <label htmlFor="budget" className={LABEL_CLASS}>
               Your budget
             </label>
@@ -163,7 +185,10 @@ export default function ContactForm() {
             </div>
           </div>
 
-          <div>
+          <div
+            className="animate-fade-in-up"
+            style={{ '--delay': '300ms' } as React.CSSProperties}
+          >
             <label htmlFor="message" className={LABEL_CLASS}>
               Message
             </label>
@@ -183,11 +208,14 @@ export default function ContactForm() {
           <p className="text-red-400 text-sm mt-4">{errorMessage}</p>
         )}
 
-        <div className="mt-3">
+        <div
+          className="animate-fade-in-up mt-3"
+          style={{ '--delay': '350ms' } as React.CSSProperties}
+        >
           <button
             type="submit"
             disabled={formState === 'submitting'}
-            className={`${BUTTON_CLASS} disabled:opacity-50`}
+            className={`${BUTTON_CLASS} active:scale-[0.97] disabled:opacity-50 transition-all duration-150`}
           >
             {formState === 'submitting' ? 'Sending...' : 'Send'}
           </button>
