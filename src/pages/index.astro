@@ -1,5 +1,4 @@
 ---
-import ContactButton from '../components/ContactButton';
 import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
 import Hero from '../components/Hero.astro';
@@ -11,13 +10,11 @@ import Layout from '../layouts/Layout.astro';
   <div class="h-screen flex flex-col overflow-hidden">
     <Header />
 
-    <main class="flex-1 flex flex-col min-h-0">
+    <main transition:name="page-content" class="flex-1 flex flex-col min-h-0">
       <Hero />
       <LogoMarquee />
     </main>
 
     <Footer />
   </div>
-
-  <ContactButton client:load />
 </Layout>
