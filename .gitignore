@@ -1,1 +1,27 @@
 .DS_Store
+node_modules
+
+# Astro
+dist/
+.astro/
+
+# Vercel
+.vercel/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor
+*.swp
+*.swo
+.idea/
+*.sublime-*
+
+# TypeScript
+*.tsbuildinfo
