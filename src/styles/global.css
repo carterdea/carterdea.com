@@ -30,16 +30,53 @@ body.bg-image {
   }
 }
 
-/* Fade in animation */
+/* Animation easing - smooth deceleration curve */
+:root {
+  --ease-out-expo: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* Fade in animation (for header elements) */
 @keyframes fade-in {
   from {
     opacity: 0;
+    transform: scale(0.97);
   }
   to {
     opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Fade in with upward movement (for content) */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
 .animate-fade-in {
-  animation: fade-in 0.3s ease-out forwards;
+  opacity: 0;
+  animation: fade-in 400ms var(--ease-out-expo) forwards;
+  animation-delay: var(--delay, 0ms);
+}
+
+.animate-fade-in-up {
+  opacity: 0;
+  animation: fade-in-up 500ms var(--ease-out-expo) forwards;
+  animation-delay: var(--delay, 0ms);
+}
+
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in,
+  .animate-fade-in-up {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
 }

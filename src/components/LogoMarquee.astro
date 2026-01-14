@@ -12,7 +12,7 @@ const { clients = [] } = Astro.props;
 ---
 
 <!-- Mobile: Swipeable carousel -->
-<section class="relative md:hidden overflow-hidden">
+<section class="animate-fade-in-up relative md:hidden overflow-hidden" style="--delay: 260ms;">
   <div
     id="mobile-carousel"
     class="flex gap-4 overflow-x-auto px-4 pb-4 snap-x snap-mandatory scrollbar-hide carousel-elastic"
@@ -45,10 +45,16 @@ const { clients = [] } = Astro.props;
 <!-- Desktop: Bare logos with descriptions, alpha mask edges -->
 <section class="hidden md:block relative overflow-hidden desktop-marquee-mask">
   <div id="marquee-track" class="marquee-track flex items-start gap-[74px] py-8">
-    {[0, 1].map(() => (
+    {[0, 1].map((setIndex) => (
       <div class="marquee-content flex items-start gap-[74px]">
-        {clients.map((client) => (
-          <div class="shrink-0 flex flex-col items-center w-[270px]">
+        {clients.map((client, index) => (
+          <div
+            class:list={[
+              'shrink-0 flex flex-col items-center w-[270px]',
+              setIndex === 0 ? 'animate-fade-in-up' : ''
+            ]}
+            style={setIndex === 0 ? `--delay: ${260 + index * 60}ms` : ''}
+          >
             <div class="h-[80px] flex items-center justify-center">
               <img
                 src={client.logoSrc}
@@ -170,7 +176,7 @@ const { clients = [] } = Astro.props;
     const contentWidth = marqueeContent.getBoundingClientRect().width;
     const gap = 74;
     const totalWidth = contentWidth + gap;
-    const duration = totalWidth / 50; // 50px per second
+    const duration = totalWidth / 30; // 30px per second
 
     // Use requestAnimationFrame for smoother animation
     let startTime: number | null = null;

@@ -3,12 +3,13 @@ const currentYear = new Date().getFullYear();
 ---
 
 <footer transition:persist class="flex items-center justify-between px-4 py-6 md:px-8">
-  <p class="text-xs text-white/35">© 2013-{currentYear} carterdea.com</p>
+  <p class="animate-fade-in text-xs text-white/35" style="--delay: 340ms;">© 2013-<span id="current-year">{currentYear}</span> carterdea.com</p>
 
   <button
     id="bg-toggle"
     type="button"
-    class="text-neutral-600 hover:text-neutral-500 transition-colors"
+    class="animate-fade-in text-neutral-600 hover:text-neutral-500 active:scale-[0.95] transition-all duration-150"
+    style="--delay: 380ms;"
     aria-label="Toggle background"
     title="Toggle background"
   >
@@ -31,6 +32,12 @@ const currentYear = new Date().getFullYear();
 </footer>
 
 <script>
+  // Update copyright year client-side to always be current
+  const yearSpan = document.getElementById('current-year');
+  if (yearSpan) {
+    yearSpan.textContent = String(new Date().getFullYear());
+  }
+
   const bgToggle = document.getElementById('bg-toggle');
   const body = document.body;
 

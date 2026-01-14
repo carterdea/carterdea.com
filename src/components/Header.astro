@@ -8,13 +8,14 @@ const { actionHref = '/contact', actionLabel = 'Contact Us' } = Astro.props;
 ---
 
 <header transition:name="header" class="flex items-center justify-between px-4 pt-[26px] pb-4 md:px-8 md:pt-8 md:pb-6">
-  <a href="/">
+  <a href="/" class="animate-fade-in" style="--delay: 0ms;">
     <img src="/logo.svg" alt="Carterdea - Digital Design & Development" class="h-[29px] w-auto" />
   </a>
 
   <a
     href={actionHref}
-    class="bg-white/10 border-[0.5px] border-white/5 rounded-[3px] px-3 pt-2 pb-1.5 text-xs text-white tracking-[-0.24px] hover:bg-white/15 hover:border-white/10 active:bg-white/5 active:border-white/5 active:text-white/70 transition-colors"
+    class="animate-fade-in bg-white/10 border-[0.5px] border-white/5 rounded-[3px] px-3 pt-2 pb-1.5 text-xs text-white tracking-[-0.24px] hover:bg-white/15 hover:border-white/10 active:scale-[0.97] active:bg-white/5 active:border-white/5 active:text-white/70 transition-all duration-150"
+    style="--delay: 50ms;"
   >
     {actionLabel}
   </a>
