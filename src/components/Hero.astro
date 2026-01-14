@@ -1,0 +1,20 @@
+---
+interface Props {
+  title?: string;
+  subtitle?: string;
+}
+
+const {
+  title = "Product design and engineering for companies shaping what's next",
+  subtitle = 'A distributed studio building AI products and ecommerce systems.',
+} = Astro.props;
+---
+
+<section class="px-4 pt-20 pb-8 md:px-8 md:pt-24 md:pb-12">
+  <h1 class="text-lg text-white leading-normal tracking-[-0.36px] max-w-sm md:text-2xl md:max-w-xl">
+    {title}
+  </h1>
+  <h2 class="mt-4 text-sm text-white/60 leading-normal tracking-[-0.28px] max-w-sm md:text-base md:max-w-xl">
+    {subtitle}
+  </h2>
+</section>

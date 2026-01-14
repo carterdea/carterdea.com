@@ -1,0 +1,146 @@
+---
+import ClientCard from './ClientCard.astro';
+
+interface Client {
+  name: string;
+  description: string;
+  logoSrc: string;
+}
+
+const clients: Client[] = [
+  {
+    name: 'Stussy',
+    description: '4x revenue growth after redesign',
+    logoSrc: '/logos/stussy.svg',
+  },
+  {
+    name: 'Associated Press',
+    description: 'Rebuilt newsroom digital infrastructure',
+    logoSrc: '/logos/ap.svg',
+  },
+  {
+    name: 'GoToMeeting',
+    description: 'Designed next-gen video conferencing UI',
+    logoSrc: '/logos/gotomeeting.svg',
+  },
+  {
+    name: 'Grasshopper',
+    description: 'Led product design for mobile app',
+    logoSrc: '/logos/grasshopper.svg',
+  },
+  {
+    name: 'Code Climate',
+    description: 'Built developer analytics dashboard',
+    logoSrc: '/logos/code-climate.svg',
+  },
+];
+---
+
+<!-- Mobile: Swipeable carousel -->
+<section class="relative md:hidden">
+  <div
+    id="mobile-carousel"
+    class="flex gap-4 overflow-x-auto px-4 pb-4 snap-x snap-mandatory overscroll-x-contain scrollbar-hide"
+    style="-webkit-overflow-scrolling: touch;"
+  >
+    {clients.map((client) => (
+      <ClientCard
+        name={client.name}
+        description={client.description}
+        logoSrc={client.logoSrc}
+      />
+    ))}
+  </div>
+
+  <!-- Pagination dots -->
+  <div class="flex justify-center gap-[7px] mt-3">
+    {clients.map((_, index) => (
+      <div
+        class:list={[
+          'size-2.5 rounded-full transition-colors',
+          index === 0 ? 'bg-white' : 'bg-white/20',
+        ]}
+        data-dot={index}
+      />
+    ))}
+  </div>
+</section>
+
+<!-- Desktop: Auto-scrolling marquee -->
+<section class="hidden md:block relative overflow-hidden">
+  <div class="marquee-mask">
+    <div class="marquee-track flex gap-6 py-8">
+      <!-- First set -->
+      {clients.map((client) => (
+        <ClientCard
+          name={client.name}
+          description={client.description}
+          logoSrc={client.logoSrc}
+        />
+      ))}
+      <!-- Duplicate for seamless loop -->
+      {clients.map((client) => (
+        <ClientCard
+          name={client.name}
+          description={client.description}
+          logoSrc={client.logoSrc}
+        />
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .marquee-mask {
+    mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+  }
+
+  .marquee-track {
+    animation: marquee 30s linear infinite;
+    will-change: transform;
+  }
+
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .marquee-track {
+      animation: none;
+    }
+  }
+</style>
+
+<script>
+  const carousel = document.getElementById('mobile-carousel');
+  const dots = document.querySelectorAll('[data-dot]');
+  const cards = carousel?.querySelectorAll(':scope > div');
+
+  if (carousel && dots.length > 0 && cards && cards.length > 0) {
+    carousel.addEventListener('scroll', () => {
+      const scrollLeft = carousel.scrollLeft;
+      const cardWidth = cards[0].offsetWidth;
+      const gap = 16;
+      const activeIndex = Math.round(scrollLeft / (cardWidth + gap));
+
+      dots.forEach((dot, index) => {
+        dot.classList.toggle('bg-white', index === activeIndex);
+        dot.classList.toggle('bg-white/20', index !== activeIndex);
+      });
+    });
+  }
+</script>

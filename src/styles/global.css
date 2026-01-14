@@ -1,8 +1,9 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "UniversPro55Roman", -apple-system, BlinkMacSystemFont, "Segoe UI",
-    Roboto, Helvetica, Arial, sans-serif;
+  --font-sans:
+    "UniversPro55Roman", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
+    sans-serif;
 }
 
 @font-face {
@@ -13,4 +14,12 @@
   font-weight: normal;
   font-style: normal;
   font-display: swap;
+}
+
+/* Background toggle */
+body.bg-image {
+  background-image: url("/santa-monica-north.jpg");
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
 }
