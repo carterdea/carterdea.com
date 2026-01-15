@@ -26,7 +26,7 @@ Personal site rebuild using Astro + Bun.
 │            H1 Title             │
 │           H2 Subtitle           │
 │                                 │
-│  ◀─ [logo] [logo] [logo] ─▶    │  ← Client logo marquee
+│  ◀─ [logo] [logo] [logo] ─▶     │  ← Client logo marquee
 │     (gradient fade edges)       │
 │                                 │
 ├─────────────────────────────────┤
@@ -42,10 +42,12 @@ Personal site rebuild using Astro + Bun.
 - Contact button: top right → opens contact modal
 
 **Hero**
+
 - H1: main headline (centered)
 - H2: subheadline (centered, below H1)
 
 **Client Logo Marquee**
+
 - Desktop: auto-scrolling marquee animation (CSS `@keyframes`)
 - Mobile: manual swipe carousel using CSS `scroll-snap` for native iOS feel
 - Edges: gradient mask (`mask-image: linear-gradient(...)`) to fade logos to black
@@ -105,32 +107,36 @@ Personal site rebuild using Astro + Bun.
 
 ### Setup
 
-- [ ] Initialize Astro project with Bun
-- [ ] Add React integration
-- [ ] Add Tailwind CSS
-- [ ] Configure custom font (`UniversPro55Roman`)
-- [ ] Configure for Vercel (hybrid output for API routes)
+- [x] Initialize Astro project with Bun
+- [x] Add React integration (`@astrojs/react`)
+- [x] Add Tailwind CSS v4 (`@tailwindcss/vite`)
+- [x] Configure custom font (`UniversPro55Roman`) — `public/font.woff`, `public/font.woff2`
+- [x] Configure for Vercel (`@astrojs/vercel` adapter)
 
 ### Components
 
-- [ ] Header (logo + contact button placeholder)
-- [ ] Hero (H1 + H2)
-- [ ] Logo marquee (desktop: auto-scroll, mobile: swipe carousel)
-- [ ] Footer (copyright + toggle placeholder)
-- [ ] Contact modal (Headless UI Dialog + form + Resend)
+- [x] Header (logo + contact link)
+- [x] Hero (H1 + H2, responsive)
+- [x] Logo marquee (desktop: auto-scroll, mobile: swipe carousel with elastic overscroll)
+- [x] Footer (copyright + social links)
+- [x] Contact form (dedicated `/contact` page with Resend API route)
+- [x] ClientCard (glass effect with backdrop blur)
+- [x] MobileSections (mobile-specific layout sections)
 
 ### Polish
 
-- [ ] Background toggle functionality (default: `bg-black`, toggle: `santa-monica-north.jpg`)
-- [ ] Favicon/meta tags/OG images
-- [ ] Responsive breakpoints review
-- [ ] Font preloading optimization
-- [ ] Lighthouse audit (aim for 100s)
+- [x] Background image with gradient overlay
+- [x] Favicon/meta tags (complete)
+- [ ] OG image (1200x630px) — needs creation
+- [x] Responsive breakpoints (mobile-first)
+- [x] Font preloading optimization (`preload`, `font-display: swap`)
+- [x] Lighthouse audit — Accessibility 100%, Best Practices 100%, SEO 92%+ (production)
 - [ ] Test deployment
 
 ## Technical Notes
 
 ### Gradient Mask for Marquee Edges
+
 ```css
 .marquee {
   mask-image: linear-gradient(
@@ -145,14 +151,15 @@ Personal site rebuild using Astro + Bun.
 ```
 
 ### Mobile Carousel (Native Feel)
+
 ```css
 .carousel {
   display: flex;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
-  scroll-snap-stop: always; /* prevents skipping cards */
-  overscroll-behavior-x: contain; /* prevents page scroll at edges */
-  -webkit-overflow-scrolling: touch; /* iOS momentum/inertia */
+  scroll-snap-stop: always;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .carousel-item {
@@ -163,6 +170,7 @@ Personal site rebuild using Astro + Bun.
 ```
 
 ### GPU-Accelerated Marquee Animation
+
 ```css
 @keyframes marquee {
   from { transform: translateX(0); }
@@ -183,4 +191,4 @@ Personal site rebuild using Astro + Bun.
 
 ## Open Questions
 
-1. **Client logos?** SVGs exported — need to verify correct versions
+1. ~~**Client logos?** SVGs exported — need to verify correct versions~~ ✓ Done — logos in `public/logos/`

@@ -1,7 +1,14 @@
 import type { APIRoute } from 'astro';
 import { Resend } from 'resend';
 
-const resend = new Resend(import.meta.env.RESEND_API_KEY);
+// Lazy initialization to avoid build-time errors
+let resend: Resend | null = null;
+function getResend(): Resend {
+  if (!resend) {
+    resend = new Resend(import.meta.env.RESEND_API_KEY);
+  }
+  return resend;
+}
 
 // Simple in-memory rate limiting (resets on cold start)
 const rateLimitMap = new Map<string, { count: number; timestamp: number }>();
@@ -92,7 +99,7 @@ export const POST: APIRoute = async ({ request }) => {
     const sanitizedMessage = sanitize(message, 2000);
 
     // Send email via Resend
-    const { error } = await resend.emails.send({
+    const { error } = await getResend().emails.send({
       from: 'hello@carterdea.com',
       to: 'hello@carterdea.com',
       replyTo: sanitizedEmail,

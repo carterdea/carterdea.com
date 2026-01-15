@@ -1,4 +1,5 @@
 import { type FormEvent, useEffect, useState } from 'react';
+import Button from './ui/Button';
 
 type FormState = 'idle' | 'submitting' | 'success' | 'error';
 type TransitionState = 'form-visible' | 'form-hiding' | 'success-visible';
@@ -15,9 +16,6 @@ const INPUT_CLASS =
   'w-full px-3 pt-3 pb-2.5 bg-white/5 border border-white/20 rounded text-white text-sm placeholder:text-white/50 focus:outline-none focus:bg-white/10 focus:border-white/80 transition-colors';
 
 const LABEL_CLASS = 'block text-sm text-white/70 tracking-[-0.14px] mb-2';
-
-const BUTTON_CLASS =
-  'px-3 pt-2 pb-1.5 bg-white/10 border border-white/5 rounded text-white text-xs tracking-[-0.24px] hover:bg-white/15 transition-colors';
 
 export default function ContactForm() {
   const [formState, setFormState] = useState<FormState>('idle');
@@ -77,7 +75,7 @@ export default function ContactForm() {
   // Show success view after form fades out
   if (transitionState === 'success-visible') {
     return (
-      <div className="flex-1 flex flex-col pt-32">
+      <div className="flex-1 flex flex-col pt-32 w-full md:max-w-1/2 md:mx-auto">
         <h3
           className="animate-fade-in-up text-lg text-white mb-2"
           style={{ '--delay': '0ms' } as React.CSSProperties}
@@ -96,18 +94,18 @@ export default function ContactForm() {
 
   return (
     <div
-      className={`flex-1 flex flex-col transition-opacity duration-300 ${
+      className={`flex-1 flex flex-col transition-opacity duration-300 w-full md:max-w-1/2 md:mx-auto ${
         transitionState === 'form-hiding' ? 'opacity-0' : 'opacity-100'
       }`}
     >
       <h1
-        className="animate-fade-in-up text-white text-lg pt-32 mb-16"
+        className="animate-fade-in-up text-white text-lg pt-32 mb-12"
         style={{ '--delay': '100ms' } as React.CSSProperties}
       >
         Contact Us
       </h1>
 
-      <form onSubmit={handleSubmit} className="flex flex-col">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         {/* Honeypot field */}
         <input
           type="text"
@@ -118,107 +116,101 @@ export default function ContactForm() {
           aria-hidden="true"
         />
 
-        <div className="space-y-5">
-          <div
-            className="animate-fade-in-up"
-            style={{ '--delay': '150ms' } as React.CSSProperties}
-          >
-            <label htmlFor="name" className={LABEL_CLASS}>
-              Name
-            </label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              required
-              maxLength={100}
-              placeholder="Lloyd Christmas"
-              className={INPUT_CLASS}
-            />
-          </div>
+        <div
+          className="animate-fade-in-up md:w-1/2"
+          style={{ '--delay': '150ms' } as React.CSSProperties}
+        >
+          <label htmlFor="name" className={LABEL_CLASS}>
+            Name
+          </label>
+          <input
+            type="text"
+            id="name"
+            name="name"
+            required
+            maxLength={100}
+            placeholder="Lloyd Christmas"
+            className={INPUT_CLASS}
+          />
+        </div>
 
-          <div
-            className="animate-fade-in-up"
-            style={{ '--delay': '200ms' } as React.CSSProperties}
-          >
-            <label htmlFor="email" className={LABEL_CLASS}>
-              Email
-            </label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              required
-              maxLength={254}
-              placeholder="lloydchristmas@gmail.com"
-              className={INPUT_CLASS}
-            />
-          </div>
+        <div
+          className="animate-fade-in-up md:w-1/2"
+          style={{ '--delay': '200ms' } as React.CSSProperties}
+        >
+          <label htmlFor="email" className={LABEL_CLASS}>
+            Email
+          </label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            required
+            maxLength={254}
+            placeholder="lloydchristmas@gmail.com"
+            className={INPUT_CLASS}
+          />
+        </div>
 
-          <div
-            className="animate-fade-in-up"
-            style={{ '--delay': '250ms' } as React.CSSProperties}
-          >
-            <label htmlFor="budget" className={LABEL_CLASS}>
-              Your budget
-            </label>
-            <div className="relative">
-              <select
-                id="budget"
-                name="budget"
-                className={`${INPUT_CLASS} text-white/50 appearance-none cursor-pointer`}
-              >
-                {BUDGET_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value} className="bg-neutral-900 text-white">
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                <img
-                  src="/assets/efb22407ec7f0fe4413b586a604392693ce407b0.svg"
-                  alt=""
-                  aria-hidden="true"
-                  className="w-2 h-4 opacity-50"
-                />
-              </div>
+        <div
+          className="animate-fade-in-up md:w-1/2"
+          style={{ '--delay': '250ms' } as React.CSSProperties}
+        >
+          <label htmlFor="budget" className={LABEL_CLASS}>
+            Your budget
+          </label>
+          <div className="relative">
+            <select
+              id="budget"
+              name="budget"
+              className={`${INPUT_CLASS} text-white/50 appearance-none cursor-pointer`}
+            >
+              {BUDGET_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value} className="bg-neutral-900 text-white">
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+              <img
+                src="/assets/icon-chevron.svg"
+                alt=""
+                aria-hidden="true"
+                className="w-2 h-4 opacity-50"
+              />
             </div>
-          </div>
-
-          <div
-            className="animate-fade-in-up"
-            style={{ '--delay': '300ms' } as React.CSSProperties}
-          >
-            <label htmlFor="message" className={LABEL_CLASS}>
-              Message
-            </label>
-            <textarea
-              id="message"
-              name="message"
-              required
-              maxLength={2000}
-              rows={5}
-              placeholder="Tell us what you're working on"
-              className={`${INPUT_CLASS} resize-none`}
-            />
           </div>
         </div>
 
+        <div
+          className="animate-fade-in-up"
+          style={{ '--delay': '300ms' } as React.CSSProperties}
+        >
+          <label htmlFor="message" className={LABEL_CLASS}>
+            Message
+          </label>
+          <textarea
+            id="message"
+            name="message"
+            required
+            maxLength={2000}
+            rows={5}
+            placeholder="Tell us what you're working on"
+            className={`${INPUT_CLASS} resize-none`}
+          />
+        </div>
+
         {errorMessage && (
-          <p className="text-red-400 text-sm mt-4">{errorMessage}</p>
+          <p className="text-red-400 text-sm">{errorMessage}</p>
         )}
 
         <div
-          className="animate-fade-in-up mt-3"
+          className="animate-fade-in-up"
           style={{ '--delay': '350ms' } as React.CSSProperties}
         >
-          <button
-            type="submit"
-            disabled={formState === 'submitting'}
-            className={`${BUTTON_CLASS} active:scale-[0.97] disabled:opacity-50 transition-all duration-150`}
-          >
+          <Button type="submit" disabled={formState === 'submitting'}>
             {formState === 'submitting' ? 'Sending...' : 'Send'}
-          </button>
+          </Button>
         </div>
       </form>
     </div>

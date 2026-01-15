@@ -24,6 +24,22 @@ const site = defineCollection({
         logoHeight: z.number().optional(),
       })
     ),
+    technologies: z.array(z.string()).optional(),
+    services: z.array(z.string()).optional(),
+    results: z.array(z.string()).optional(),
+    testimonials: z.array(
+      z.object({
+        quote: z.string(),
+        author: z.string(),
+        role: z.string(),
+        company: z.string(),
+        logoSrc: z.string().optional(),
+      })
+    ).optional(),
+    cta: z.object({
+      title: z.string(),
+      subtitle: z.string(),
+    }).optional(),
   }),
 });
 
