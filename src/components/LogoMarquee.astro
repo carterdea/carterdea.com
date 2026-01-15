@@ -26,36 +26,40 @@ const { clients = [] } = Astro.props;
     ))}
   </div>
 
-  <!-- Pagination dots -->
-  <div class="flex justify-center gap-[7px]">
+  <!-- Pagination dots - wrapped in touch-friendly buttons -->
+  <div class="flex justify-center gap-1">
     {clients.map((_, index) => (
       <button
         type="button"
         aria-label={`Go to slide ${index + 1}`}
-        class:list={[
-          'size-2.5 rounded-full transition-colors cursor-pointer',
-          index === 0 ? 'bg-white' : 'bg-white/20',
-        ]}
+        class="p-4 -m-2 cursor-pointer group"
         data-dot={index}
-      />
+      >
+        <span
+          class:list={[
+            'block size-2.5 rounded-full transition-colors group-hover:bg-white/50',
+            index === 0 ? 'bg-white' : 'bg-white/20',
+          ]}
+        />
+      </button>
     ))}
   </div>
 </section>
 
 <!-- Desktop: Bare logos with descriptions, alpha mask edges -->
-<section class="hidden md:block relative overflow-hidden desktop-marquee-mask">
-  <div id="marquee-track" class="marquee-track flex items-start gap-[74px] py-8">
+<section class="hidden md:block relative overflow-hidden desktop-marquee-mask md:-mx-10 shrink-0">
+  <div id="marquee-track" class="marquee-track flex items-start gap-24 py-24">
     {[0, 1].map((setIndex) => (
-      <div class="marquee-content flex items-start gap-[74px]">
+      <div class="marquee-content flex items-start gap-24">
         {clients.map((client, index) => (
           <div
             class:list={[
-              'shrink-0 flex flex-col items-center w-[270px]',
+              'flex flex-col items-center w-[270px]',
               setIndex === 0 ? 'animate-fade-in-up' : ''
             ]}
             style={setIndex === 0 ? `--delay: ${260 + index * 60}ms` : ''}
           >
-            <div class="h-[80px] flex items-center justify-center">
+            <div class="h-20 flex items-center justify-center">
               <img
                 src={client.logoSrc}
                 alt={client.name}
@@ -115,8 +119,11 @@ const { clients = [] } = Astro.props;
       const activeIndex = Math.round(scrollLeft / (cardWidth + gap));
 
       dots.forEach((dot, index) => {
-        dot.classList.toggle('bg-white', index === activeIndex);
-        dot.classList.toggle('bg-white/20', index !== activeIndex);
+        const indicator = dot.querySelector('span');
+        if (indicator) {
+          indicator.classList.toggle('bg-white', index === activeIndex);
+          indicator.classList.toggle('bg-white/20', index !== activeIndex);
+        }
       });
     });
 

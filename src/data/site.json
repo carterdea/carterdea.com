@@ -1,7 +1,64 @@
 {
   "hero": {
     "title": "Product design and engineering for companies shaping what's next",
-    "subtitle": "A small, distributed studio building AI products and ecommerce systems."
+    "subtitle": "A distributed studio building AI products and ecommerce systems."
+  },
+  "technologies": [
+    "Figma",
+    "Next.js",
+    "React",
+    "Python",
+    "Node",
+    "Ruby on Rails",
+    "Shopify",
+    "OpenAI",
+    "Google Gemini",
+    "Anthropic",
+    "LangChain",
+    "LangGraph"
+  ],
+  "services": [
+    "Product strategy",
+    "UX Workshops",
+    "Product Design",
+    "Prototyping",
+    "Design Systems",
+    "Front-end Development",
+    "Backend Development",
+    "AI Engineering",
+    "Context Engineering",
+    "Prompt Engineering",
+    "Eval"
+  ],
+  "results": [
+    "Directly responsible for $100M+ in annual revenue across client product lines",
+    "Products and platforms supporting 100M+ monthly visits",
+    "Long-term product partner to teams averaging 7–8 year engagements, including multiple acquisitions and one IPO"
+  ],
+  "testimonials": [
+    {
+      "quote": "Carter stepped in when we needed design leadership to tighten up critical pages and ship key features. His UX audit helped us identify key conversion opportunities. The results speak for themselves.",
+      "author": "David Sinatra",
+      "role": "CEO",
+      "company": "Stussy",
+      "logoSrc": "/logos/stussy-crown.svg"
+    },
+    {
+      "quote": "Placeholder testimonial two. Replace this with real content later.",
+      "author": "Jane Doe",
+      "role": "VP Product",
+      "company": "Acme Corp"
+    },
+    {
+      "quote": "Placeholder testimonial three. Replace this with real content later.",
+      "author": "John Smith",
+      "role": "CTO",
+      "company": "TechCo"
+    }
+  ],
+  "cta": {
+    "title": "Get in touch",
+    "subtitle": "If you'd like to work on something great together, get in touch."
   },
   "clients": [
     {
@@ -30,14 +87,14 @@
       "name": "New Era",
       "description": "3x revenue growth after platform redesign",
       "logoSrc": "/logos/new-era.svg",
-      "logoHeight": 50
+      "logoHeight": 24
     },
     {
       "id": "oracle",
       "name": "Oracle",
       "description": "Redesigned data science platform, acquired by Oracle",
       "logoSrc": "/logos/oracle.svg",
-      "logoHeight": 23
+      "logoHeight": 24
     },
     {
       "id": "ford",

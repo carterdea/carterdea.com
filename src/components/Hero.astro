@@ -7,23 +7,18 @@ interface Props {
 const { title, subtitle } = Astro.props;
 ---
 
-<!-- Mobile layout -->
-<section class="px-4 pt-20 pb-8 md:hidden">
-  <h1 class="animate-fade-in-up text-lg text-white leading-normal tracking-[-0.36px] max-w-sm" style="--delay: 100ms;">
-    {title}
-  </h1>
-  <h2 class="animate-fade-in-up mt-4 text-sm text-white/60 leading-normal tracking-[-0.28px] max-w-sm" style="--delay: 180ms;">
-    {subtitle}
-  </h2>
-</section>
-
-<!-- Desktop layout: centered text block -->
-<section class="hidden md:block pt-[205px] pb-12">
-  <div class="max-w-[590px] mx-auto">
-    <h1 class="animate-fade-in-up text-[18px] text-white leading-normal tracking-[-0.18px]" style="--delay: 100ms;">
+<section class="px-4 pt-20 pb-8 md:pt-30 md:pb-18 md:px-0">
+  <div class="max-w-sm md:max-w-[50%] md:mx-auto">
+    <h1
+      class="animate-fade-in-up text-lg text-white leading-normal tracking-[-0.36px]"
+      style="--delay: 100ms;"
+    >
       {title}
     </h1>
-    <h2 class="animate-fade-in-up mt-4 text-[14px] text-white/60 leading-normal tracking-[-0.14px]" style="--delay: 180ms;">
+    <h2
+      class="animate-fade-in-up mt-4 text-sm text-white/60 leading-normal tracking-[-0.28px]"
+      style="--delay: 180ms;"
+    >
       {subtitle}
     </h2>
   </div>
