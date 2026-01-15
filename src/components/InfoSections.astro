@@ -69,10 +69,10 @@ const ChevronRight = `<svg width="5" height="8" viewBox="0 0 5 8" fill="none" xm
         <h3 class="text-sm text-white tracking-[-0.28px]">Testimonials</h3>
         {testimonials.length > 1 && (
           <div class="flex gap-1 md:hidden">
-            <Button client:load type="button" className="testimonial-prev px-2! py-1!" aria-label="Previous testimonial">
+            <Button client:load type="button" className="testimonial-prev py-1.5!" aria-label="Previous testimonial">
               <Fragment set:html={ChevronLeft} />
             </Button>
-            <Button client:load type="button" className="testimonial-next px-2! py-1!" aria-label="Next testimonial">
+            <Button client:load type="button" className="testimonial-next py-1.5!" aria-label="Next testimonial">
               <Fragment set:html={ChevronRight} />
             </Button>
           </div>
@@ -81,37 +81,39 @@ const ChevronRight = `<svg width="5" height="8" viewBox="0 0 5 8" fill="none" xm
       <div class="md:col-span-2 animate-fade-in-up" style="--delay: 450ms;">
         {testimonials.length > 1 && (
           <div class="hidden md:flex gap-1 justify-end mb-4">
-            <Button client:load type="button" className="testimonial-prev px-2! py-1!" aria-label="Previous testimonial">
+            <Button client:load type="button" className="testimonial-prev py-1.5!" aria-label="Previous testimonial">
               <Fragment set:html={ChevronLeft} />
             </Button>
-            <Button client:load type="button" className="testimonial-next px-2! py-1!" aria-label="Next testimonial">
+            <Button client:load type="button" className="testimonial-next py-1.5!" aria-label="Next testimonial">
               <Fragment set:html={ChevronRight} />
             </Button>
           </div>
         )}
-        <div class="testimonials-container">
-          {testimonials.map((testimonial, index) => (
-            <div
-              class:list={[
-                'testimonial-slide border-l border-white pl-4',
-                index === 0 ? 'block' : 'hidden'
-              ]}
-              data-testimonial-index={index}
-            >
-              <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal italic mb-3 md:mb-3">
-                "{testimonial.quote}"
-              </p>
-              <div class="flex items-center gap-2 flex-wrap">
-                <span class="text-sm text-white/60 tracking-[-0.28px]">
-                  — {testimonial.author}, {testimonial.role}
-                </span>
-                {testimonial.logoSrc && (
-                  <img src={testimonial.logoSrc} alt={testimonial.company} class="h-6 w-auto" />
-                )}
-                <span class="text-sm text-white/60 tracking-[-0.28px]">{testimonial.company}</span>
+        <div class="testimonials-container testimonials-mask relative overflow-hidden -mx-6 px-6">
+          <div class="testimonials-track relative">
+            {testimonials.map((testimonial, index) => (
+              <div
+                class:list={[
+                  'testimonial-slide absolute inset-y-0 border-l border-white pl-4 transition-transform duration-300',
+                  index === 0 ? 'translate-x-0' : 'slide-offscreen-right pointer-events-none'
+                ]}
+                data-testimonial-index={index}
+              >
+                <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal italic mb-3">
+                  "{testimonial.quote}"
+                </p>
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="text-sm text-white/60 tracking-[-0.28px]">
+                    — {testimonial.author}, {testimonial.role}
+                  </span>
+                  {testimonial.logoSrc && (
+                    <img src={testimonial.logoSrc} alt={testimonial.company} class="h-6 w-auto" />
+                  )}
+                  <span class="text-sm text-white/60 tracking-[-0.28px]">{testimonial.company}</span>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
       <div class="hidden md:block"></div>
@@ -135,35 +137,89 @@ const ChevronRight = `<svg width="5" height="8" viewBox="0 0 5 8" fill="none" xm
   )}
 </div>
 
+<style>
+  .testimonials-mask {
+    -webkit-mask-image: linear-gradient(to right, transparent, black 24px, black calc(100% - 24px), transparent);
+    mask-image: linear-gradient(to right, transparent, black 24px, black calc(100% - 24px), transparent);
+  }
+
+  .testimonial-slide {
+    transition: transform 300ms cubic-bezier(0.22, 0.61, 0.36, 1), opacity 0ms 300ms;
+    opacity: 1;
+  }
+
+  .testimonial-slide.slide-entering {
+    transition: transform 300ms cubic-bezier(0.22, 0.61, 0.36, 1), opacity 0ms 0ms;
+    opacity: 1;
+  }
+
+  .slide-offscreen-left {
+    transform: translateX(calc(-100% - 48px));
+    opacity: 0;
+  }
+
+  .slide-offscreen-right {
+    transform: translateX(calc(100% + 48px));
+    opacity: 0;
+  }
+</style>
+
 <script is:inline>
   (function() {
-    // Use event delegation for React buttons that load after this script
     let currentIndex = 0;
+    const container = document.querySelector('.testimonials-container');
+    const track = document.querySelector('.testimonials-track');
+    const slides = document.querySelectorAll('.testimonial-slide');
 
-    const getSlides = () => document.querySelectorAll('.testimonial-slide');
+    if (!container || !track || slides.length === 0) return;
 
-    const showSlide = (index) => {
-      const slides = getSlides();
+    // Set track height to tallest slide
+    const setTrackHeight = () => {
+      let maxHeight = 0;
+      slides.forEach(slide => {
+        slide.style.position = 'relative';
+        const height = slide.offsetHeight;
+        slide.style.position = '';
+        maxHeight = Math.max(maxHeight, height);
+      });
+      track.style.height = `${maxHeight}px`;
+    };
+
+    setTrackHeight();
+    window.addEventListener('resize', setTrackHeight);
+
+    const showSlide = (index, direction) => {
       slides.forEach((slide, i) => {
-        slide.classList.toggle('hidden', i !== index);
-        slide.classList.toggle('block', i === index);
+        slide.classList.remove('translate-x-0', 'slide-offscreen-left', 'slide-offscreen-right', 'slide-entering', 'pointer-events-none');
+
+        if (i === index) {
+          // Entering slide: no delay on opacity so it's visible immediately
+          slide.classList.add('translate-x-0', 'slide-entering');
+        } else {
+          // Exiting slides: opacity delayed until after transform completes
+          if (direction === 'next') {
+            slide.classList.add(i === (index - 1 + slides.length) % slides.length ? 'slide-offscreen-left' : 'slide-offscreen-right', 'pointer-events-none');
+          } else {
+            slide.classList.add(i === (index + 1) % slides.length ? 'slide-offscreen-right' : 'slide-offscreen-left', 'pointer-events-none');
+          }
+        }
       });
     };
 
-    // Event delegation on document for dynamically loaded React buttons
     document.addEventListener('click', (e) => {
       const target = e.target.closest('.testimonial-prev, .testimonial-next');
       if (!target) return;
 
-      const slides = getSlides();
       if (slides.length <= 1) return;
 
-      if (target.classList.contains('testimonial-prev')) {
+      const direction = target.classList.contains('testimonial-prev') ? 'prev' : 'next';
+
+      if (direction === 'prev') {
         currentIndex = (currentIndex - 1 + slides.length) % slides.length;
       } else {
         currentIndex = (currentIndex + 1) % slides.length;
       }
-      showSlide(currentIndex);
+      showSlide(currentIndex, direction);
     });
   })();
 </script>
