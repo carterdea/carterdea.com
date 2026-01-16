@@ -24,8 +24,10 @@
     "@astrojs/vercel": "^9.0.3",
     "@headlessui/react": "^2.2.9",
     "astro": "^5.16.9",
+    "embla-carousel": "^8.6.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
+    "react-hook-form": "^7.71.1",
     "resend": "^6.7.0"
   }
 }

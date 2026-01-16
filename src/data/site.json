@@ -78,14 +78,14 @@
     {
       "id": "stussy",
       "name": "Stussy",
-      "description": "4x revenue growth after ecommerce redesign",
+      "description": "4x revenue growth after ecommerce re-platform and redesign",
       "logoSrc": "/logos/stussy.svg",
       "logoHeight": 80
     },
     {
       "id": "new-era",
       "name": "New Era",
-      "description": "3x revenue growth after platform redesign",
+      "description": "3x revenue growth after re-platform and redesign",
       "logoSrc": "/logos/new-era.svg",
       "logoHeight": 24
     },
@@ -108,6 +108,34 @@
       "name": "Grasshopper",
       "description": "Redesigned mobile and desktop apps",
       "logoSrc": "/logos/grasshopper.svg",
+      "logoHeight": 30
+    },
+    {
+      "id": "spinlister",
+      "name": "Spinlister",
+      "description": "Designed and built web, iOS, and Android apps",
+      "logoSrc": "/logos/spinlister.svg",
+      "logoHeight": 30
+    },
+    {
+      "id": "datascience",
+      "name": "DataScience",
+      "description": "Designed tooling for data scientists and model management for AI engineers",
+      "logoSrc": "/logos/datascience.svg",
+      "logoHeight": 30
+    },
+    {
+      "id": "protectai",
+      "name": "ProtectAI",
+      "description": "Designed security reporting for ML pipelines",
+      "logoSrc": "/logos/protect-ai.svg",
+      "logoHeight": 30
+    },
+    {
+      "id": "adopttogether",
+      "name": "AdoptTogether",
+      "description": "Designed and developed a crowdfunding platform for families trying to adopt",
+      "logoSrc": "/logos/adopttogether.svg",
       "logoHeight": 30
     }
   ]

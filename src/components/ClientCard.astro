@@ -8,14 +8,16 @@ interface Props {
 const { name, description, logoSrc } = Astro.props;
 ---
 
-<div class="client-card shrink-0 w-[370px] h-[340px] rounded shadow-[0px_12px_24px_0px_rgba(0,0,0,0.16),0px_4px_4px_0px_rgba(0,0,0,0.1)] flex flex-col items-center pt-24 pb-12 px-8 snap-center snap-always">
-  <img
-    src={logoSrc}
-    alt={name}
-    class="h-20 w-auto max-w-[200px] object-contain relative z-10"
-    loading="lazy"
-  />
-  <p class="mt-auto text-sm text-white/70 text-center max-w-[270px] tracking-[-0.14px] relative z-10">
+<div class="client-card shrink-0 w-[370px] h-[340px] rounded shadow-[0px_12px_24px_0px_rgba(0,0,0,0.16),0px_4px_4px_0px_rgba(0,0,0,0.1)] flex flex-col items-center justify-center px-8 snap-center snap-always gap-4">
+  <div class="h-[180px] flex items-center justify-center relative z-10">
+    <img
+      src={logoSrc}
+      alt={name}
+      class="h-20 w-auto max-w-[200px] object-contain"
+      loading="lazy"
+    />
+  </div>
+  <p class="text-sm text-white/70 text-center max-w-[270px] tracking-[-0.14px] relative z-10">
     {description}
   </p>
 </div>
@@ -31,7 +33,7 @@ const { name, description, logoSrc } = Astro.props;
     content: '';
     position: absolute;
     inset: 0;
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.05);
     -webkit-backdrop-filter: blur(4px);
     backdrop-filter: blur(4px);
     z-index: 0;

@@ -26,200 +26,133 @@ const ChevronLeft = `<svg width="5" height="8" viewBox="0 0 5 8" fill="none" xml
 const ChevronRight = `<svg width="5" height="8" viewBox="0 0 5 8" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 1L4 4L1 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 ---
 
-<div class="info-sections grid grid-cols-1 md:grid-cols-4 gap-16 md:gap-y-20 px-4 md:px-0 py-12 md:py-16">
+<div class="info-sections flex flex-col gap-16 md:grid md:grid-cols-4 md:gap-y-20 px-4 md:px-0 py-12 md:py-16">
   <!-- Technologies -->
   {technologies.length > 0 && (
-    <>
-      <h3 class="text-sm text-white tracking-[-0.28px] mb-3 md:mb-0 animate-fade-in-up" style="--delay: 300ms;">Technologies</h3>
-      <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal md:col-span-2 animate-fade-in-up" style="--delay: 300ms;">
-        {technologies.join(', ')}
-      </p>
-      <div class="hidden md:block"></div>
-    </>
+    <div class="contents md:contents">
+      <div class="flex flex-col gap-3 md:contents animate-fade-in-up" style="--delay: 300ms;">
+        <h3 class="text-sm text-white tracking-[-0.28px]">Technologies</h3>
+        <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal md:col-span-2">
+          {technologies.join(', ')}
+        </p>
+        <div class="hidden md:block"></div>
+      </div>
+    </div>
   )}
 
   <!-- Services -->
   {services.length > 0 && (
-    <>
-      <h3 class="text-sm text-white tracking-[-0.28px] mb-3 md:mb-0 animate-fade-in-up" style="--delay: 350ms;">Services</h3>
-      <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal md:col-span-2 animate-fade-in-up" style="--delay: 350ms;">
-        {services.join(', ')}
-      </p>
-      <div class="hidden md:block"></div>
-    </>
+    <div class="contents md:contents">
+      <div class="flex flex-col gap-3 md:contents animate-fade-in-up" style="--delay: 350ms;">
+        <h3 class="text-sm text-white tracking-[-0.28px]">Services</h3>
+        <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal md:col-span-2">
+          {services.join(', ')}
+        </p>
+        <div class="hidden md:block"></div>
+      </div>
+    </div>
   )}
 
   <!-- Results -->
   {results.length > 0 && (
-    <>
-      <h3 class="text-sm text-white tracking-[-0.28px] mb-3 md:mb-0 animate-fade-in-up" style="--delay: 400ms;">Results</h3>
-      <ul class="list-disc pl-5 space-y-1 md:col-span-2 animate-fade-in-up" style="--delay: 400ms;">
-        {results.map((result) => (
-          <li class="text-sm text-white/60 tracking-[-0.28px] leading-normal">{result}</li>
-        ))}
-      </ul>
-      <div class="hidden md:block"></div>
-    </>
+    <div class="contents md:contents">
+      <div class="flex flex-col gap-3 md:contents animate-fade-in-up" style="--delay: 400ms;">
+        <h3 class="text-sm text-white tracking-[-0.28px]">Results</h3>
+        <ul class="list-disc pl-5 space-y-1 md:col-span-2">
+          {results.map((result) => (
+            <li class="text-sm text-white/60 tracking-[-0.28px] leading-normal">{result}</li>
+          ))}
+        </ul>
+        <div class="hidden md:block"></div>
+      </div>
+    </div>
   )}
 
   <!-- Testimonials -->
   {testimonials.length > 0 && (
-    <>
-      <div class="flex items-center justify-between md:block animate-fade-in-up" style="--delay: 450ms;">
-        <h3 class="text-sm text-white tracking-[-0.28px]">Testimonials</h3>
-        {testimonials.length > 1 && (
-          <div class="flex gap-1 md:hidden">
-            <Button client:load type="button" className="testimonial-prev py-1.5!" aria-label="Previous testimonial">
-              <Fragment set:html={ChevronLeft} />
-            </Button>
-            <Button client:load type="button" className="testimonial-next py-1.5!" aria-label="Next testimonial">
-              <Fragment set:html={ChevronRight} />
-            </Button>
-          </div>
-        )}
-      </div>
-      <div class="md:col-span-2 animate-fade-in-up" style="--delay: 450ms;">
-        {testimonials.length > 1 && (
-          <div class="hidden md:flex gap-1 justify-end mb-4">
-            <Button client:load type="button" className="testimonial-prev py-1.5!" aria-label="Previous testimonial">
-              <Fragment set:html={ChevronLeft} />
-            </Button>
-            <Button client:load type="button" className="testimonial-next py-1.5!" aria-label="Next testimonial">
-              <Fragment set:html={ChevronRight} />
-            </Button>
-          </div>
-        )}
-        <div class="testimonials-container testimonials-mask relative overflow-hidden -mx-6 px-6">
-          <div class="testimonials-track relative">
-            {testimonials.map((testimonial, index) => (
-              <div
-                class:list={[
-                  'testimonial-slide absolute inset-y-0 border-l border-white pl-4 transition-transform duration-300',
-                  index === 0 ? 'translate-x-0' : 'slide-offscreen-right pointer-events-none'
-                ]}
-                data-testimonial-index={index}
-              >
-                <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal italic mb-3">
-                  "{testimonial.quote}"
-                </p>
-                <div class="flex items-center gap-2 flex-wrap">
-                  <span class="text-sm text-white/60 tracking-[-0.28px]">
-                    — {testimonial.author}, {testimonial.role}
-                  </span>
-                  {testimonial.logoSrc && (
-                    <img src={testimonial.logoSrc} alt={testimonial.company} class="h-6 w-auto" />
-                  )}
-                  <span class="text-sm text-white/60 tracking-[-0.28px]">{testimonial.company}</span>
+    <div class="contents md:contents">
+      <div class="flex flex-col gap-3 md:contents animate-fade-in-up" style="--delay: 450ms;">
+        <div class="flex items-center justify-between md:block">
+          <h3 class="text-sm text-white tracking-[-0.28px]">Testimonials</h3>
+          {testimonials.length > 1 && (
+            <div class="flex gap-1 md:hidden">
+              <Button client:load type="button" className="testimonial-prev py-1.5!" aria-label="Previous testimonial">
+                <Fragment set:html={ChevronLeft} />
+              </Button>
+              <Button client:load type="button" className="testimonial-next py-1.5!" aria-label="Next testimonial">
+                <Fragment set:html={ChevronRight} />
+              </Button>
+            </div>
+          )}
+        </div>
+        <div class="md:col-span-2">
+          {testimonials.length > 1 && (
+            <div class="hidden md:flex gap-1 justify-end mb-4">
+              <Button client:load type="button" className="testimonial-prev py-1.5!" aria-label="Previous testimonial">
+                <Fragment set:html={ChevronLeft} />
+              </Button>
+              <Button client:load type="button" className="testimonial-next py-1.5!" aria-label="Next testimonial">
+                <Fragment set:html={ChevronRight} />
+              </Button>
+            </div>
+          )}
+          <div class="testimonials-viewport overflow-hidden" aria-live="polite">
+            <div class="testimonials-container flex gap-8">
+              {testimonials.map((testimonial) => (
+                <div class="testimonial-slide flex-[0_0_100%] min-w-0 border-l border-white pl-4">
+                  <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal italic mb-3">
+                    "{testimonial.quote}"
+                  </p>
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-sm text-white/60 tracking-[-0.28px]">
+                      — {testimonial.author}, {testimonial.role}, {testimonial.company}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
+        <div class="hidden md:block"></div>
       </div>
-      <div class="hidden md:block"></div>
-    </>
+    </div>
   )}
 
   <!-- CTA -->
   {cta && (
-    <>
-      <h3 class="text-sm text-white tracking-[-0.28px] mb-3 md:mb-0 animate-fade-in-up" style="--delay: 500ms;">{cta.title}</h3>
-      <div class="md:col-span-2 animate-fade-in-up" style="--delay: 500ms;">
-        <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal mb-4">
-          {cta.subtitle}
-        </p>
-        <Button client:load as="a" href="/contact">
-          Contact Us
-        </Button>
+    <div class="contents md:contents">
+      <div class="flex flex-col gap-3 md:contents animate-fade-in-up" style="--delay: 500ms;">
+        <h3 class="text-sm text-white tracking-[-0.28px]">{cta.title}</h3>
+        <div class="md:col-span-2">
+          <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal mb-4">
+            {cta.subtitle}
+          </p>
+          <Button client:load as="a" href="/contact">
+            Contact Us
+          </Button>
+        </div>
+        <div class="hidden md:block"></div>
       </div>
-      <div class="hidden md:block"></div>
-    </>
+    </div>
   )}
 </div>
 
-<style>
-  .testimonials-mask {
-    -webkit-mask-image: linear-gradient(to right, transparent, black 24px, black calc(100% - 24px), transparent);
-    mask-image: linear-gradient(to right, transparent, black 24px, black calc(100% - 24px), transparent);
-  }
+<script>
+  import EmblaCarousel from 'embla-carousel';
 
-  .testimonial-slide {
-    transition: transform 300ms cubic-bezier(0.22, 0.61, 0.36, 1), opacity 0ms 300ms;
-    opacity: 1;
-  }
-
-  .testimonial-slide.slide-entering {
-    transition: transform 300ms cubic-bezier(0.22, 0.61, 0.36, 1), opacity 0ms 0ms;
-    opacity: 1;
-  }
-
-  .slide-offscreen-left {
-    transform: translateX(calc(-100% - 48px));
-    opacity: 0;
-  }
-
-  .slide-offscreen-right {
-    transform: translateX(calc(100% + 48px));
-    opacity: 0;
-  }
-</style>
-
-<script is:inline>
-  (function() {
-    let currentIndex = 0;
-    const container = document.querySelector('.testimonials-container');
-    const track = document.querySelector('.testimonials-track');
-    const slides = document.querySelectorAll('.testimonial-slide');
-
-    if (!container || !track || slides.length === 0) return;
-
-    // Set track height to tallest slide
-    const setTrackHeight = () => {
-      let maxHeight = 0;
-      slides.forEach(slide => {
-        slide.style.position = 'relative';
-        const height = slide.offsetHeight;
-        slide.style.position = '';
-        maxHeight = Math.max(maxHeight, height);
-      });
-      track.style.height = `${maxHeight}px`;
-    };
-
-    setTrackHeight();
-    window.addEventListener('resize', setTrackHeight);
-
-    const showSlide = (index, direction) => {
-      slides.forEach((slide, i) => {
-        slide.classList.remove('translate-x-0', 'slide-offscreen-left', 'slide-offscreen-right', 'slide-entering', 'pointer-events-none');
-
-        if (i === index) {
-          // Entering slide: no delay on opacity so it's visible immediately
-          slide.classList.add('translate-x-0', 'slide-entering');
-        } else {
-          // Exiting slides: opacity delayed until after transform completes
-          if (direction === 'next') {
-            slide.classList.add(i === (index - 1 + slides.length) % slides.length ? 'slide-offscreen-left' : 'slide-offscreen-right', 'pointer-events-none');
-          } else {
-            slide.classList.add(i === (index + 1) % slides.length ? 'slide-offscreen-right' : 'slide-offscreen-left', 'pointer-events-none');
-          }
-        }
-      });
-    };
+  const viewport = document.querySelector('.testimonials-viewport');
+  if (viewport) {
+    const embla = EmblaCarousel(viewport as HTMLElement, { loop: true });
 
     document.addEventListener('click', (e) => {
-      const target = e.target.closest('.testimonial-prev, .testimonial-next');
+      const target = (e.target as HTMLElement).closest('.testimonial-prev, .testimonial-next');
       if (!target) return;
 
-      if (slides.length <= 1) return;
-
-      const direction = target.classList.contains('testimonial-prev') ? 'prev' : 'next';
-
-      if (direction === 'prev') {
-        currentIndex = (currentIndex - 1 + slides.length) % slides.length;
+      if (target.classList.contains('testimonial-prev')) {
+        embla.scrollPrev();
       } else {
-        currentIndex = (currentIndex + 1) % slides.length;
+        embla.scrollNext();
       }
-      showSlide(currentIndex, direction);
     });
-  })();
+  }
 </script>
