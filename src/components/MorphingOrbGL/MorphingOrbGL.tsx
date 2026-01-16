@@ -17,23 +17,23 @@ import {
 const DEFAULT_SEQUENCE: ShapeType[] = ['gridSphere', 'curvedArcs', 'fibSphere', 'doubleOrbit']
 
 const DEFAULT_PALETTE = [
-  '#fca5a5',
-  '#fdba74',
-  '#fcd34d',
-  '#fde047',
-  '#bef264',
-  '#86efac',
-  '#6ee7b7',
-  '#5eead4',
-  '#67e8f9',
-  '#7dd3fc',
-  '#93c5fd',
-  '#a5b4fc',
-  '#c4b5fd',
-  '#d8b4fe',
-  '#f0abfc',
-  '#f9a8d4',
-  '#fda4af',
+  '#f87171', // red-400
+  '#fb923c', // orange-400
+  '#fbbf24', // amber-400
+  '#facc15', // yellow-400
+  '#a3e635', // lime-400
+  '#4ade80', // green-400
+  '#34d399', // emerald-400
+  '#2dd4bf', // teal-400
+  '#22d3ee', // cyan-400
+  '#38bdf8', // sky-400
+  '#60a5fa', // blue-400
+  '#818cf8', // indigo-400
+  '#a78bfa', // violet-400
+  '#c084fc', // purple-400
+  '#e879f9', // fuchsia-400
+  '#f472b6', // pink-400
+  '#fb7185', // rose-400
 ]
 
 interface ParticlesProps {
@@ -48,6 +48,14 @@ interface ParticlesProps {
   groupRotationX: number
 }
 
+// Reusable THREE objects for instance matrix calculations (avoids per-frame allocations)
+const tempColor = new THREE.Color()
+const tempMatrix = new THREE.Matrix4()
+const tempPosition = new THREE.Vector3()
+const tempQuaternion = new THREE.Quaternion()
+const tempScale = new THREE.Vector3()
+const upVector = new THREE.Vector3(0, 0, 1)
+
 function Particles({
   points,
   variant,
@@ -60,12 +68,6 @@ function Particles({
   groupRotationX,
 }: ParticlesProps) {
   const meshRef = useRef<THREE.InstancedMesh>(null)
-  const tempColor = useMemo(() => new THREE.Color(), [])
-  const tempMatrix = useMemo(() => new THREE.Matrix4(), [])
-  const tempPosition = useMemo(() => new THREE.Vector3(), [])
-  const tempQuaternion = useMemo(() => new THREE.Quaternion(), [])
-  const tempScale = useMemo(() => new THREE.Vector3(), [])
-  const upVector = useMemo(() => new THREE.Vector3(0, 0, 1), [])
 
   // Create shuffled palette (deterministic)
   const shuffledPalette = useMemo(() => {
@@ -94,7 +96,7 @@ function Particles({
         }
         case 'shuffled':
           return shuffledPalette[index % shuffledPalette.length]
-        default:
+        case 'sequential':
           return palette[index % palette.length]
       }
     },
@@ -153,13 +155,27 @@ function Particles({
       tempMatrix.compose(tempPosition, tempQuaternion, tempScale)
       meshRef.current.setMatrixAt(i, tempMatrix)
 
-      // Set color with depth-based dimming
+      // Set color with lighting
       const hex = getDotColorHex(i, point)
       tempColor.set(hex)
 
       // Back dots get darker (nzWorld ranges from -1 to 1, map to 0.35-1.0 brightness)
       const depthBrightness = 0.35 + (nzWorld + 1) * 0.325
-      tempColor.multiplyScalar(depthBrightness)
+
+      // Directional light from top-left in SCREEN SPACE (fixed, doesn't rotate with sphere)
+      // Use world-space position (after rotation) for lighting
+      const nxWorld = wx / len
+      const nyWorld = wy / len
+      // Light direction: top-left-front in screen space (-x = left, +y = top, +z = toward camera)
+      const lightX = -0.577
+      const lightY = 0.577
+      const lightZ = 0.577
+      // Dot product with world-space normal (clamped to 0-1)
+      const lightDot = Math.max(0, nxWorld * lightX + nyWorld * lightY + nzWorld * lightZ)
+      // Strong contrast: 30% ambient + 70% directional
+      const directionalBrightness = 0.3 + lightDot * 0.7
+
+      tempColor.multiplyScalar(depthBrightness * directionalBrightness)
 
       meshRef.current.setColorAt(i, tempColor)
     }
@@ -168,7 +184,7 @@ function Particles({
     if (meshRef.current.instanceColor) {
       meshRef.current.instanceColor.needsUpdate = true
     }
-  }, [points, getDotColorHex, tempColor, tempMatrix, tempPosition, tempQuaternion, tempScale, upVector, dotSize, groupRotationY, groupRotationX])
+  }, [points, getDotColorHex, dotSize, groupRotationY, groupRotationX])
 
   return (
     <instancedMesh ref={meshRef} args={[undefined, undefined, points.length]}>
@@ -218,10 +234,33 @@ function Scene({
   const rotationRef = useRef({ y: 0, x: 0 })
 
   const radius = 1 // Normalized radius for 3D space
-  // Dot sizes proportional to sphere - increased by 25%
-  const dotSize = size <= 32 ? 0.075 : size <= 64 ? 0.0625 : size <= 200 ? 0.056 : 0.044
 
-  // Generate shape points
+  // Dot sizes proportional to sphere
+  const dotSize = useMemo(() => {
+    if (size <= 32) return 0.11
+    if (size <= 64) return 0.09
+    if (size <= 200) return 0.08
+    return 0.065
+  }, [size])
+
+  // Generate points for spinning shapes with current time (returns null for static shapes)
+  const generateSpinningShapePoints = useCallback(
+    (shapeType: ShapeType, time: number): Point3D[] | null => {
+      switch (shapeType) {
+        case 'curvedArcs':
+          return curvedArcs(radius, time, size)
+        case 'orbit':
+          return orbit(getDotCount('orbit', size), radius, time)
+        case 'doubleOrbit':
+          return doubleOrbit(getDotCount('doubleOrbit', size), radius, time)
+        default:
+          return null
+      }
+    },
+    [size]
+  )
+
+  // Generate shape points (static shapes or initial state)
   const generateShapePoints = useCallback(
     (shapeType: ShapeType): Point3D[] => {
       const count = getDotCount(shapeType, size)
@@ -239,8 +278,6 @@ function Scene({
           return orbit(count > 0 ? count : 16, radius)
         case 'doubleOrbit':
           return doubleOrbit(count > 0 ? count : 24, radius)
-        default:
-          return gridSphere(radius)
       }
     },
     [size]
@@ -293,6 +330,7 @@ function Scene({
     colorRotationRef.current += 0.0001875 * deltaMs * speedMultiplier
 
     const currentShapeType = shapeSequence[shapeIndexRef.current]
+    const spinningPoints = generateSpinningShapePoints(currentShapeType, arcTimeRef.current)
 
     // Update morph
     if (morphProgressRef.current < 1) {
@@ -304,16 +342,8 @@ function Scene({
       const easedProgress = easeOutExpo(morphProgressRef.current)
 
       // Regenerate spinning shapes during morph
-      if (currentShapeType === 'curvedArcs') {
-        targetPointsRef.current = curvedArcs(radius, arcTimeRef.current, size)
-      } else if (currentShapeType === 'orbit') {
-        targetPointsRef.current = orbit(getDotCount('orbit', size), radius, arcTimeRef.current)
-      } else if (currentShapeType === 'doubleOrbit') {
-        targetPointsRef.current = doubleOrbit(
-          getDotCount('doubleOrbit', size),
-          radius,
-          arcTimeRef.current
-        )
+      if (spinningPoints) {
+        targetPointsRef.current = spinningPoints
       }
 
       currentPointsRef.current = currentPointsRef.current.map((point, i) => {
@@ -321,17 +351,9 @@ function Scene({
         return lerpPoint(point, target, easedProgress)
       })
     } else {
-      // Not morphing - update spinning shapes
-      if (currentShapeType === 'curvedArcs') {
-        currentPointsRef.current = curvedArcs(radius, arcTimeRef.current, size)
-      } else if (currentShapeType === 'orbit') {
-        currentPointsRef.current = orbit(getDotCount('orbit', size), radius, arcTimeRef.current)
-      } else if (currentShapeType === 'doubleOrbit') {
-        currentPointsRef.current = doubleOrbit(
-          getDotCount('doubleOrbit', size),
-          radius,
-          arcTimeRef.current
-        )
+      // Not morphing - update spinning shapes directly
+      if (spinningPoints) {
+        currentPointsRef.current = spinningPoints
       }
 
       if (autoMorph) {
