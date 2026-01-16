@@ -29,130 +29,182 @@ const ChevronRight = `<svg width="5" height="8" viewBox="0 0 5 8" fill="none" xm
 <div class="info-sections flex flex-col gap-16 md:grid md:grid-cols-4 md:gap-y-20 px-4 md:px-0 py-12 md:py-16">
   <!-- Technologies -->
   {technologies.length > 0 && (
-    <div class="contents md:contents">
-      <div class="flex flex-col gap-3 md:contents animate-fade-in-up" style="--delay: 300ms;">
-        <h3 class="text-sm text-white tracking-[-0.28px]">Technologies</h3>
-        <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal md:col-span-2">
-          {technologies.join(', ')}
-        </p>
-        <div class="hidden md:block"></div>
-      </div>
+    <div class="flex flex-col gap-3 md:contents info-section-row" data-delay="0">
+      <h3 class="text-sm text-white tracking-[-0.28px] info-section-item">Technologies</h3>
+      <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal md:col-span-2 info-section-item">
+        {technologies.join(', ')}
+      </p>
+      <div class="hidden md:block"></div>
     </div>
   )}
 
   <!-- Services -->
   {services.length > 0 && (
-    <div class="contents md:contents">
-      <div class="flex flex-col gap-3 md:contents animate-fade-in-up" style="--delay: 350ms;">
-        <h3 class="text-sm text-white tracking-[-0.28px]">Services</h3>
-        <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal md:col-span-2">
-          {services.join(', ')}
-        </p>
-        <div class="hidden md:block"></div>
-      </div>
+    <div class="flex flex-col gap-3 md:contents info-section-row" data-delay="50">
+      <h3 class="text-sm text-white tracking-[-0.28px] info-section-item">Services</h3>
+      <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal md:col-span-2 info-section-item">
+        {services.join(', ')}
+      </p>
+      <div class="hidden md:block"></div>
     </div>
   )}
 
   <!-- Results -->
   {results.length > 0 && (
-    <div class="contents md:contents">
-      <div class="flex flex-col gap-3 md:contents animate-fade-in-up" style="--delay: 400ms;">
-        <h3 class="text-sm text-white tracking-[-0.28px]">Results</h3>
-        <ul class="list-disc pl-5 space-y-1 md:col-span-2">
-          {results.map((result) => (
-            <li class="text-sm text-white/60 tracking-[-0.28px] leading-normal">{result}</li>
-          ))}
-        </ul>
-        <div class="hidden md:block"></div>
-      </div>
+    <div class="flex flex-col gap-3 md:contents info-section-row" data-delay="100">
+      <h3 class="text-sm text-white tracking-[-0.28px] info-section-item">Results</h3>
+      <ul class="list-disc pl-5 space-y-1 md:col-span-2 info-section-item">
+        {results.map((result) => (
+          <li class="text-sm text-white/60 tracking-[-0.28px] leading-normal">{result}</li>
+        ))}
+      </ul>
+      <div class="hidden md:block"></div>
     </div>
   )}
 
   <!-- Testimonials -->
   {testimonials.length > 0 && (
-    <div class="contents md:contents">
-      <div class="flex flex-col gap-3 md:contents animate-fade-in-up" style="--delay: 450ms;">
-        <div class="flex items-center justify-between md:block">
-          <h3 class="text-sm text-white tracking-[-0.28px]">Testimonials</h3>
-          {testimonials.length > 1 && (
-            <div class="flex gap-1 md:hidden">
-              <Button client:load type="button" className="testimonial-prev py-1.5!" aria-label="Previous testimonial">
-                <Fragment set:html={ChevronLeft} />
-              </Button>
-              <Button client:load type="button" className="testimonial-next py-1.5!" aria-label="Next testimonial">
-                <Fragment set:html={ChevronRight} />
-              </Button>
-            </div>
-          )}
-        </div>
-        <div class="md:col-span-2">
-          {testimonials.length > 1 && (
-            <div class="hidden md:flex gap-1 justify-end mb-4">
-              <Button client:load type="button" className="testimonial-prev py-1.5!" aria-label="Previous testimonial">
-                <Fragment set:html={ChevronLeft} />
-              </Button>
-              <Button client:load type="button" className="testimonial-next py-1.5!" aria-label="Next testimonial">
-                <Fragment set:html={ChevronRight} />
-              </Button>
-            </div>
-          )}
-          <div class="testimonials-viewport overflow-hidden" aria-live="polite">
-            <div class="testimonials-container flex gap-8">
-              {testimonials.map((testimonial) => (
-                <div class="testimonial-slide flex-[0_0_100%] min-w-0 border-l border-white pl-4">
-                  <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal italic mb-3">
-                    "{testimonial.quote}"
-                  </p>
-                  <div class="flex items-center gap-2 flex-wrap">
-                    <span class="text-sm text-white/60 tracking-[-0.28px]">
-                      — {testimonial.author}, {testimonial.role}, {testimonial.company}
-                    </span>
-                  </div>
+    <div class="flex flex-col gap-3 md:contents info-section-row" data-delay="150">
+      <div class="flex items-center justify-between md:block info-section-item">
+        <h3 class="text-sm text-white tracking-[-0.28px]">Testimonials</h3>
+        {testimonials.length > 1 && (
+          <div class="flex gap-1 md:hidden">
+            <Button client:load type="button" className="testimonial-prev py-1.5!" aria-label="Previous testimonial">
+              <Fragment set:html={ChevronLeft} />
+            </Button>
+            <Button client:load type="button" className="testimonial-next py-1.5!" aria-label="Next testimonial">
+              <Fragment set:html={ChevronRight} />
+            </Button>
+          </div>
+        )}
+      </div>
+      <div class="md:col-span-2 info-section-item">
+        {testimonials.length > 1 && (
+          <div class="hidden md:flex gap-1 justify-end mb-4">
+            <Button client:load type="button" className="testimonial-prev py-1.5!" aria-label="Previous testimonial">
+              <Fragment set:html={ChevronLeft} />
+            </Button>
+            <Button client:load type="button" className="testimonial-next py-1.5!" aria-label="Next testimonial">
+              <Fragment set:html={ChevronRight} />
+            </Button>
+          </div>
+        )}
+        <div class="testimonials-viewport overflow-hidden" aria-live="polite">
+          <div class="testimonials-container flex gap-8">
+            {testimonials.map((testimonial) => (
+              <div class="testimonial-slide flex-[0_0_100%] min-w-0 border-l border-white pl-4">
+                <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal italic mb-3">
+                  "{testimonial.quote}"
+                </p>
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="text-sm text-white/60 tracking-[-0.28px]">
+                    — {testimonial.author}, {testimonial.role}, {testimonial.company}
+                  </span>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         </div>
-        <div class="hidden md:block"></div>
       </div>
+      <div class="hidden md:block"></div>
     </div>
   )}
 
   <!-- CTA -->
   {cta && (
-    <div class="contents md:contents">
-      <div class="flex flex-col gap-3 md:contents animate-fade-in-up" style="--delay: 500ms;">
-        <h3 class="text-sm text-white tracking-[-0.28px]">{cta.title}</h3>
-        <div class="md:col-span-2">
-          <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal mb-4">
-            {cta.subtitle}
-          </p>
-          <Button client:load as="a" href="/contact">
-            Contact Us
-          </Button>
-        </div>
-        <div class="hidden md:block"></div>
+    <div class="flex flex-col gap-3 md:contents info-section-row" data-delay="200">
+      <h3 class="text-sm text-white tracking-[-0.28px] info-section-item">{cta.title}</h3>
+      <div class="md:col-span-2 info-section-item">
+        <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal mb-4">
+          {cta.subtitle}
+        </p>
+        <Button client:load as="a" href="/contact">
+          Contact Us
+        </Button>
       </div>
+      <div class="hidden md:block"></div>
     </div>
   )}
 </div>
 
+<style>
+  .info-section-item {
+    opacity: 0;
+  }
+
+  .info-section-item.animate-fade-in-up {
+    animation: fade-in-up 500ms var(--ease-out-expo) forwards;
+    animation-delay: var(--delay, 0ms);
+  }
+
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .info-section-item {
+      opacity: 1;
+    }
+    .info-section-item.animate-fade-in-up {
+      animation: none;
+      transform: none;
+    }
+  }
+</style>
+
 <script>
   import EmblaCarousel from 'embla-carousel';
 
-  const viewport = document.querySelector('.testimonials-viewport');
-  if (viewport) {
-    const embla = EmblaCarousel(viewport as HTMLElement, { loop: true });
+  function initInfoSections() {
+    // Testimonials carousel
+    const viewport = document.querySelector('.testimonials-viewport');
+    if (viewport) {
+      const embla = EmblaCarousel(viewport as HTMLElement, { loop: true });
 
-    document.addEventListener('click', (e) => {
-      const target = (e.target as HTMLElement).closest('.testimonial-prev, .testimonial-next');
-      if (!target) return;
+      const handleClick = (e: Event) => {
+        const target = (e.target as HTMLElement).closest('.testimonial-prev, .testimonial-next');
+        if (!target) return;
 
-      if (target.classList.contains('testimonial-prev')) {
-        embla.scrollPrev();
-      } else {
-        embla.scrollNext();
-      }
+        if (target.classList.contains('testimonial-prev')) {
+          embla.scrollPrev();
+        } else {
+          embla.scrollNext();
+        }
+      };
+
+      document.addEventListener('click', handleClick);
+
+      // Cleanup on page swap
+      document.addEventListener('astro:before-swap', () => {
+        document.removeEventListener('click', handleClick);
+        embla.destroy();
+      }, { once: true });
+    }
+
+    // Trigger info section animations after marquee logos start animating
+    // Logo 4 (index 4) starts at 350 + 4*100 = 750ms
+    const triggerDelay = 850;
+
+    const rows = document.querySelectorAll('.info-section-row');
+    rows.forEach((row) => {
+      const rowDelay = parseInt(row.getAttribute('data-delay') || '0', 10);
+      const items = row.querySelectorAll('.info-section-item');
+
+      setTimeout(() => {
+        items.forEach((item) => {
+          (item as HTMLElement).style.setProperty('--delay', `${rowDelay}ms`);
+          item.classList.add('animate-fade-in-up');
+        });
+      }, triggerDelay);
     });
   }
+
+  document.addEventListener('astro:page-load', initInfoSections);
 </script>
