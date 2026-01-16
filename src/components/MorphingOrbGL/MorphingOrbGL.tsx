@@ -9,6 +9,20 @@ import {
   fibSphere,
   orbit,
   doubleOrbit,
+  cylinder,
+  capsule,
+  hourglass,
+  diabolo,
+  torus,
+  cube,
+  octahedron,
+  stellatedSphere,
+  trefoilKnot,
+  torusKnot,
+  lemniscate,
+  helix,
+  blob,
+  pulseSphere,
   getDotCount,
   lerpPoint,
   easeOutExpo,
@@ -253,6 +267,18 @@ function Scene({
           return orbit(getDotCount('orbit', size), radius, time)
         case 'doubleOrbit':
           return doubleOrbit(getDotCount('doubleOrbit', size), radius, time)
+        case 'trefoilKnot':
+          return trefoilKnot(getDotCount('trefoilKnot', size), radius, time)
+        case 'torusKnot':
+          return torusKnot(getDotCount('torusKnot', size), radius, time)
+        case 'lemniscate':
+          return lemniscate(getDotCount('lemniscate', size), radius, time)
+        case 'helix':
+          return helix(getDotCount('helix', size), radius, time)
+        case 'blob':
+          return blob(radius, time, size)
+        case 'pulseSphere':
+          return pulseSphere(radius, time, size)
         default:
           return null
       }
@@ -278,6 +304,36 @@ function Scene({
           return orbit(count > 0 ? count : 16, radius)
         case 'doubleOrbit':
           return doubleOrbit(count > 0 ? count : 24, radius)
+        case 'cylinder':
+          return cylinder(radius, size)
+        case 'capsule':
+          return capsule(radius, size)
+        case 'hourglass':
+          return hourglass(radius, size)
+        case 'diabolo':
+          return diabolo(radius, size)
+        case 'torus':
+          return torus(radius, size)
+        case 'cube':
+          return cube(radius, size)
+        case 'octahedron':
+          return octahedron(radius, size)
+        case 'stellatedSphere':
+          return stellatedSphere(radius, size)
+        case 'trefoilKnot':
+          return trefoilKnot(count > 0 ? count : 100, radius, 0)
+        case 'torusKnot':
+          return torusKnot(count > 0 ? count : 120, radius, 0)
+        case 'lemniscate':
+          return lemniscate(count > 0 ? count : 70, radius, 0)
+        case 'helix':
+          return helix(count > 0 ? count : 80, radius, 0)
+        case 'blob':
+          return blob(radius, 0, size)
+        case 'pulseSphere':
+          return pulseSphere(radius, 0, size)
+        default:
+          return gridSphere(radius, size)
       }
     },
     [size]
