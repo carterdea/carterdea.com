@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState, useCallback } from 'react'
-import type { Point3D, ProjectedDot, ShapeType, MorphingOrbSVGProps } from './types'
+import type { Point3D, ProjectedDot, ShapeType, MorphingOrbSVGProps, ColorMode } from './types'
 import {
   gridSphere,
   curvedArcs,
@@ -16,7 +16,26 @@ export function MorphingOrbSVG({
   size = 500,
   variant = 'mono',
   color = '#ffffff',
-  palette = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#ffeaa7'],
+  palette = [
+    '#fca5a5', // red-300
+    '#fdba74', // orange-300
+    '#fcd34d', // amber-300
+    '#fde047', // yellow-300
+    '#bef264', // lime-300
+    '#86efac', // green-300
+    '#6ee7b7', // emerald-300
+    '#5eead4', // teal-300
+    '#67e8f9', // cyan-300
+    '#7dd3fc', // sky-300
+    '#93c5fd', // blue-300
+    '#a5b4fc', // indigo-300
+    '#c4b5fd', // violet-300
+    '#d8b4fe', // purple-300
+    '#f0abfc', // fuchsia-300
+    '#f9a8d4', // pink-300
+    '#fda4af', // rose-300
+  ],
+  colorMode = 'sequential',
   className = '',
   shapeSequence = DEFAULT_SEQUENCE,
   autoMorph = true,
@@ -196,15 +215,44 @@ export function MorphingOrbSVG({
     }
   }, [animate])
 
-  // Get dot color
+  // Create shuffled palette (stable per component instance)
+  const shuffledPaletteRef = useRef<string[]>([])
+  if (shuffledPaletteRef.current.length !== palette.length) {
+    // Fisher-Yates shuffle with deterministic seed based on palette
+    const shuffled = [...palette]
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor((i * 7919) % (i + 1)) // deterministic pseudo-random
+      ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+    }
+    shuffledPaletteRef.current = shuffled
+  }
+
+  // Get dot color based on mode
   const getDotColor = useCallback(
-    (index: number): string => {
+    (index: number, point?: Point3D): string => {
       if (variant === 'mono') {
         return color
       }
-      return palette[index % palette.length]
+
+      switch (colorMode) {
+        case 'spatial': {
+          // Color based on angle around Y-axis (hue follows position)
+          if (point) {
+            const angle = Math.atan2(point.x, point.z) // -PI to PI
+            const normalizedAngle = (angle + Math.PI) / (2 * Math.PI) // 0 to 1
+            const paletteIndex = Math.floor(normalizedAngle * palette.length)
+            return palette[paletteIndex % palette.length]
+          }
+          return palette[index % palette.length]
+        }
+        case 'shuffled':
+          return shuffledPaletteRef.current[index % shuffledPaletteRef.current.length]
+        case 'sequential':
+        default:
+          return palette[index % palette.length]
+      }
     },
-    [variant, color, palette]
+    [variant, color, palette, colorMode]
   )
 
   return (
@@ -225,7 +273,7 @@ export function MorphingOrbSVG({
           rx={dot.rx}
           ry={dot.ry}
           transform={`rotate(${dot.rotation} ${dot.cx} ${dot.cy})`}
-          fill={getDotColor(dot.originalIndex)}
+          fill={getDotColor(dot.originalIndex, dot.point3D)}
           fillOpacity={variant === 'mono' ? dot.opacity : 1}
         />
       ))}

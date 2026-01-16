@@ -50,7 +50,7 @@ export function curvedArcs(radius: number = 1, time: number = 0): Point3D[] {
     { tiltX: -0.25, tiltY: -0.5, spinSpeed: 0.00035 },
   ]
 
-  const dotsPerArc = 8
+  const dotsPerArc = 12
 
   for (let arcIndex = 0; arcIndex < arcs.length; arcIndex++) {
     const arc = arcs[arcIndex]
@@ -217,7 +217,7 @@ export function getDotCount(shape: string, size: number): number {
   // Fibonacci sphere scales with size
   if (size <= 32) return 28
   if (size <= 64) return 38
-  if (size <= 150) return 40
-  if (size <= 300) return 50
-  return 60
+  if (size <= 150) return 45
+  if (size <= 300) return 65
+  return 80
 }

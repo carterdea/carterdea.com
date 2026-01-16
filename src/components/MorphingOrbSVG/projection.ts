@@ -69,6 +69,7 @@ export function projectPoint(
     opacity,
     z,
     originalIndex,
+    point3D: point,
   }
 }
 

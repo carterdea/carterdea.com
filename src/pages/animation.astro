@@ -130,6 +130,45 @@ import { MorphingOrbSVG } from '../components/MorphingOrbSVG';
           </div>
         </section>
 
+        <!-- Color Modes -->
+        <section class="mb-16">
+          <h2 class="text-xl font-medium mb-2">Color Modes</h2>
+          <p class="text-white/50 text-sm mb-6">Different strategies for assigning colors to dots</p>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div>
+              <p class="text-white/40 text-xs mb-3 uppercase tracking-wider">Sequential</p>
+              <p class="text-white/30 text-xs mb-4">Colors follow dot creation order (smooth gradients along shape structure)</p>
+              <MorphingOrbSVG
+                client:load
+                size={250}
+                variant="color"
+                colorMode="sequential"
+              />
+            </div>
+            <div>
+              <p class="text-white/40 text-xs mb-3 uppercase tracking-wider">Spatial</p>
+              <p class="text-white/30 text-xs mb-4">Colors based on 3D position (hue follows angle around Y-axis)</p>
+              <MorphingOrbSVG
+                client:load
+                size={250}
+                variant="color"
+                colorMode="spatial"
+              />
+            </div>
+            <div>
+              <p class="text-white/40 text-xs mb-3 uppercase tracking-wider">Shuffled</p>
+              <p class="text-white/30 text-xs mb-4">Palette shuffled for more contrast between neighbors</p>
+              <MorphingOrbSVG
+                client:load
+                size={250}
+                variant="color"
+                colorMode="shuffled"
+              />
+            </div>
+          </div>
+        </section>
+
         <!-- Individual shapes -->
         <section class="mb-16">
           <h2 class="text-xl font-medium mb-2">Individual Shapes</h2>
