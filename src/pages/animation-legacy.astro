@@ -1,0 +1,237 @@
+---
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+import Layout from '../layouts/Layout.astro';
+import { MorphingOrb } from '../components/MorphingOrb';
+---
+
+<Layout title="Animation — Carterdea">
+  <div class="min-h-screen flex flex-col">
+    <Header actionHref="/" actionLabel="Back" />
+
+    <main transition:name="page-content" class="flex-1 flex flex-col px-4 md:px-8 py-12">
+      <div class="max-w-6xl mx-auto w-full">
+        <h1 class="text-3xl md:text-4xl font-medium mb-4">Morphing Orb</h1>
+        <p class="text-white/60 mb-12 max-w-2xl">
+          A particle-based animation that morphs between abstract shapes.
+          Hover over any orb to increase animation speed and intensity.
+        </p>
+
+        <!-- Large version -->
+        <section class="mb-16">
+          <h2 class="text-xl font-medium mb-2">Large (500px)</h2>
+          <p class="text-white/50 text-sm mb-6">~120 particles, full detail</p>
+
+          <div class="flex flex-wrap gap-8">
+            <div>
+              <p class="text-white/40 text-xs mb-3 uppercase tracking-wider">Monochrome</p>
+              <MorphingOrb
+                client:load
+                size={500}
+                variant="mono"
+                color="#ffffff"
+              />
+            </div>
+            <div>
+              <p class="text-white/40 text-xs mb-3 uppercase tracking-wider">Color</p>
+              <MorphingOrb
+                client:load
+                size={500}
+                variant="color"
+                palette={['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#ffeaa7']}
+              />
+            </div>
+          </div>
+        </section>
+
+        <!-- Medium version -->
+        <section class="mb-16">
+          <h2 class="text-xl font-medium mb-2">Medium (200px)</h2>
+          <p class="text-white/50 text-sm mb-6">~50 particles</p>
+
+          <div class="flex flex-wrap gap-8 items-start">
+            <div>
+              <p class="text-white/40 text-xs mb-3 uppercase tracking-wider">Monochrome</p>
+              <MorphingOrb
+                client:load
+                size={200}
+                variant="mono"
+                color="#ffffff"
+              />
+            </div>
+            <div>
+              <p class="text-white/40 text-xs mb-3 uppercase tracking-wider">Color</p>
+              <MorphingOrb
+                client:load
+                size={200}
+                variant="color"
+                palette={['#a855f7', '#ec4899', '#f43f5e']}
+              />
+            </div>
+          </div>
+        </section>
+
+        <!-- Small version -->
+        <section class="mb-16">
+          <h2 class="text-xl font-medium mb-2">Small (64px)</h2>
+          <p class="text-white/50 text-sm mb-6">~20 particles</p>
+
+          <div class="flex flex-wrap gap-8 items-start">
+            <div>
+              <p class="text-white/40 text-xs mb-3 uppercase tracking-wider">Monochrome</p>
+              <MorphingOrb
+                client:load
+                size={64}
+                variant="mono"
+                color="#ffffff"
+              />
+            </div>
+            <div>
+              <p class="text-white/40 text-xs mb-3 uppercase tracking-wider">Color</p>
+              <MorphingOrb
+                client:load
+                size={64}
+                variant="color"
+              />
+            </div>
+          </div>
+        </section>
+
+        <!-- Tiny version -->
+        <section class="mb-16">
+          <h2 class="text-xl font-medium mb-2">Tiny (24px)</h2>
+          <p class="text-white/50 text-sm mb-6">~10 particles, minimal</p>
+
+          <div class="flex flex-wrap gap-8 items-center">
+            <div>
+              <p class="text-white/40 text-xs mb-3 uppercase tracking-wider">Monochrome</p>
+              <MorphingOrb
+                client:load
+                size={24}
+                variant="mono"
+                color="#ffffff"
+              />
+            </div>
+            <div>
+              <p class="text-white/40 text-xs mb-3 uppercase tracking-wider">Color</p>
+              <MorphingOrb
+                client:load
+                size={24}
+                variant="color"
+              />
+            </div>
+            <div class="ml-8 flex items-center gap-3 text-white/60">
+              <MorphingOrb
+                client:load
+                size={24}
+                variant="mono"
+                color="#ffffff"
+              />
+              <span>Example inline usage</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Shape showcase -->
+        <section class="mb-16">
+          <h2 class="text-xl font-medium mb-2">Individual Shapes</h2>
+          <p class="text-white/50 text-sm mb-6">Each shape isolated (no auto-morph)</p>
+
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div>
+              <p class="text-white/40 text-xs mb-3 uppercase tracking-wider">Sphere</p>
+              <MorphingOrb
+                client:load
+                size={150}
+                variant="mono"
+                color="#ffffff"
+                shapeSequence={['sphere']}
+                autoMorph={false}
+              />
+            </div>
+            <div>
+              <p class="text-white/40 text-xs mb-3 uppercase tracking-wider">Curved Dots</p>
+              <MorphingOrb
+                client:load
+                size={150}
+                variant="mono"
+                color="#ffffff"
+                shapeSequence={['curvedDots']}
+                autoMorph={false}
+              />
+            </div>
+            <div>
+              <p class="text-white/40 text-xs mb-3 uppercase tracking-wider">Double Orbit</p>
+              <MorphingOrb
+                client:load
+                size={150}
+                variant="mono"
+                color="#ffffff"
+                shapeSequence={['doubleOrbit']}
+                autoMorph={false}
+              />
+            </div>
+            <div>
+              <p class="text-white/40 text-xs mb-3 uppercase tracking-wider">Flower</p>
+              <MorphingOrb
+                client:load
+                size={150}
+                variant="mono"
+                color="#ffffff"
+                shapeSequence={['flower']}
+                autoMorph={false}
+              />
+            </div>
+            <div>
+              <p class="text-white/40 text-xs mb-3 uppercase tracking-wider">Star</p>
+              <MorphingOrb
+                client:load
+                size={150}
+                variant="mono"
+                color="#ffffff"
+                shapeSequence={['star']}
+                autoMorph={false}
+              />
+            </div>
+            <div>
+              <p class="text-white/40 text-xs mb-3 uppercase tracking-wider">Cluster</p>
+              <MorphingOrb
+                client:load
+                size={150}
+                variant="mono"
+                color="#ffffff"
+                shapeSequence={['cluster']}
+                autoMorph={false}
+              />
+            </div>
+            <div>
+              <p class="text-white/40 text-xs mb-3 uppercase tracking-wider">Single Orbit</p>
+              <MorphingOrb
+                client:load
+                size={150}
+                variant="mono"
+                color="#ffffff"
+                shapeSequence={['orbit']}
+                autoMorph={false}
+              />
+            </div>
+            <div>
+              <p class="text-white/40 text-xs mb-3 uppercase tracking-wider">Sparse Sphere</p>
+              <MorphingOrb
+                client:load
+                size={150}
+                variant="mono"
+                color="#ffffff"
+                shapeSequence={['sphereSparse']}
+                autoMorph={false}
+              />
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+
+    <Footer />
+  </div>
+</Layout>
