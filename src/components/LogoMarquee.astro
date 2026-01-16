@@ -13,26 +13,25 @@ const { clients = [] } = Astro.props;
 
 <!-- Mobile: Swipeable carousel -->
 <section class="animate-fade-in-up relative md:hidden overflow-hidden" style="--delay: 260ms;">
-  <div
-    id="mobile-carousel"
-    class="flex gap-4 overflow-x-auto px-4 pb-4 snap-x snap-mandatory scrollbar-hide carousel-elastic"
-  >
-    {clients.map((client) => (
-      <ClientCard
-        name={client.name}
-        description={client.description}
-        logoSrc={client.logoSrc}
-      />
-    ))}
+  <div id="mobile-carousel-viewport" class="overflow-hidden px-4 pb-4">
+    <div id="mobile-carousel-container" class="flex gap-4">
+      {clients.map((client) => (
+        <ClientCard
+          name={client.name}
+          description={client.description}
+          logoSrc={client.logoSrc}
+        />
+      ))}
+    </div>
   </div>
 
-  <!-- Pagination dots - wrapped in touch-friendly buttons -->
-  <div class="flex justify-center gap-1">
+  <!-- Pagination dots -->
+  <div id="mobile-carousel-dots" class="flex justify-center gap-0">
     {clients.map((_, index) => (
       <button
         type="button"
         aria-label={`Go to slide ${index + 1}`}
-        class="p-4 -m-2 cursor-pointer group"
+        class="p-1.5 cursor-pointer group"
         data-dot={index}
       >
         <span
@@ -48,9 +47,10 @@ const { clients = [] } = Astro.props;
 
 <!-- Desktop: Bare logos with descriptions, alpha mask edges -->
 <section class="hidden md:block relative overflow-hidden desktop-marquee-mask md:-mx-10 shrink-0">
+  <h2 class="sr-only">Some of our Clients</h2>
   <div id="marquee-track" class="marquee-track flex items-start gap-24 py-24">
     {[0, 1].map((setIndex) => (
-      <div class="marquee-content flex items-start gap-24">
+      <div class="marquee-content flex items-start gap-24" aria-hidden={setIndex === 1 ? "true" : undefined}>
         {clients.map((client, index) => (
           <div
             class:list={[
@@ -78,24 +78,8 @@ const { clients = [] } = Astro.props;
 </section>
 
 <style>
-  .scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none;
-  }
-
   .marquee-track {
     will-change: transform;
-  }
-
-  .carousel-elastic {
-    transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  }
-
-  .carousel-elastic.dragging {
-    transition: none;
   }
 
   .desktop-marquee-mask {
@@ -105,73 +89,37 @@ const { clients = [] } = Astro.props;
 </style>
 
 <script>
-  const carousel = document.getElementById('mobile-carousel');
-  const dots = document.querySelectorAll('[data-dot]');
-  const cards = carousel?.querySelectorAll(':scope > div');
+  import EmblaCarousel from 'embla-carousel';
 
-  if (carousel && dots.length > 0 && cards && cards.length > 0) {
-    const cardWidth = (cards[0] as HTMLElement).offsetWidth;
-    const gap = 16;
+  // Mobile carousel with Embla
+  const viewport = document.getElementById('mobile-carousel-viewport');
+  const dotsContainer = document.getElementById('mobile-carousel-dots');
+  const dots = dotsContainer?.querySelectorAll('[data-dot]');
 
-    // Update dots on scroll
-    carousel.addEventListener('scroll', () => {
-      const scrollLeft = carousel.scrollLeft;
-      const activeIndex = Math.round(scrollLeft / (cardWidth + gap));
+  if (viewport && dots && dots.length > 0) {
+    const embla = EmblaCarousel(viewport, {
+      containScroll: 'trimSnaps',
+      align: 'start',
+    });
 
+    const updateDots = () => {
+      const selected = embla.selectedScrollSnap();
       dots.forEach((dot, index) => {
         const indicator = dot.querySelector('span');
         if (indicator) {
-          indicator.classList.toggle('bg-white', index === activeIndex);
-          indicator.classList.toggle('bg-white/20', index !== activeIndex);
+          indicator.classList.toggle('bg-white', index === selected);
+          indicator.classList.toggle('bg-white/20', index !== selected);
         }
       });
-    });
+    };
 
-    // Click dots to scroll to slide
+    embla.on('select', updateDots);
+
     dots.forEach((dot) => {
       dot.addEventListener('click', () => {
         const index = Number(dot.getAttribute('data-dot'));
-        const scrollPosition = index * (cardWidth + gap);
-        carousel.scrollTo({ left: scrollPosition, behavior: 'smooth' });
+        embla.scrollTo(index);
       });
-    });
-
-    // Elastic overscroll effect
-    let touchStartX = 0;
-    let elasticOffset = 0;
-    const maxElastic = 80;
-    const resistance = 0.4;
-
-    carousel.addEventListener('touchstart', (e) => {
-      touchStartX = e.touches[0].clientX;
-      carousel.classList.add('dragging');
-    }, { passive: true });
-
-    carousel.addEventListener('touchmove', (e) => {
-      const touchX = e.touches[0].clientX;
-      const diff = touchX - touchStartX;
-      const maxScroll = carousel.scrollWidth - carousel.clientWidth;
-
-      // At left edge, pulling right
-      if (carousel.scrollLeft <= 0 && diff > 0) {
-        elasticOffset = Math.min(diff * resistance, maxElastic);
-        carousel.style.transform = `translateX(${elasticOffset}px)`;
-      }
-      // At right edge, pulling left
-      else if (carousel.scrollLeft >= maxScroll && diff < 0) {
-        elasticOffset = Math.max(diff * resistance, -maxElastic);
-        carousel.style.transform = `translateX(${elasticOffset}px)`;
-      }
-      else {
-        elasticOffset = 0;
-        carousel.style.transform = '';
-      }
-    }, { passive: true });
-
-    carousel.addEventListener('touchend', () => {
-      carousel.classList.remove('dragging');
-      carousel.style.transform = '';
-      elasticOffset = 0;
     });
   }
 
@@ -201,6 +149,13 @@ const { clients = [] } = Astro.props;
     // Check for reduced motion preference
     if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       requestAnimationFrame(animate);
+
+      // Restart animation smoothly when tab regains focus
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          startTime = null;
+        }
+      });
     }
   }
 </script>
