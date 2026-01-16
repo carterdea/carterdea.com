@@ -131,84 +131,6 @@ function doubleOrbit(count: number, radius: number = 1): Point3D[] {
   return points
 }
 
-// Rose curve / flower pattern
-function flower(count: number, radius: number = 1): Point3D[] {
-  const points: Point3D[] = []
-  const k = 5 // 5 petals
-
-  for (let i = 0; i < count; i++) {
-    const theta = (i / count) * Math.PI * 2
-    const r = Math.cos(k * theta) * radius
-
-    // Distribute points along multiple "layers" for depth
-    const layer = i % 3
-    const zOffset = (layer - 1) * 0.15
-
-    points.push({
-      x: r * Math.cos(theta),
-      y: r * Math.sin(theta),
-      z: zOffset * radius,
-    })
-  }
-  return points
-}
-
-// Star burst - radial lines from center
-function star(count: number, radius: number = 1): Point3D[] {
-  const points: Point3D[] = []
-  const rays = 6
-  const dotsPerRay = Math.floor(count / rays)
-
-  for (let ray = 0; ray < rays; ray++) {
-    const theta = (ray / rays) * Math.PI * 2
-    const phi = (ray % 2 === 0 ? 0.3 : -0.3) * Math.PI
-
-    for (let i = 0; i < dotsPerRay; i++) {
-      const t = (i + 1) / dotsPerRay
-      const r = t * radius
-
-      // Direction in 3D
-      const x = Math.cos(theta) * Math.cos(phi) * r
-      const y = Math.sin(phi) * r
-      const z = Math.sin(theta) * Math.cos(phi) * r
-
-      points.push({ x, y, z })
-    }
-  }
-  return points
-}
-
-// Loose organic cluster
-function cluster(count: number, radius: number = 1): Point3D[] {
-  const points: Point3D[] = []
-
-  // Use deterministic pseudo-random for consistency
-  const seed = 12345
-  let rand = seed
-
-  function nextRand() {
-    rand = (rand * 1103515245 + 12345) & 0x7fffffff
-    return rand / 0x7fffffff
-  }
-
-  for (let i = 0; i < count; i++) {
-    // Gaussian-ish distribution using Box-Muller
-    const u1 = nextRand()
-    const u2 = nextRand()
-    const r = Math.sqrt(-2 * Math.log(u1 || 0.001)) * 0.4 * radius
-
-    const theta = nextRand() * Math.PI * 2
-    const phi = Math.acos(2 * nextRand() - 1)
-
-    points.push({
-      x: r * Math.sin(phi) * Math.cos(theta),
-      y: r * Math.sin(phi) * Math.sin(theta),
-      z: r * Math.cos(phi),
-    })
-  }
-  return points
-}
-
 // Main shape generator
 export function generateShape(
   type: ShapeType,
@@ -226,12 +148,6 @@ export function generateShape(
       return orbit(count, radius)
     case 'doubleOrbit':
       return doubleOrbit(count, radius)
-    case 'flower':
-      return flower(count, radius)
-    case 'star':
-      return star(count, radius)
-    case 'cluster':
-      return cluster(count, radius)
     default:
       return fibonacciSphere(count, radius)
   }

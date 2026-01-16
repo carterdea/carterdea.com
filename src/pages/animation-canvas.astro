@@ -1,21 +1,24 @@
 ---
+import AnimationToggle from '../components/AnimationToggle.astro';
 import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
 import Layout from '../layouts/Layout.astro';
 import { MorphingOrb } from '../components/MorphingOrb';
 ---
 
-<Layout title="Animation — Carterdea">
+<Layout title="Canvas Animation — Carterdea">
   <div class="min-h-screen flex flex-col">
     <Header actionHref="/" actionLabel="Back" />
 
     <main transition:name="page-content" class="flex-1 flex flex-col px-4 md:px-8 py-12">
       <div class="max-w-6xl mx-auto w-full">
-        <h1 class="text-3xl md:text-4xl font-medium mb-4">Morphing Orb</h1>
-        <p class="text-white/60 mb-12 max-w-2xl">
+        <h1 class="text-3xl md:text-4xl font-medium mb-4">Morphing Orb (Canvas)</h1>
+        <p class="text-white/60 mb-8 max-w-2xl">
           A particle-based animation that morphs between abstract shapes.
           Hover over any orb to increase animation speed and intensity.
         </p>
+
+        <AnimationToggle active="canvas" />
 
         <!-- Large version -->
         <section class="mb-16">
@@ -168,39 +171,6 @@ import { MorphingOrb } from '../components/MorphingOrb';
                 variant="mono"
                 color="#ffffff"
                 shapeSequence={['doubleOrbit']}
-                autoMorph={false}
-              />
-            </div>
-            <div>
-              <p class="text-white/40 text-xs mb-3 uppercase tracking-wider">Flower</p>
-              <MorphingOrb
-                client:load
-                size={150}
-                variant="mono"
-                color="#ffffff"
-                shapeSequence={['flower']}
-                autoMorph={false}
-              />
-            </div>
-            <div>
-              <p class="text-white/40 text-xs mb-3 uppercase tracking-wider">Star</p>
-              <MorphingOrb
-                client:load
-                size={150}
-                variant="mono"
-                color="#ffffff"
-                shapeSequence={['star']}
-                autoMorph={false}
-              />
-            </div>
-            <div>
-              <p class="text-white/40 text-xs mb-3 uppercase tracking-wider">Cluster</p>
-              <MorphingOrb
-                client:load
-                size={150}
-                variant="mono"
-                color="#ffffff"
-                shapeSequence={['cluster']}
                 autoMorph={false}
               />
             </div>

@@ -8,12 +8,19 @@ import {
   SHAPE_HOLD_DURATION,
   IDLE_ROTATION_SPEED,
   HOVER_ROTATION_SPEED,
-  PERSPECTIVE,
   BASE_DOT_SIZE_RATIO,
   MIN_DOT_SIZE,
-  DEPTH_SIZE_SCALE,
   type ShapeType,
 } from './constants'
+
+const PERSPECTIVE = 2.0 // Lower = stronger perspective distortion
+
+// Light direction (normalized) - upper-left-front
+const LIGHT_DIR = { x: -0.5, y: -0.7, z: 0.5 }
+const lightLen = Math.sqrt(LIGHT_DIR.x ** 2 + LIGHT_DIR.y ** 2 + LIGHT_DIR.z ** 2)
+LIGHT_DIR.x /= lightLen
+LIGHT_DIR.y /= lightLen
+LIGHT_DIR.z /= lightLen
 
 export interface MorphingOrbProps {
   size?: number
@@ -51,7 +58,7 @@ export function MorphingOrb({
   const [isHovered, setIsHovered] = useState(false)
 
   const particleCount = getParticleCount(size)
-  const radius = size * 0.35
+  const radius = size * 0.4
 
   // Initialize particles
   const initParticles = useCallback(() => {
@@ -83,36 +90,53 @@ export function MorphingOrb({
     timeSinceLastMorphRef.current = 0
   }, [particleCount, radius, shapeSequence])
 
-  // Project 3D to 2D
+  // Project 3D to 2D with ellipse deformation (matching SVG approach exactly)
   const project = useCallback(
     (x: number, y: number, z: number) => {
-      const scale = PERSPECTIVE / (PERSPECTIVE + z / radius)
+      // Perspective projection (camera looks down -Z axis, positive Z = closer)
+      const depth = PERSPECTIVE - z / radius
+      const scale = PERSPECTIVE / Math.max(0.5, depth)
+      // Use smaller scale than SVG to fit within canvas bounds
+      // (SVG has overflow:visible, canvas clips at boundary)
+      // SVG uses 0.8, we use 0.65 to ensure all dots fit with padding
+      const screenScale = (size / 2 / radius) * 0.65
+      const screenX = size / 2 + x * scale * screenScale
+      const screenY = size / 2 + y * scale * screenScale
+
+      // Calculate surface normal (normalized position for sphere)
+      const len = Math.sqrt(x * x + y * y + z * z) || 1
+      const nx = x / len
+      const ny = y / len
+      const nz = z / len
+
+      // How much is the dot facing the camera (dot product with view direction [0,0,1])
+      const facing = Math.abs(nz)
+
+      // Lambert shading: dot product of normal with light direction
+      const lightDot = nx * LIGHT_DIR.x + ny * LIGHT_DIR.y + nz * LIGHT_DIR.z
+      const lighting = Math.max(0, lightDot)
+
+      // Ellipse squash: 1.0 when facing camera, 0.15 when on edge
+      const squash = 0.15 + facing * 0.85
+
+      // Ellipse rotation based on 3D surface normal direction
+      // The ellipse squashes in the direction the surface tilts away from camera
+      // For a sphere, the normal's x,y components indicate the tilt direction
+      const rotation = Math.atan2(ny, nx)
+
+      // Lit dots are slightly larger
+      const lightSizeBoost = 1 + lighting * 0.12
+
       return {
-        screenX: size / 2 + x * scale,
-        screenY: size / 2 + y * scale,
+        screenX,
+        screenY,
         scale,
+        squash,
+        rotation,
+        lightSizeBoost,
       }
     },
     [size, radius]
-  )
-
-  // Get dot color
-  const getDotColor = useCallback(
-    (index: number, z: number): string => {
-      if (variant === 'mono') {
-        // Slight opacity variation based on depth
-        const depthFactor = 0.5 + ((z / radius + 1) / 2) * 0.5
-        // Parse hex color and apply opacity
-        const hex = color.replace('#', '')
-        const r = parseInt(hex.slice(0, 2), 16)
-        const g = parseInt(hex.slice(2, 4), 16)
-        const b = parseInt(hex.slice(4, 6), 16)
-        return `rgba(${r}, ${g}, ${b}, ${depthFactor})`
-      } else {
-        return palette[index % palette.length]
-      }
-    },
-    [variant, color, palette, radius]
   )
 
   // Animation loop
@@ -155,20 +179,13 @@ export function MorphingOrb({
       ctx.clearRect(0, 0, size, size)
 
       // Calculate projected positions and sort by depth
+      const baseDotSize = Math.max(MIN_DOT_SIZE, size * BASE_DOT_SIZE_RATIO)
+
       const projected = particlesRef.current.map((particle, index) => {
         const rotated = particle.getRotatedPosition(rotationRef.current)
-
-        // Add subtle wobble
-        const wobbleTime = timestamp * 0.001
-        const wobbleAmp = 0.02 * radius * (hovered ? intensity : 1)
-        const wobbleX =
-          Math.sin(wobbleTime + particle.wobbleOffset) * wobbleAmp
-        const wobbleY =
-          Math.cos(wobbleTime * 0.7 + particle.wobbleOffset) * wobbleAmp
-
-        const { screenX, screenY, scale } = project(
-          rotated.x + wobbleX,
-          rotated.y + wobbleY,
+        const { screenX, screenY, scale, squash, rotation, lightSizeBoost } = project(
+          rotated.x,
+          rotated.y,
           rotated.z
         )
 
@@ -177,6 +194,9 @@ export function MorphingOrb({
           screenX,
           screenY,
           scale,
+          squash,
+          rotation,
+          lightSizeBoost,
           z: rotated.z,
           particle,
         }
@@ -185,19 +205,25 @@ export function MorphingOrb({
       // Sort by z (back to front)
       projected.sort((a, b) => a.z - b.z)
 
-      // Draw particles
-      const baseDotSize = Math.max(MIN_DOT_SIZE, size * BASE_DOT_SIZE_RATIO)
+      // Draw particles as ellipses with flat fill
+      projected.forEach(({ index, screenX, screenY, scale, squash, rotation, lightSizeBoost, particle }) => {
+        const dotSize = baseDotSize * scale * particle.sizeVariation * lightSizeBoost
+        const rx = Math.max(0.5, dotSize)
+        const ry = Math.max(0.3, dotSize * squash)
 
-      projected.forEach(({ index, screenX, screenY, scale, z, particle }) => {
-        const dotSize =
-          baseDotSize *
-          scale *
-          particle.sizeVariation *
-          (1 + (z / radius) * DEPTH_SIZE_SCALE * 0.3)
+        // Get color
+        let fillColor: string
+        if (variant === 'mono') {
+          fillColor = color
+        } else {
+          fillColor = palette[index % palette.length]
+        }
 
         ctx.beginPath()
-        ctx.arc(screenX, screenY, Math.max(0.5, dotSize), 0, Math.PI * 2)
-        ctx.fillStyle = getDotColor(index, z)
+        // Use ellipse's built-in rotation parameter (5th param) instead of ctx.rotate()
+        // rx is major axis (tangent to sphere edge), ry is minor axis (toward center)
+        ctx.ellipse(screenX, screenY, rx, ry, rotation, 0, Math.PI * 2)
+        ctx.fillStyle = fillColor
         ctx.fill()
       })
 
@@ -211,8 +237,9 @@ export function MorphingOrb({
       autoMorph,
       morphToNextShape,
       project,
-      getDotColor,
-      radius,
+      variant,
+      color,
+      palette,
     ]
   )
 

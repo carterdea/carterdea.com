@@ -15,17 +15,13 @@ export type ShapeType =
   | 'curvedDots'
   | 'orbit'
   | 'doubleOrbit'
-  | 'flower'
-  | 'star'
-  | 'cluster'
 
 // Default shape sequence for auto-morphing
 export const DEFAULT_SHAPE_SEQUENCE: ShapeType[] = [
   'sphere',
   'curvedDots',
   'doubleOrbit',
-  'flower',
-  'star',
+  'sphereSparse',
   'sphere',
 ]
 

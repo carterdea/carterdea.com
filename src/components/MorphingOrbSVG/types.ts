@@ -18,6 +18,7 @@ export interface ProjectedDot {
 
 export type ShapeType =
   | 'gridSphere'    // lat/long grid like icon 363881
+  | 'offsetSphere'  // staggered grid - alternating rows offset
   | 'curvedArcs'    // 3 great circle arcs like icon 363882
   | 'fibSphere'     // fibonacci distribution like icon 363875
   | 'orbit'

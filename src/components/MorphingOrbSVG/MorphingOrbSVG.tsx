@@ -2,6 +2,7 @@ import { useRef, useEffect, useState, useCallback } from 'react'
 import type { Point3D, ProjectedDot, ShapeType, MorphingOrbSVGProps, ColorMode } from './types'
 import {
   gridSphere,
+  offsetSphere,
   curvedArcs,
   fibSphere,
   orbit,
@@ -43,6 +44,7 @@ export function MorphingOrbSVG({
   holdDuration = 3000,
 }: MorphingOrbSVGProps) {
   const [dots, setDots] = useState<ProjectedDot[]>([])
+  const [colorRotation, setColorRotation] = useState(0)
   const [isHovered, setIsHovered] = useState(false)
 
   const currentPointsRef = useRef<Point3D[]>([])
@@ -54,10 +56,12 @@ export function MorphingOrbSVG({
   const animationRef = useRef<number>(0)
   const lastTimeRef = useRef(0)
   const arcTimeRef = useRef(0) // Track time for arc spinning
+  const colorRotationRef = useRef(0) // Track color rotation offset
 
   const radius = size * 0.4
-  // Scale dot size - smaller dots for tiny sizes
-  const baseDotSize = size <= 32 ? size * 0.025 : size <= 64 ? size * 0.03 : Math.max(2, size * 0.04)
+  // Scale dot size - smaller dots for tiny sizes, and smaller for large sizes too
+  const baseDotSize =
+    size <= 32 ? size * 0.025 : size <= 64 ? size * 0.03 : size <= 200 ? size * 0.035 : size * 0.025
 
   // Generate shape points
   const generateShapePoints = useCallback(
@@ -67,8 +71,10 @@ export function MorphingOrbSVG({
       switch (shapeType) {
         case 'gridSphere':
           return gridSphere(radius, size)
+        case 'offsetSphere':
+          return offsetSphere(radius, size)
         case 'curvedArcs':
-          return curvedArcs(radius)
+          return curvedArcs(radius, 0, size)
         case 'fibSphere':
           return fibSphere(count > 0 ? count : 40, radius)
         case 'orbit':
@@ -132,6 +138,9 @@ export function MorphingOrbSVG({
       // Update arc spinning time
       arcTimeRef.current += deltaTime * speedMultiplier
 
+      // Update color rotation (slow spin for spatial color mode)
+      colorRotationRef.current += 0.0001875 * deltaTime * speedMultiplier
+
       // Get current shape type
       const currentShapeType = shapeSequence[shapeIndexRef.current]
 
@@ -146,7 +155,7 @@ export function MorphingOrbSVG({
 
         // For spinning shapes, regenerate target points each frame
         if (currentShapeType === 'curvedArcs') {
-          targetPointsRef.current = curvedArcs(radius, arcTimeRef.current)
+          targetPointsRef.current = curvedArcs(radius, arcTimeRef.current, size)
         } else if (currentShapeType === 'orbit') {
           targetPointsRef.current = orbit(getDotCount('orbit', size), radius, arcTimeRef.current)
         } else if (currentShapeType === 'doubleOrbit') {
@@ -161,7 +170,7 @@ export function MorphingOrbSVG({
       } else {
         // Not morphing - update spinning shapes directly
         if (currentShapeType === 'curvedArcs') {
-          currentPointsRef.current = curvedArcs(radius, arcTimeRef.current)
+          currentPointsRef.current = curvedArcs(radius, arcTimeRef.current, size)
         } else if (currentShapeType === 'orbit') {
           currentPointsRef.current = orbit(getDotCount('orbit', size), radius, arcTimeRef.current)
         } else if (currentShapeType === 'doubleOrbit') {
@@ -190,6 +199,7 @@ export function MorphingOrbSVG({
       projected.sort((a, b) => a.z - b.z)
 
       setDots(projected)
+      setColorRotation(colorRotationRef.current)
 
       animationRef.current = requestAnimationFrame(animate)
     },
@@ -229,7 +239,7 @@ export function MorphingOrbSVG({
 
   // Get dot color based on mode
   const getDotColor = useCallback(
-    (index: number, point?: Point3D): string => {
+    (index: number, point?: Point3D, colorRotation: number = 0): string => {
       if (variant === 'mono') {
         return color
       }
@@ -237,11 +247,13 @@ export function MorphingOrbSVG({
       switch (colorMode) {
         case 'spatial': {
           // Color based on angle around Y-axis (hue follows position)
+          // Add colorRotation offset to make colors spin independently
           if (point) {
             const angle = Math.atan2(point.x, point.z) // -PI to PI
-            const normalizedAngle = (angle + Math.PI) / (2 * Math.PI) // 0 to 1
+            const offsetAngle = angle + colorRotation
+            const normalizedAngle = ((offsetAngle + Math.PI) % (2 * Math.PI)) / (2 * Math.PI) // 0 to 1
             const paletteIndex = Math.floor(normalizedAngle * palette.length)
-            return palette[paletteIndex % palette.length]
+            return palette[Math.abs(paletteIndex) % palette.length]
           }
           return palette[index % palette.length]
         }
@@ -280,8 +292,7 @@ export function MorphingOrbSVG({
           rx={dot.rx}
           ry={dot.ry}
           transform={`rotate(${dot.rotation} ${dot.cx} ${dot.cy})`}
-          fill={getDotColor(dot.originalIndex, dot.point3D)}
-          fillOpacity={variant === 'mono' ? dot.opacity : 1}
+          fill={getDotColor(dot.originalIndex, dot.point3D, colorRotation)}
         />
       ))}
     </svg>

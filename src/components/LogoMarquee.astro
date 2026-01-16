@@ -140,31 +140,36 @@ const shuffledClients = [...clients].sort(() => Math.random() - 0.5);
       const slowSpeed = baseSpeed * 0.75; // 25% slower on hover
 
       let animationId: number | null = null;
-      let position = 0;
-      let lastTimestamp: number | null = null;
-      let currentSpeed = baseSpeed;
-      let targetSpeed = baseSpeed;
+
+      // Use object to avoid closure issues
+      const state = {
+        position: 0,
+        lastTimestamp: null as number | null,
+        currentSpeed: baseSpeed,
+        targetSpeed: baseSpeed,
+      };
 
       const animate = (timestamp: number) => {
-        if (!lastTimestamp) lastTimestamp = timestamp;
-        const deltaTime = (timestamp - lastTimestamp) / 1000;
-        lastTimestamp = timestamp;
+        if (!state.lastTimestamp) state.lastTimestamp = timestamp;
+        const deltaTime = (timestamp - state.lastTimestamp) / 1000;
+        state.lastTimestamp = timestamp;
 
         // Smoothly interpolate speed toward target (ease-out feel)
-        const speedDiff = targetSpeed - currentSpeed;
-        if (Math.abs(speedDiff) > 0.1) {
+        const speedDiff = state.targetSpeed - state.currentSpeed;
+        if (Math.abs(speedDiff) > 0.05) {
           // Lerp with ease-out by using diminishing factor
-          currentSpeed += speedDiff * 0.08;
+          // 0.15 gives ~300ms transition time at 60fps
+          state.currentSpeed += speedDiff * 0.15;
         } else {
-          currentSpeed = targetSpeed;
+          state.currentSpeed = state.targetSpeed;
         }
 
-        position += currentSpeed * deltaTime;
-        if (position >= totalWidth) {
-          position -= totalWidth;
+        state.position += state.currentSpeed * deltaTime;
+        if (state.position >= totalWidth) {
+          state.position -= totalWidth;
         }
 
-        marqueeTrack.style.transform = `translateX(${-position}px)`;
+        marqueeTrack.style.transform = `translateX(${-state.position}px)`;
         animationId = requestAnimationFrame(animate);
       };
 
@@ -174,18 +179,21 @@ const shuffledClients = [...clients].sort(() => Math.random() - 0.5);
 
         // Hover handlers for slowdown
         const handleMouseEnter = () => {
-          targetSpeed = slowSpeed;
+          console.log('MARQUEE: mouseenter, slowing to', slowSpeed);
+          state.targetSpeed = slowSpeed;
         };
         const handleMouseLeave = () => {
-          targetSpeed = baseSpeed;
+          console.log('MARQUEE: mouseleave, speeding to', baseSpeed);
+          state.targetSpeed = baseSpeed;
         };
         desktopSection.addEventListener('mouseenter', handleMouseEnter);
         desktopSection.addEventListener('mouseleave', handleMouseLeave);
+        console.log('MARQUEE: hover handlers attached to', desktopSection);
 
         // Restart animation smoothly when tab regains focus
         const handleVisibility = () => {
           if (document.visibilityState === 'visible') {
-            lastTimestamp = null;
+            state.lastTimestamp = null;
           }
         };
         document.addEventListener('visibilitychange', handleVisibility);
