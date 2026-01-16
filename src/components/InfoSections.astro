@@ -26,7 +26,7 @@ const ChevronLeft = `<svg width="5" height="8" viewBox="0 0 5 8" fill="none" xml
 const ChevronRight = `<svg width="5" height="8" viewBox="0 0 5 8" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 1L4 4L1 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 ---
 
-<div class="info-sections flex flex-col gap-16 md:grid md:grid-cols-4 md:gap-y-20 px-4 md:px-0 py-12 md:py-16">
+<div class="info-sections max-w-4xl mx-auto w-full flex flex-col gap-16 md:grid md:grid-cols-3 md:gap-y-20 px-4 md:px-0 py-12 md:py-16">
   <!-- Technologies -->
   {technologies.length > 0 && (
     <div class="flex flex-col gap-3 md:contents info-section-row" data-delay="0">
@@ -34,7 +34,6 @@ const ChevronRight = `<svg width="5" height="8" viewBox="0 0 5 8" fill="none" xm
       <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal md:col-span-2 info-section-item">
         {technologies.join(', ')}
       </p>
-      <div class="hidden md:block"></div>
     </div>
   )}
 
@@ -45,7 +44,6 @@ const ChevronRight = `<svg width="5" height="8" viewBox="0 0 5 8" fill="none" xm
       <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal md:col-span-2 info-section-item">
         {services.join(', ')}
       </p>
-      <div class="hidden md:block"></div>
     </div>
   )}
 
@@ -58,7 +56,6 @@ const ChevronRight = `<svg width="5" height="8" viewBox="0 0 5 8" fill="none" xm
           <li class="text-sm text-white/60 tracking-[-0.28px] leading-normal">{result}</li>
         ))}
       </ul>
-      <div class="hidden md:block"></div>
     </div>
   )}
 
@@ -106,7 +103,6 @@ const ChevronRight = `<svg width="5" height="8" viewBox="0 0 5 8" fill="none" xm
           </div>
         </div>
       </div>
-      <div class="hidden md:block"></div>
     </div>
   )}
 
@@ -122,7 +118,6 @@ const ChevronRight = `<svg width="5" height="8" viewBox="0 0 5 8" fill="none" xm
           Contact Us
         </Button>
       </div>
-      <div class="hidden md:block"></div>
     </div>
   )}
 </div>

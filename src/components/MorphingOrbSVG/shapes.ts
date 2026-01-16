@@ -4,12 +4,29 @@ import type { Point3D } from './types'
  * Grid Sphere (like icon 363881)
  * Dots at intersections of latitude rings and longitude lines
  * Creates the classic "disco ball" look
+ * @param radius - sphere radius
+ * @param size - canvas size, used to scale dot density
  */
-export function gridSphere(radius: number = 1): Point3D[] {
+export function gridSphere(radius: number = 1, size: number = 500): Point3D[] {
   const points: Point3D[] = []
 
-  // 9 latitude bands from pole to pole
-  const latitudes = 9
+  // Scale latitude bands and dots per ring based on size
+  let latitudes: number
+  let maxDotsPerRing: number
+
+  if (size <= 32) {
+    latitudes = 6
+    maxDotsPerRing = 8
+  } else if (size <= 64) {
+    latitudes = 8
+    maxDotsPerRing = 12
+  } else if (size <= 200) {
+    latitudes = 13
+    maxDotsPerRing = 20
+  } else {
+    latitudes = 17
+    maxDotsPerRing = 26
+  }
 
   for (let lat = 0; lat < latitudes; lat++) {
     // phi goes from 0 (top) to PI (bottom)
@@ -19,7 +36,7 @@ export function gridSphere(radius: number = 1): Point3D[] {
 
     // Fewer dots near poles, more at equator
     // This creates even visual spacing on the sphere surface
-    const dotsInRing = Math.max(1, Math.round(12 * Math.sin(phi)))
+    const dotsInRing = Math.max(1, Math.round(maxDotsPerRing * Math.sin(phi)))
 
     for (let i = 0; i < dotsInRing; i++) {
       const theta = (i / dotsInRing) * Math.PI * 2

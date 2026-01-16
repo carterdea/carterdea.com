@@ -66,7 +66,7 @@ export function MorphingOrbSVG({
 
       switch (shapeType) {
         case 'gridSphere':
-          return gridSphere(radius)
+          return gridSphere(radius, size)
         case 'curvedArcs':
           return curvedArcs(radius)
         case 'fibSphere':
@@ -255,6 +255,9 @@ export function MorphingOrbSVG({
     [variant, color, palette, colorMode]
   )
 
+  // Small orbs scale up slightly on hover
+  const hoverScale = size <= 64 ? 1.15 : 1
+
   return (
     <svg
       width={size}
@@ -263,7 +266,11 @@ export function MorphingOrbSVG({
       className={className}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      style={{ overflow: 'visible' }}
+      style={{
+        overflow: 'visible',
+        transform: isHovered ? `scale(${hoverScale})` : 'scale(1)',
+        transition: 'transform 200ms ease-out',
+      }}
     >
       {dots.map((dot, renderIndex) => (
         <ellipse

@@ -1,0 +1,39 @@
+---
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="404 — Carterdea">
+  <div class="min-h-screen flex flex-col">
+    <Header />
+
+    <main transition:name="page-content" class="flex-1 flex flex-col px-4 md:px-10">
+      <section class="px-0 pt-20 pb-8 md:pt-30 md:pb-18">
+        <div class="max-w-sm md:max-w-[50%] md:mx-auto">
+          <h1
+            class="animate-fade-in-up text-lg text-white leading-normal tracking-[-0.36px]"
+            style="--delay: 100ms;"
+          >
+            404
+          </h1>
+          <p
+            class="animate-fade-in-up mt-4 text-sm text-white/60 leading-normal tracking-[-0.28px]"
+            style="--delay: 180ms;"
+          >
+            This page doesn't exist or has been moved.
+          </p>
+          <a
+            href="/"
+            class="animate-fade-in-up mt-4 inline-block text-sm text-white/60 tracking-[-0.28px] hover:text-white transition-colors"
+            style="--delay: 260ms;"
+          >
+            Back to home
+          </a>
+        </div>
+      </section>
+    </main>
+
+    <Footer />
+  </div>
+</Layout>

@@ -1,11 +1,11 @@
 // Particle count thresholds based on canvas size
 export function getParticleCount(size: number): number {
-  if (size <= 32) return 10
-  if (size <= 64) return 20
-  if (size <= 100) return 35
-  if (size <= 200) return 50
-  if (size <= 300) return 70
-  return 120
+  if (size <= 32) return 16
+  if (size <= 64) return 30
+  if (size <= 100) return 50
+  if (size <= 200) return 80
+  if (size <= 300) return 110
+  return 180
 }
 
 // Shape types for morphing

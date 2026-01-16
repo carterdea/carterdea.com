@@ -9,13 +9,16 @@ interface Props {
 }
 
 const { clients = [] } = Astro.props;
+
+// Fisher-Yates shuffle for randomized order on each page load
+const shuffledClients = [...clients].sort(() => Math.random() - 0.5);
 ---
 
 <!-- Mobile: Swipeable carousel -->
 <section class="animate-fade-in-up relative md:hidden overflow-hidden" style="--delay: 350ms;">
   <div id="mobile-carousel-viewport" class="overflow-hidden px-4 pb-4">
     <div id="mobile-carousel-container" class="flex gap-4">
-      {clients.map((client) => (
+      {shuffledClients.map((client) => (
         <ClientCard
           name={client.name}
           description={client.description}
@@ -27,7 +30,7 @@ const { clients = [] } = Astro.props;
 
   <!-- Pagination dots -->
   <div id="mobile-carousel-dots" class="flex justify-center gap-0">
-    {clients.map((_, index) => (
+    {shuffledClients.map((_, index) => (
       <button
         type="button"
         aria-label={`Go to slide ${index + 1}`}
