@@ -3,39 +3,23 @@ interface Props {
   name: string;
   description: string;
   logoSrc: string;
+  logoHeight?: number;
 }
 
-const { name, description, logoSrc } = Astro.props;
+const { name, description, logoSrc, logoHeight = 80 } = Astro.props;
 ---
 
-<div class="client-card shrink-0 w-[370px] h-[340px] rounded shadow-[0px_12px_24px_0px_rgba(0,0,0,0.16),0px_4px_4px_0px_rgba(0,0,0,0.1)] flex flex-col items-center justify-center px-8 snap-center snap-always gap-4">
-  <div class="h-[180px] flex items-center justify-center relative z-10">
+<div class="client-card shrink-0 w-[370px] h-[340px] rounded shadow-[0_12px_24px_rgba(0,0,0,0.16),0_4px_4px_rgba(0,0,0,0.1)] flex flex-col items-center justify-center px-8 snap-center snap-always gap-4 bg-white/5 backdrop-blur">
+  <div class="h-[180px] flex items-center justify-center">
     <img
       src={logoSrc}
       alt={name}
-      class="h-20 w-auto max-w-[200px] object-contain"
+      style={`height: ${logoHeight}px`}
+      class="w-auto max-w-[280px] object-contain"
       loading="lazy"
     />
   </div>
-  <p class="text-sm text-white/70 text-center max-w-[270px] tracking-[-0.14px] relative z-10">
+  <p class="text-sm text-white/70 text-center max-w-[270px] tracking-[-0.14px]">
     {description}
   </p>
 </div>
-
-<style>
-  .client-card {
-    position: relative;
-    overflow: hidden;
-    isolation: isolate;
-  }
-
-  .client-card::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: rgba(255, 255, 255, 0.05);
-    -webkit-backdrop-filter: blur(4px);
-    backdrop-filter: blur(4px);
-    z-index: 0;
-  }
-</style>
