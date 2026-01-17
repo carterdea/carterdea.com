@@ -1,8 +1,9 @@
 ---
+import AnimationToggle from '../components/AnimationToggle.astro';
 import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
 import Layout from '../layouts/Layout.astro';
-import { MorphingOrbSVG } from '../components/MorphingOrbSVG';
+import { MorphingOrbGL } from '../components/MorphingOrbGL';
 ---
 
 <Layout title="Animation — Carterdea">
@@ -11,23 +12,25 @@ import { MorphingOrbSVG } from '../components/MorphingOrbSVG';
 
     <main transition:name="page-content" class="flex-1 flex flex-col px-4 md:px-8 py-12">
       <div class="max-w-6xl mx-auto w-full">
-        <h1 class="text-3xl md:text-4xl font-medium mb-4">Morphing Orb (SVG)</h1>
-        <p class="text-white/60 mb-12 max-w-2xl">
-          Ellipse-based particle animation with proper 3D projection.
-          Dots are drawn as ellipses that squash based on surface orientation.
+        <h1 class="text-3xl md:text-4xl font-medium mb-4">Morphing Orb (WebGL)</h1>
+        <p class="text-white/60 mb-8 max-w-2xl">
+          Three.js particle animation with real 3D rendering.
+          Spherical dots with proper lighting and depth.
           Hover to speed up.
         </p>
+
+        <AnimationToggle active="webgl" />
 
         <!-- Large version -->
         <section class="mb-16">
           <h2 class="text-xl font-medium mb-2">Large (500px)</h2>
-          <p class="text-white/50 text-sm mb-6">Full detail with ellipse distortion</p>
+          <p class="text-white/50 text-sm mb-6">Full detail with 3D lighting</p>
 
           <div class="flex flex-wrap gap-8">
             <div>
               <p class="text-white/40 text-xs mb-3 uppercase tracking-wider">Monochrome</p>
-              <MorphingOrbSVG
-                client:load
+              <MorphingOrbGL
+                client:visible
                 size={500}
                 variant="mono"
                 color="#ffffff"
@@ -35,97 +38,47 @@ import { MorphingOrbSVG } from '../components/MorphingOrbSVG';
             </div>
             <div>
               <p class="text-white/40 text-xs mb-3 uppercase tracking-wider">Color</p>
-              <MorphingOrbSVG
-                client:load
+              <MorphingOrbGL
+                client:visible
                 size={500}
                 variant="color"
-                palette={['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#ffeaa7']}
               />
             </div>
           </div>
         </section>
 
-        <!-- Medium version -->
+        <!-- Size variants -->
         <section class="mb-16">
-          <h2 class="text-xl font-medium mb-2">Medium (200px)</h2>
+          <h2 class="text-xl font-medium mb-2">Size Variants</h2>
+          <p class="text-white/50 text-sm mb-6">Responsive sizing from 200px to 64px</p>
 
-          <div class="flex flex-wrap gap-8 items-start">
+          <div class="flex flex-wrap gap-8 items-end">
             <div>
-              <p class="text-white/40 text-xs mb-3 uppercase tracking-wider">Monochrome</p>
-              <MorphingOrbSVG
-                client:load
-                size={200}
-                variant="mono"
-                color="#ffffff"
-              />
-            </div>
-            <div>
-              <p class="text-white/40 text-xs mb-3 uppercase tracking-wider">Color</p>
-              <MorphingOrbSVG
-                client:load
+              <p class="text-white/40 text-xs mb-3 uppercase tracking-wider">Medium (200px)</p>
+              <MorphingOrbGL
+                client:visible
                 size={200}
                 variant="color"
                 palette={['#a855f7', '#ec4899', '#f43f5e']}
               />
             </div>
-          </div>
-        </section>
-
-        <!-- Small version -->
-        <section class="mb-16">
-          <h2 class="text-xl font-medium mb-2">Small (64px)</h2>
-
-          <div class="flex flex-wrap gap-8 items-start">
             <div>
-              <p class="text-white/40 text-xs mb-3 uppercase tracking-wider">Monochrome</p>
-              <MorphingOrbSVG
-                client:load
+              <p class="text-white/40 text-xs mb-3 uppercase tracking-wider">Small (64px)</p>
+              <MorphingOrbGL
+                client:visible
                 size={64}
                 variant="mono"
                 color="#ffffff"
               />
             </div>
             <div>
-              <p class="text-white/40 text-xs mb-3 uppercase tracking-wider">Color</p>
-              <MorphingOrbSVG
-                client:load
-                size={64}
-                variant="color"
-              />
-            </div>
-          </div>
-        </section>
-
-        <!-- Tiny version -->
-        <section class="mb-16">
-          <h2 class="text-xl font-medium mb-2">Tiny (24px)</h2>
-
-          <div class="flex flex-wrap gap-8 items-center">
-            <div>
-              <p class="text-white/40 text-xs mb-3 uppercase tracking-wider">Monochrome</p>
-              <MorphingOrbSVG
-                client:load
-                size={24}
+              <p class="text-white/40 text-xs mb-3 uppercase tracking-wider">Tiny (32px)</p>
+              <MorphingOrbGL
+                client:visible
+                size={32}
                 variant="mono"
                 color="#ffffff"
               />
-            </div>
-            <div>
-              <p class="text-white/40 text-xs mb-3 uppercase tracking-wider">Color</p>
-              <MorphingOrbSVG
-                client:load
-                size={24}
-                variant="color"
-              />
-            </div>
-            <div class="ml-8 flex items-center gap-3 text-white/60">
-              <MorphingOrbSVG
-                client:load
-                size={24}
-                variant="mono"
-                color="#ffffff"
-              />
-              <span>Example inline usage</span>
             </div>
           </div>
         </section>
@@ -138,30 +91,30 @@ import { MorphingOrbSVG } from '../components/MorphingOrbSVG';
           <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
               <p class="text-white/40 text-xs mb-3 uppercase tracking-wider">Sequential</p>
-              <p class="text-white/30 text-xs mb-4">Colors follow dot creation order (smooth gradients along shape structure)</p>
-              <MorphingOrbSVG
-                client:load
-                size={250}
+              <p class="text-white/30 text-xs mb-4">Colors follow dot creation order</p>
+              <MorphingOrbGL
+                client:visible
+                size={200}
                 variant="color"
                 colorMode="sequential"
               />
             </div>
             <div>
               <p class="text-white/40 text-xs mb-3 uppercase tracking-wider">Spatial</p>
-              <p class="text-white/30 text-xs mb-4">Colors based on 3D position (hue follows angle around Y-axis)</p>
-              <MorphingOrbSVG
-                client:load
-                size={250}
+              <p class="text-white/30 text-xs mb-4">Colors based on 3D position</p>
+              <MorphingOrbGL
+                client:visible
+                size={200}
                 variant="color"
                 colorMode="spatial"
               />
             </div>
             <div>
               <p class="text-white/40 text-xs mb-3 uppercase tracking-wider">Shuffled</p>
-              <p class="text-white/30 text-xs mb-4">Palette shuffled for more contrast between neighbors</p>
-              <MorphingOrbSVG
-                client:load
-                size={250}
+              <p class="text-white/30 text-xs mb-4">Palette shuffled for contrast</p>
+              <MorphingOrbGL
+                client:visible
+                size={200}
                 variant="color"
                 colorMode="shuffled"
               />
@@ -169,76 +122,14 @@ import { MorphingOrbSVG } from '../components/MorphingOrbSVG';
           </div>
         </section>
 
-        <!-- Individual shapes -->
-        <section class="mb-16">
-          <h2 class="text-xl font-medium mb-2">Individual Shapes</h2>
-          <p class="text-white/50 text-sm mb-6">Each shape isolated (no auto-morph)</p>
-
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <div>
-              <p class="text-white/40 text-xs mb-3 uppercase tracking-wider">Grid Sphere</p>
-              <MorphingOrbSVG
-                client:load
-                size={150}
-                variant="mono"
-                color="#ffffff"
-                shapeSequence={['gridSphere']}
-                autoMorph={false}
-              />
-            </div>
-            <div>
-              <p class="text-white/40 text-xs mb-3 uppercase tracking-wider">Curved Arcs</p>
-              <MorphingOrbSVG
-                client:load
-                size={150}
-                variant="mono"
-                color="#ffffff"
-                shapeSequence={['curvedArcs']}
-                autoMorph={false}
-              />
-            </div>
-            <div>
-              <p class="text-white/40 text-xs mb-3 uppercase tracking-wider">Fibonacci Sphere</p>
-              <MorphingOrbSVG
-                client:load
-                size={150}
-                variant="mono"
-                color="#ffffff"
-                shapeSequence={['fibSphere']}
-                autoMorph={false}
-              />
-            </div>
-            <div>
-              <p class="text-white/40 text-xs mb-3 uppercase tracking-wider">Double Orbit</p>
-              <MorphingOrbSVG
-                client:load
-                size={150}
-                variant="mono"
-                color="#ffffff"
-                shapeSequence={['doubleOrbit']}
-                autoMorph={false}
-              />
-            </div>
-            <div>
-              <p class="text-white/40 text-xs mb-3 uppercase tracking-wider">Single Orbit</p>
-              <MorphingOrbSVG
-                client:load
-                size={150}
-                variant="mono"
-                color="#ffffff"
-                shapeSequence={['orbit']}
-                autoMorph={false}
-              />
-            </div>
-          </div>
+        <!-- Note about WebGL contexts -->
+        <section class="mb-16 p-4 bg-white/5 rounded-lg">
+          <p class="text-white/50 text-sm">
+            <strong class="text-white/70">Note:</strong> WebGL has a browser limit of ~8-16 simultaneous contexts.
+            This page uses lazy loading to only initialize canvases when scrolled into view.
+          </p>
         </section>
 
-        <!-- Link to legacy -->
-        <section class="mt-8 pt-8 border-t border-white/10">
-          <a href="/animation-legacy" class="text-white/40 hover:text-white/60 text-sm">
-            View Canvas-based implementation →
-          </a>
-        </section>
       </div>
     </main>
 

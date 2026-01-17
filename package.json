@@ -16,18 +16,23 @@
     "@types/bun": "latest",
     "@types/react": "^19.2.8",
     "@types/react-dom": "^19.2.3",
+    "@types/three": "^0.182.0",
     "tailwindcss": "^4.1.18",
     "typescript": "^5.9.3"
   },
   "dependencies": {
     "@astrojs/react": "^4.4.2",
+    "@astrojs/sitemap": "^3.7.0",
     "@astrojs/vercel": "^9.0.3",
     "@headlessui/react": "^2.2.9",
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.5.0",
     "astro": "^5.16.9",
     "embla-carousel": "^8.6.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "react-hook-form": "^7.71.1",
-    "resend": "^6.7.0"
+    "resend": "^6.7.0",
+    "three": "^0.182.0"
   }
 }

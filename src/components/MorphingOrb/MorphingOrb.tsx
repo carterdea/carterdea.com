@@ -1,31 +1,38 @@
-import { useRef, useEffect, useCallback, useState } from 'react'
-import { Particle } from './particle'
-import { generateShape } from './shapes'
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  getParticleCount,
+  BASE_DOT_SIZE_RATIO,
   DEFAULT_SHAPE_SEQUENCE,
+  getParticleCount,
+  HOVER_ROTATION_SPEED,
+  IDLE_ROTATION_SPEED,
+  MIN_DOT_SIZE,
   MORPH_DURATION,
   SHAPE_HOLD_DURATION,
-  IDLE_ROTATION_SPEED,
-  HOVER_ROTATION_SPEED,
-  PERSPECTIVE,
-  BASE_DOT_SIZE_RATIO,
-  MIN_DOT_SIZE,
-  DEPTH_SIZE_SCALE,
   type ShapeType,
-} from './constants'
+} from './constants';
+import { Particle } from './particle';
+import { generateShape } from './shapes';
+
+const PERSPECTIVE = 2.0; // Lower = stronger perspective distortion
+
+// Light direction (normalized) - upper-left-front
+const LIGHT_DIR = { x: -0.5, y: -0.7, z: 0.5 };
+const lightLen = Math.sqrt(LIGHT_DIR.x ** 2 + LIGHT_DIR.y ** 2 + LIGHT_DIR.z ** 2);
+LIGHT_DIR.x /= lightLen;
+LIGHT_DIR.y /= lightLen;
+LIGHT_DIR.z /= lightLen;
 
 export interface MorphingOrbProps {
-  size?: number
-  variant?: 'mono' | 'color'
-  color?: string
-  palette?: string[]
-  baseSpeed?: number
-  hoverSpeed?: number
-  hoverIntensity?: number
-  className?: string
-  shapeSequence?: ShapeType[]
-  autoMorph?: boolean
+  size?: number;
+  variant?: 'mono' | 'color';
+  color?: string;
+  palette?: string[];
+  baseSpeed?: number;
+  hoverSpeed?: number;
+  hoverIntensity?: number;
+  className?: string;
+  shapeSequence?: ShapeType[];
+  autoMorph?: boolean;
 }
 
 export function MorphingOrb({
@@ -40,168 +47,182 @@ export function MorphingOrb({
   shapeSequence = DEFAULT_SHAPE_SEQUENCE,
   autoMorph = true,
 }: MorphingOrbProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const particlesRef = useRef<Particle[]>([])
-  const animationRef = useRef<number>(0)
-  const rotationRef = useRef(0)
-  const lastTimeRef = useRef(0)
-  const shapeIndexRef = useRef(0)
-  const timeSinceLastMorphRef = useRef(0)
-  const isHoveredRef = useRef(false)
-  const [isHovered, setIsHovered] = useState(false)
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const particlesRef = useRef<Particle[]>([]);
+  const animationRef = useRef<number>(0);
+  const rotationRef = useRef(0);
+  const lastTimeRef = useRef(0);
+  const shapeIndexRef = useRef(0);
+  const timeSinceLastMorphRef = useRef(0);
+  const isHoveredRef = useRef(false);
+  const [isHovered, setIsHovered] = useState(false);
 
-  const particleCount = getParticleCount(size)
-  const radius = size * 0.35
+  const particleCount = getParticleCount(size);
+  const radius = size * 0.4;
 
   // Initialize particles
   const initParticles = useCallback(() => {
-    const shape = generateShape(shapeSequence[0], particleCount, radius)
-    particlesRef.current = shape.map(
-      (point, i) => new Particle(point, i, shape.length)
-    )
-    shapeIndexRef.current = 0
-    timeSinceLastMorphRef.current = 0
-  }, [particleCount, radius, shapeSequence])
+    const shape = generateShape(shapeSequence[0], particleCount, radius);
+    particlesRef.current = shape.map((point, i) => new Particle(point, i, shape.length));
+    shapeIndexRef.current = 0;
+    timeSinceLastMorphRef.current = 0;
+  }, [particleCount, radius, shapeSequence]);
 
   // Morph to next shape
   const morphToNextShape = useCallback(() => {
-    shapeIndexRef.current =
-      (shapeIndexRef.current + 1) % shapeSequence.length
-    const nextShape = generateShape(
-      shapeSequence[shapeIndexRef.current],
-      particleCount,
-      radius
-    )
+    shapeIndexRef.current = (shapeIndexRef.current + 1) % shapeSequence.length;
+    const nextShape = generateShape(shapeSequence[shapeIndexRef.current], particleCount, radius);
 
     // Assign targets with staggered delays
     particlesRef.current.forEach((particle, i) => {
-      const target = nextShape[i % nextShape.length]
-      const delay = (i / particlesRef.current.length) * 0.3 // 0-0.3 stagger
-      particle.setTarget(target, delay)
-    })
+      const target = nextShape[i % nextShape.length];
+      const delay = (i / particlesRef.current.length) * 0.3; // 0-0.3 stagger
+      particle.setTarget(target, delay);
+    });
 
-    timeSinceLastMorphRef.current = 0
-  }, [particleCount, radius, shapeSequence])
+    timeSinceLastMorphRef.current = 0;
+  }, [particleCount, radius, shapeSequence]);
 
-  // Project 3D to 2D
+  // Project 3D to 2D with ellipse deformation (matching SVG approach exactly)
   const project = useCallback(
     (x: number, y: number, z: number) => {
-      const scale = PERSPECTIVE / (PERSPECTIVE + z / radius)
+      // Perspective projection (camera looks down -Z axis, positive Z = closer)
+      const depth = PERSPECTIVE - z / radius;
+      const scale = PERSPECTIVE / Math.max(0.5, depth);
+      // Use smaller scale than SVG to fit within canvas bounds
+      // (SVG has overflow:visible, canvas clips at boundary)
+      // SVG uses 0.8, we use 0.65 to ensure all dots fit with padding
+      const screenScale = (size / 2 / radius) * 0.65;
+      const screenX = size / 2 + x * scale * screenScale;
+      const screenY = size / 2 + y * scale * screenScale;
+
+      // Calculate surface normal (normalized position for sphere)
+      const len = Math.sqrt(x * x + y * y + z * z) || 1;
+      const nx = x / len;
+      const ny = y / len;
+      const nz = z / len;
+
+      // How much is the dot facing the camera (dot product with view direction [0,0,1])
+      const facing = Math.abs(nz);
+
+      // Lambert shading: dot product of normal with light direction
+      const lightDot = nx * LIGHT_DIR.x + ny * LIGHT_DIR.y + nz * LIGHT_DIR.z;
+      const lighting = Math.max(0, lightDot);
+
+      // Ellipse squash: 1.0 when facing camera, 0.15 when on edge
+      const squash = 0.15 + facing * 0.85;
+
+      // Ellipse rotation based on 3D surface normal direction
+      // The ellipse squashes in the direction the surface tilts away from camera
+      // For a sphere, the normal's x,y components indicate the tilt direction
+      const rotation = Math.atan2(ny, nx);
+
+      // Lit dots are slightly larger
+      const lightSizeBoost = 1 + lighting * 0.12;
+
       return {
-        screenX: size / 2 + x * scale,
-        screenY: size / 2 + y * scale,
+        screenX,
+        screenY,
         scale,
-      }
+        squash,
+        rotation,
+        lightSizeBoost,
+      };
     },
     [size, radius]
-  )
-
-  // Get dot color
-  const getDotColor = useCallback(
-    (index: number, z: number): string => {
-      if (variant === 'mono') {
-        // Slight opacity variation based on depth
-        const depthFactor = 0.5 + ((z / radius + 1) / 2) * 0.5
-        // Parse hex color and apply opacity
-        const hex = color.replace('#', '')
-        const r = parseInt(hex.slice(0, 2), 16)
-        const g = parseInt(hex.slice(2, 4), 16)
-        const b = parseInt(hex.slice(4, 6), 16)
-        return `rgba(${r}, ${g}, ${b}, ${depthFactor})`
-      } else {
-        return palette[index % palette.length]
-      }
-    },
-    [variant, color, palette, radius]
-  )
+  );
 
   // Animation loop
   const animate = useCallback(
     (timestamp: number) => {
-      const canvas = canvasRef.current
-      if (!canvas) return
+      const canvas = canvasRef.current;
+      if (!canvas) return;
 
-      const ctx = canvas.getContext('2d')
-      if (!ctx) return
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
 
-      const deltaTime = lastTimeRef.current ? timestamp - lastTimeRef.current : 16
-      lastTimeRef.current = timestamp
+      const deltaTime = lastTimeRef.current ? timestamp - lastTimeRef.current : 16;
+      lastTimeRef.current = timestamp;
 
-      const hovered = isHoveredRef.current
-      const currentSpeed = hovered ? hoverSpeed : baseSpeed
-      const intensity = hovered ? hoverIntensity : 1
+      const hovered = isHoveredRef.current;
+      const currentSpeed = hovered ? hoverSpeed : baseSpeed;
+      const intensity = hovered ? hoverIntensity : 1;
 
       // Update rotation
-      const rotationSpeed = hovered ? HOVER_ROTATION_SPEED : IDLE_ROTATION_SPEED
-      rotationRef.current += rotationSpeed * deltaTime * currentSpeed
+      const rotationSpeed = hovered ? HOVER_ROTATION_SPEED : IDLE_ROTATION_SPEED;
+      rotationRef.current += rotationSpeed * deltaTime * currentSpeed;
 
       // Update morph progress
-      const morphDelta = (deltaTime / MORPH_DURATION) * intensity
-      let anyMorphing = false
+      const morphDelta = (deltaTime / MORPH_DURATION) * intensity;
+      let anyMorphing = false;
       particlesRef.current.forEach((particle) => {
-        particle.updateMorph(morphDelta)
-        if (particle.isMorphing()) anyMorphing = true
-      })
+        particle.updateMorph(morphDelta);
+        if (particle.isMorphing()) anyMorphing = true;
+      });
 
       // Auto morph timing
       if (autoMorph && !anyMorphing) {
-        timeSinceLastMorphRef.current += deltaTime
+        timeSinceLastMorphRef.current += deltaTime;
         if (timeSinceLastMorphRef.current >= SHAPE_HOLD_DURATION / currentSpeed) {
-          morphToNextShape()
+          morphToNextShape();
         }
       }
 
       // Clear canvas
-      ctx.clearRect(0, 0, size, size)
+      ctx.clearRect(0, 0, size, size);
 
       // Calculate projected positions and sort by depth
+      const baseDotSize = Math.max(MIN_DOT_SIZE, size * BASE_DOT_SIZE_RATIO);
+
       const projected = particlesRef.current.map((particle, index) => {
-        const rotated = particle.getRotatedPosition(rotationRef.current)
-
-        // Add subtle wobble
-        const wobbleTime = timestamp * 0.001
-        const wobbleAmp = 0.02 * radius * (hovered ? intensity : 1)
-        const wobbleX =
-          Math.sin(wobbleTime + particle.wobbleOffset) * wobbleAmp
-        const wobbleY =
-          Math.cos(wobbleTime * 0.7 + particle.wobbleOffset) * wobbleAmp
-
-        const { screenX, screenY, scale } = project(
-          rotated.x + wobbleX,
-          rotated.y + wobbleY,
+        const rotated = particle.getRotatedPosition(rotationRef.current);
+        const { screenX, screenY, scale, squash, rotation, lightSizeBoost } = project(
+          rotated.x,
+          rotated.y,
           rotated.z
-        )
+        );
 
         return {
           index,
           screenX,
           screenY,
           scale,
+          squash,
+          rotation,
+          lightSizeBoost,
           z: rotated.z,
           particle,
-        }
-      })
+        };
+      });
 
       // Sort by z (back to front)
-      projected.sort((a, b) => a.z - b.z)
+      projected.sort((a, b) => a.z - b.z);
 
-      // Draw particles
-      const baseDotSize = Math.max(MIN_DOT_SIZE, size * BASE_DOT_SIZE_RATIO)
+      // Draw particles as ellipses with flat fill
+      projected.forEach(
+        ({ index, screenX, screenY, scale, squash, rotation, lightSizeBoost, particle }) => {
+          const dotSize = baseDotSize * scale * particle.sizeVariation * lightSizeBoost;
+          const rx = Math.max(0.5, dotSize);
+          const ry = Math.max(0.3, dotSize * squash);
 
-      projected.forEach(({ index, screenX, screenY, scale, z, particle }) => {
-        const dotSize =
-          baseDotSize *
-          scale *
-          particle.sizeVariation *
-          (1 + (z / radius) * DEPTH_SIZE_SCALE * 0.3)
+          // Get color
+          let fillColor: string;
+          if (variant === 'mono') {
+            fillColor = color;
+          } else {
+            fillColor = palette[index % palette.length];
+          }
 
-        ctx.beginPath()
-        ctx.arc(screenX, screenY, Math.max(0.5, dotSize), 0, Math.PI * 2)
-        ctx.fillStyle = getDotColor(index, z)
-        ctx.fill()
-      })
+          ctx.beginPath();
+          // Use ellipse's built-in rotation parameter (5th param) instead of ctx.rotate()
+          // rx is major axis (tangent to sphere edge), ry is minor axis (toward center)
+          ctx.ellipse(screenX, screenY, rx, ry, rotation, 0, Math.PI * 2);
+          ctx.fillStyle = fillColor;
+          ctx.fill();
+        }
+      );
 
-      animationRef.current = requestAnimationFrame(animate)
+      animationRef.current = requestAnimationFrame(animate);
     },
     [
       size,
@@ -211,43 +232,44 @@ export function MorphingOrb({
       autoMorph,
       morphToNextShape,
       project,
-      getDotColor,
-      radius,
+      variant,
+      color,
+      palette,
     ]
-  )
+  );
 
   // Setup and cleanup
   useEffect(() => {
-    initParticles()
-    animationRef.current = requestAnimationFrame(animate)
+    initParticles();
+    animationRef.current = requestAnimationFrame(animate);
 
     return () => {
       if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current)
+        cancelAnimationFrame(animationRef.current);
       }
-    }
-  }, [initParticles, animate])
+    };
+  }, [initParticles, animate]);
 
   // Handle hover state sync
   useEffect(() => {
-    isHoveredRef.current = isHovered
-  }, [isHovered])
+    isHoveredRef.current = isHovered;
+  }, [isHovered]);
 
   // Handle resize
   useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
+    const canvas = canvasRef.current;
+    if (!canvas) return;
 
     // Set actual pixel size for retina displays
-    const dpr = window.devicePixelRatio || 1
-    canvas.width = size * dpr
-    canvas.height = size * dpr
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = size * dpr;
+    canvas.height = size * dpr;
 
-    const ctx = canvas.getContext('2d')
+    const ctx = canvas.getContext('2d');
     if (ctx) {
-      ctx.scale(dpr, dpr)
+      ctx.scale(dpr, dpr);
     }
-  }, [size])
+  }, [size]);
 
   return (
     <canvas
@@ -259,7 +281,7 @@ export function MorphingOrb({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     />
-  )
+  );
 }
 
-export default MorphingOrb
+export default MorphingOrb;

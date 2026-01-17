@@ -7,7 +7,7 @@ interface Props {
   description?: string;
 }
 
-const { title, description = 'Product design and engineering for companies shaping what\'s next. A distributed studio building AI products and ecommerce systems.' } = Astro.props;
+const { title, description = 'Product design, AI engineering, and Shopify development focused on business outcomes. UX audits and conversion rate optimization for ecommerce and SaaS.' } = Astro.props;
 const canonicalURL = new URL(Astro.url.pathname, Astro.site || 'https://carterdea.com');
 ---
 
@@ -48,6 +48,52 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site || 'https://carterde
 
     <!-- Font Preload -->
     <link rel="preload" href="/font.woff2" as="font" type="font/woff2" crossorigin />
+
+    <!-- JSON-LD Structured Data -->
+    <script is:inline type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "ProfessionalService",
+        "name": "Carterdea",
+        "url": "https://carterdea.com",
+        "logo": "https://carterdea.com/logos/carterdea-icon.svg",
+        "image": "https://carterdea.com/og-image.png",
+        "description": "Product design, AI engineering, and Shopify development focused on business outcomes. UX audits and conversion rate optimization for ecommerce and SaaS.",
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "Scottsdale",
+          "addressRegion": "AZ",
+          "addressCountry": "US"
+        },
+        "areaServed": [
+          {"@type": "City", "name": "Los Angeles"},
+          {"@type": "City", "name": "San Francisco"},
+          {"@type": "City", "name": "New York"},
+          {"@type": "City", "name": "Phoenix"},
+          {"@type": "City", "name": "Scottsdale"},
+          {"@type": "City", "name": "Denver"},
+          {"@type": "City", "name": "Salt Lake City"},
+          {"@type": "City", "name": "Boston"},
+          {"@type": "City", "name": "Miami"},
+          {"@type": "City", "name": "Orange County"},
+          {"@type": "City", "name": "Dallas"},
+          {"@type": "City", "name": "Austin"},
+          {"@type": "Country", "name": "United States"}
+        ],
+        "serviceType": [
+          "Product Design",
+          "AI Engineering",
+          "Shopify Plus Development",
+          "Shopify Headless Development",
+          "UX Audits",
+          "Conversion Rate Optimization",
+          "Front-end Development",
+          "Backend Development"
+        ],
+        "priceRange": "$$$$",
+        "sameAs": []
+      }
+    </script>
 
     <ClientRouter />
   </head>

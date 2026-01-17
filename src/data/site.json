@@ -1,7 +1,7 @@
 {
   "hero": {
     "title": "Product design and engineering for companies shaping what's next",
-    "subtitle": "A distributed studio building AI products and ecommerce systems."
+    "subtitle": "A distributed studio focused on applied AI and ecommerce systems with real business impact."
   },
   "technologies": [
     "Figma",
@@ -11,6 +11,7 @@
     "Node",
     "Ruby on Rails",
     "Shopify",
+    "Shopify Headless",
     "OpenAI",
     "Google Gemini",
     "Anthropic",
@@ -19,15 +20,18 @@
   ],
   "services": [
     "Product strategy",
+    "UX Audits",
     "UX Workshops",
     "Product Design",
     "Prototyping",
     "Design Systems",
+    "Shopify Plus Development",
     "Front-end Development",
     "Backend Development",
     "AI Engineering",
     "Context Engineering",
     "Prompt Engineering",
+    "Conversion Rate Optimization",
     "Eval"
   ],
   "results": [
@@ -44,16 +48,11 @@
       "logoSrc": "/logos/stussy-crown.svg"
     },
     {
-      "quote": "Placeholder testimonial two. Replace this with real content later.",
-      "author": "Jane Doe",
-      "role": "VP Product",
-      "company": "Acme Corp"
-    },
-    {
-      "quote": "Placeholder testimonial three. Replace this with real content later.",
-      "author": "John Smith",
-      "role": "CTO",
-      "company": "TechCo"
+      "quote": "Carter delivered a complex headless Shopify build in just three weeks and played a key role in a major revenue initiative that transformed our digital business.",
+      "author": "Jonathan Smalley",
+      "role": "VP of Ecommerce",
+      "company": "New Era",
+      "logoSrc": "/logos/new-era.svg"
     }
   ],
   "cta": {
@@ -62,10 +61,10 @@
   },
   "clients": [
     {
-      "id": "code-climate",
-      "name": "Code Climate",
-      "description": "Dashboard for engineering team performance and PR velocity",
-      "logoSrc": "/logos/code-climate.svg",
+      "id": "adopttogether",
+      "name": "AdoptTogether",
+      "description": "Designed and developed a crowdfunding platform for families trying to adopt",
+      "logoSrc": "/logos/adopttogether.svg",
       "logoHeight": 30
     },
     {
@@ -76,16 +75,51 @@
       "logoHeight": 80
     },
     {
-      "id": "stussy",
-      "name": "Stussy",
-      "description": "4x revenue growth after ecommerce re-platform and redesign",
-      "logoSrc": "/logos/stussy.svg",
-      "logoHeight": 80
+      "id": "code-climate",
+      "name": "Code Climate",
+      "description": "Dashboard for engineering team performance and PR velocity",
+      "logoSrc": "/logos/code-climate.svg",
+      "logoHeight": 30
+    },
+    {
+      "id": "datascience",
+      "name": "DataScience",
+      "description": "Designed tooling for data scientists and model management for AI engineers",
+      "logoSrc": "/logos/datascience.svg",
+      "logoHeight": 30
+    },
+    {
+      "id": "ford",
+      "name": "Ford",
+      "description": "Infotainment UX concepts for vehicle service scheduling",
+      "logoSrc": "/logos/ford.svg",
+      "logoHeight": 48
+    },
+    {
+      "id": "gotomeeting",
+      "name": "GoToMeeting",
+      "description": "Designed AI features including virtual backgrounds and meeting transcriptions",
+      "logoSrc": "/logos/gotomeeting.svg",
+      "logoHeight": 30
+    },
+    {
+      "id": "grasshopper",
+      "name": "Grasshopper",
+      "description": "Redesigned mobile and desktop apps",
+      "logoSrc": "/logos/grasshopper.svg",
+      "logoHeight": 30
+    },
+    {
+      "id": "microsoft",
+      "name": "Microsoft",
+      "description": "Designed ASP.net and Silverlight.net developer portals",
+      "logoSrc": "/logos/microsoft.svg",
+      "logoHeight": 30
     },
     {
       "id": "new-era",
       "name": "New Era",
-      "description": "3x revenue growth after re-platform and redesign",
+      "description": "3x revenue growth after CVR optimization and redesign",
       "logoSrc": "/logos/new-era.svg",
       "logoHeight": 24
     },
@@ -97,17 +131,10 @@
       "logoHeight": 24
     },
     {
-      "id": "ford",
-      "name": "Ford",
-      "description": "Infotainment UX concepts for vehicle service scheduling",
-      "logoSrc": "/logos/ford.svg",
-      "logoHeight": 48
-    },
-    {
-      "id": "grasshopper",
-      "name": "Grasshopper",
-      "description": "Redesigned mobile and desktop apps",
-      "logoSrc": "/logos/grasshopper.svg",
+      "id": "protectai",
+      "name": "ProtectAI",
+      "description": "Designed security reporting for ML pipelines",
+      "logoSrc": "/logos/protect-ai.svg",
       "logoHeight": 30
     },
     {
@@ -118,25 +145,11 @@
       "logoHeight": 30
     },
     {
-      "id": "datascience",
-      "name": "DataScience",
-      "description": "Designed tooling for data scientists and model management for AI engineers",
-      "logoSrc": "/logos/datascience.svg",
-      "logoHeight": 30
-    },
-    {
-      "id": "protectai",
-      "name": "ProtectAI",
-      "description": "Designed security reporting for ML pipelines",
-      "logoSrc": "/logos/protect-ai.svg",
-      "logoHeight": 30
-    },
-    {
-      "id": "adopttogether",
-      "name": "AdoptTogether",
-      "description": "Designed and developed a crowdfunding platform for families trying to adopt",
-      "logoSrc": "/logos/adopttogether.svg",
-      "logoHeight": 30
+      "id": "stussy",
+      "name": "Stussy",
+      "description": "4x revenue growth after CVR optimization and redesign",
+      "logoSrc": "/logos/stussy.svg",
+      "logoHeight": 80
     }
   ]
 }
