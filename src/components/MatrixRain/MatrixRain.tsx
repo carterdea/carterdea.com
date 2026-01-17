@@ -5,6 +5,8 @@ import {
   COLUMN_WIDTH,
   DROPS_PER_COLUMN,
   FONT_FAMILY,
+  getRandomCharacter,
+  getTrailColor,
   LINE_HEIGHT_MULTIPLIER,
   MAX_BRIGHTNESS,
   MAX_FONT_SIZE,
@@ -15,8 +17,6 @@ import {
   MIN_STEP_INTERVAL,
   MIN_TRAIL_LENGTH,
   MUTATION_CHANCE,
-  getRandomCharacter,
-  getTrailColor,
   randomInRange,
 } from './constants';
 import type { Column } from './types';
@@ -78,8 +78,7 @@ const updateColumn = (column: Column, canvasHeight: number, currentTime: number)
 
   mutateTrail(column);
 
-  const lowestTrailY =
-    column.trail.length > 0 ? column.trail[column.trail.length - 1].y : column.y;
+  const lowestTrailY = column.trail.length > 0 ? column.trail[column.trail.length - 1].y : column.y;
 
   const lineHeight = column.fontSize * LINE_HEIGHT_MULTIPLIER;
 
@@ -120,15 +119,17 @@ const drawColumn = (ctx: CanvasRenderingContext2D, column: Column): void => {
 
     if (i === 0) {
       // Multiple glow passes for strong bloom effect
-      ctx.globalAlpha = 0.6;
+      ctx.globalAlpha = 0.8;
       ctx.shadowColor = glowColor;
       ctx.fillStyle = glowColor;
 
-      ctx.shadowBlur = 60;
+      ctx.shadowBlur = 80;
       ctx.fillText(char, -COLUMN_WIDTH / 4, 0);
-      ctx.shadowBlur = 30;
+      ctx.shadowBlur = 50;
       ctx.fillText(char, -COLUMN_WIDTH / 4, 0);
-      ctx.shadowBlur = 15;
+      ctx.shadowBlur = 25;
+      ctx.fillText(char, -COLUMN_WIDTH / 4, 0);
+      ctx.shadowBlur = 10;
       ctx.fillText(char, -COLUMN_WIDTH / 4, 0);
 
       // Sharp white text on top
@@ -171,6 +172,7 @@ export default function MatrixRain() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const columnsRef = useRef<Column[]>([]);
   const animationRef = useRef<number>(0);
+  const lastFrameTimeRef = useRef<number>(0);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -195,6 +197,18 @@ export default function MatrixRain() {
     window.addEventListener('resize', resize);
 
     const animate = (currentTime: number) => {
+      // Detect tab switch: if more than 100ms passed, adjust all nextStepTime values
+      // to preserve the stagger instead of having them all fire at once
+      if (lastFrameTimeRef.current > 0) {
+        const delta = currentTime - lastFrameTimeRef.current;
+        if (delta > 100) {
+          for (const column of columnsRef.current) {
+            column.nextStepTime += delta;
+          }
+        }
+      }
+      lastFrameTimeRef.current = currentTime;
+
       render(ctx, columnsRef.current, currentTime);
       animationRef.current = requestAnimationFrame(animate);
     };
