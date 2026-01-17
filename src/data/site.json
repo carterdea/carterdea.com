@@ -101,7 +101,7 @@
       "name": "Ford",
       "description": "Infotainment UX concepts for vehicle service scheduling",
       "logoSrc": "/logos/ford.svg",
-      "logoHeight": 48
+      "logoHeight": 32
     },
     {
       "id": "grasshopper",
@@ -115,7 +115,7 @@
       "name": "Spinlister",
       "description": "Designed and built web, iOS, and Android apps",
       "logoSrc": "/logos/spinlister.svg",
-      "logoHeight": 30
+      "logoHeight": 20
     },
     {
       "id": "datascience",
