@@ -10,7 +10,6 @@ interface Props {
 
 const { clients = [] } = Astro.props;
 
-// Fisher-Yates shuffle for randomized order on each page load
 const shuffledClients = [...clients].sort(() => Math.random() - 0.5);
 ---
 
@@ -23,13 +22,13 @@ const shuffledClients = [...clients].sort(() => Math.random() - 0.5);
           name={client.name}
           description={client.description}
           logoSrc={client.logoSrc}
+          logoHeight={client.logoHeight}
         />
       ))}
     </div>
   </div>
 
-  <!-- Pagination dots -->
-  <div id="mobile-carousel-dots" class="flex justify-center gap-0">
+  <div id="mobile-carousel-dots" class="flex justify-center">
     {shuffledClients.map((_, index) => (
       <button
         type="button"
@@ -48,7 +47,6 @@ const shuffledClients = [...clients].sort(() => Math.random() - 0.5);
   </div>
 </section>
 
-<!-- Desktop: Bare logos with descriptions, alpha mask edges -->
 <section class="hidden md:block relative overflow-hidden desktop-marquee-mask md:-mx-10 shrink-0">
   <h2 class="sr-only">Some of our Clients</h2>
   <div id="marquee-track" class="marquee-track flex items-start gap-24 py-24">
@@ -95,7 +93,6 @@ const shuffledClients = [...clients].sort(() => Math.random() - 0.5);
   import EmblaCarousel from 'embla-carousel';
 
   function initMarquee() {
-    // Mobile carousel with Embla
     const viewport = document.getElementById('mobile-carousel-viewport');
     const dotsContainer = document.getElementById('mobile-carousel-dots');
     const dots = dotsContainer?.querySelectorAll('[data-dot]');
@@ -127,7 +124,6 @@ const shuffledClients = [...clients].sort(() => Math.random() - 0.5);
       });
     }
 
-    // Desktop marquee with JS-calculated animation
     const marqueeTrack = document.getElementById('marquee-track');
     const marqueeContent = marqueeTrack?.querySelector('.marquee-content');
     const desktopSection = marqueeTrack?.closest('section');
@@ -140,8 +136,6 @@ const shuffledClients = [...clients].sort(() => Math.random() - 0.5);
       const slowSpeed = baseSpeed * 0.75; // 25% slower on hover
 
       let animationId: number | null = null;
-
-      // Use object to avoid closure issues
       const state = {
         position: 0,
         lastTimestamp: null as number | null,
@@ -154,11 +148,8 @@ const shuffledClients = [...clients].sort(() => Math.random() - 0.5);
         const deltaTime = (timestamp - state.lastTimestamp) / 1000;
         state.lastTimestamp = timestamp;
 
-        // Smoothly interpolate speed toward target (ease-out feel)
         const speedDiff = state.targetSpeed - state.currentSpeed;
         if (Math.abs(speedDiff) > 0.05) {
-          // Lerp with ease-out by using diminishing factor
-          // 0.15 gives ~300ms transition time at 60fps
           state.currentSpeed += speedDiff * 0.15;
         } else {
           state.currentSpeed = state.targetSpeed;
@@ -173,24 +164,14 @@ const shuffledClients = [...clients].sort(() => Math.random() - 0.5);
         animationId = requestAnimationFrame(animate);
       };
 
-      // Check for reduced motion preference
       if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
         animationId = requestAnimationFrame(animate);
 
-        // Hover handlers for slowdown
-        const handleMouseEnter = () => {
-          console.log('MARQUEE: mouseenter, slowing to', slowSpeed);
-          state.targetSpeed = slowSpeed;
-        };
-        const handleMouseLeave = () => {
-          console.log('MARQUEE: mouseleave, speeding to', baseSpeed);
-          state.targetSpeed = baseSpeed;
-        };
+        const handleMouseEnter = () => { state.targetSpeed = slowSpeed; };
+        const handleMouseLeave = () => { state.targetSpeed = baseSpeed; };
         desktopSection.addEventListener('mouseenter', handleMouseEnter);
         desktopSection.addEventListener('mouseleave', handleMouseLeave);
-        console.log('MARQUEE: hover handlers attached to', desktopSection);
 
-        // Restart animation smoothly when tab regains focus
         const handleVisibility = () => {
           if (document.visibilityState === 'visible') {
             state.lastTimestamp = null;
@@ -198,7 +179,6 @@ const shuffledClients = [...clients].sort(() => Math.random() - 0.5);
         };
         document.addEventListener('visibilitychange', handleVisibility);
 
-        // Cleanup on page swap
         document.addEventListener('astro:before-swap', () => {
           if (animationId) cancelAnimationFrame(animationId);
           document.removeEventListener('visibilitychange', handleVisibility);
@@ -209,6 +189,5 @@ const shuffledClients = [...clients].sort(() => Math.random() - 0.5);
     }
   }
 
-  // Run on initial load and after each navigation
   document.addEventListener('astro:page-load', initMarquee);
 </script>
