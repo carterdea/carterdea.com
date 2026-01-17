@@ -16,8 +16,8 @@
   font-display: swap;
 }
 
-/* Background toggle */
-body.bg-image {
+/* Site modes */
+body.mode-vacation {
   background-image: url("/santa-monica-north.jpg");
   background-size: cover;
   background-position: center;
@@ -25,9 +25,30 @@ body.bg-image {
 
 /* Fixed background only on desktop - mobile doesn't support it well and it breaks backdrop-filter */
 @media (min-width: 768px) {
-  body.bg-image {
+  body.mode-vacation {
     background-attachment: fixed;
   }
+}
+
+/* Placeholder styles for other modes - implement as needed */
+body.mode-coder {
+  /* TBD */
+}
+
+body.mode-preview {
+  /* TBD */
+}
+
+body.mode-fire {
+  /* TBD */
+}
+
+body.mode-money {
+  /* TBD */
+}
+
+body.mode-matrix {
+  /* TBD */
 }
 
 /* Animation easing - smooth deceleration curve */

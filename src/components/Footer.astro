@@ -1,5 +1,5 @@
 ---
-import { MorphingOrbGL } from './MorphingOrbGL';
+import { SettingsPanel } from './SettingsPanel';
 
 const currentYear = new Date().getFullYear();
 ---
@@ -7,20 +7,9 @@ const currentYear = new Date().getFullYear();
 <footer transition:persist class="flex items-center justify-between px-4 py-6 md:px-8">
   <p class="animate-fade-in text-xs text-white/60" style="--delay: 340ms;">© 2013-<span id="current-year">{currentYear}</span> carterdea.com</p>
 
-  <button
-    id="bg-toggle"
-    type="button"
-    class="animate-fade-in active:scale-[0.95] transition-all duration-150"
-    style="--delay: 380ms;"
-    aria-label="Toggle background"
-    title="Toggle background"
-  >
-    <MorphingOrbGL
-      client:visible
-      size={32}
-      variant="mono"
-    />
-  </button>
+  <div class="animate-fade-in" style="--delay: 380ms;">
+    <SettingsPanel client:visible />
+  </div>
 </footer>
 
 <script>
@@ -29,11 +18,4 @@ const currentYear = new Date().getFullYear();
   if (yearSpan) {
     yearSpan.textContent = String(new Date().getFullYear());
   }
-
-  const bgToggle = document.getElementById('bg-toggle');
-  const body = document.body;
-
-  bgToggle?.addEventListener('click', () => {
-    body.classList.toggle('bg-image');
-  });
 </script>
