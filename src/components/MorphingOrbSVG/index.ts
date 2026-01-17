@@ -1,2 +1,2 @@
-export { MorphingOrbSVG, default } from './MorphingOrbSVG'
-export type { ShapeType, MorphingOrbSVGProps } from './types'
+export { default, MorphingOrbSVG } from './MorphingOrbSVG';
+export type { MorphingOrbSVGProps, ShapeType } from './types';

@@ -1,34 +1,39 @@
-import { useRef, useEffect, useState, useCallback, useMemo } from 'react'
-import { Canvas, useFrame } from '@react-three/fiber'
-import * as THREE from 'three'
-import type { Point3D, ShapeType, MorphingOrbGLProps, ColorMode } from './types'
+import { Canvas, useFrame } from '@react-three/fiber';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Color, DoubleSide, Matrix4, Quaternion, Vector3 } from 'three';
+import type { InstancedMesh, Group } from 'three';
 import {
-  gridSphere,
-  offsetSphere,
   curvedArcs,
-  fibSphere,
-  orbit,
   doubleOrbit,
-  cylinder,
-  capsule,
-  hourglass,
-  diabolo,
-  torus,
-  cube,
-  octahedron,
-  stellatedSphere,
-  trefoilKnot,
-  torusKnot,
-  lemniscate,
-  helix,
-  blob,
-  pulseSphere,
+  easeOutQuint,
+  fibSphere,
   getDotCount,
+  gridSphere,
+  lemniscate,
   lerpPoint,
-  easeOutExpo,
-} from './shapes'
+  offsetSphere,
+  orbit,
+  pulseSphere,
+  torusKnot,
+  trefoilKnot,
+} from './shapes';
+import type { ColorMode, MorphingOrbGLProps, Point3D, ShapeType } from './types';
 
-const DEFAULT_SEQUENCE: ShapeType[] = ['gridSphere', 'curvedArcs', 'fibSphere', 'doubleOrbit']
+const DEFAULT_SEQUENCE: ShapeType[] = ['gridSphere', 'curvedArcs', 'fibSphere', 'doubleOrbit'];
+
+const ANIMATED_SHAPES: ReadonlySet<ShapeType> = new Set([
+  'curvedArcs',
+  'orbit',
+  'doubleOrbit',
+  'trefoilKnot',
+  'torusKnot',
+  'lemniscate',
+  'pulseSphere',
+]);
+
+const SPHERE_SHAPES: ReadonlySet<ShapeType> = new Set(['gridSphere', 'offsetSphere', 'fibSphere']);
+
+const COLOR_MODES: ColorMode[] = ['sequential', 'spatial', 'shuffled'];
 
 const DEFAULT_PALETTE = [
   '#f87171', // red-400
@@ -48,27 +53,28 @@ const DEFAULT_PALETTE = [
   '#e879f9', // fuchsia-400
   '#f472b6', // pink-400
   '#fb7185', // rose-400
-]
+];
 
 interface ParticlesProps {
-  points: Point3D[]
-  variant: 'mono' | 'color'
-  color: string
-  palette: string[]
-  colorMode: ColorMode
-  colorRotation: number
-  dotSize: number
-  groupRotationY: number
-  groupRotationX: number
+  points: Point3D[];
+  variant: 'mono' | 'color';
+  color: string;
+  palette: string[];
+  colorMode: ColorMode;
+  colorRotation: number;
+  dotSize: number;
+  groupRotationY: number;
+  groupRotationX: number;
+  isHovered: boolean;
 }
 
-// Reusable THREE objects for instance matrix calculations (avoids per-frame allocations)
-const tempColor = new THREE.Color()
-const tempMatrix = new THREE.Matrix4()
-const tempPosition = new THREE.Vector3()
-const tempQuaternion = new THREE.Quaternion()
-const tempScale = new THREE.Vector3()
-const upVector = new THREE.Vector3(0, 0, 1)
+const tempColor = new Color();
+const tempMatrix = new Matrix4();
+const tempPosition = new Vector3();
+const tempQuaternion = new Quaternion();
+const tempScale = new Vector3(1, 1, 1);
+const tempNormal = new Vector3();
+const upVector = new Vector3(0, 0, 1);
 
 function Particles({
   points,
@@ -80,145 +86,119 @@ function Particles({
   dotSize,
   groupRotationY,
   groupRotationX,
+  isHovered,
 }: ParticlesProps) {
-  const meshRef = useRef<THREE.InstancedMesh>(null)
+  const meshRef = useRef<InstancedMesh>(null);
 
-  // Create shuffled palette (deterministic)
   const shuffledPalette = useMemo(() => {
-    const shuffled = [...palette]
+    const shuffled = [...palette];
     for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor((i * 7919) % (i + 1))
-      ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+      const j = Math.floor((i * 7919) % (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
-    return shuffled
-  }, [palette])
+    return shuffled;
+  }, [palette]);
 
-  // Get color for a dot
   const getDotColorHex = useCallback(
     (index: number, point: Point3D): string => {
-      if (variant === 'mono') {
-        return color
+      if (variant === 'mono' && !isHovered) {
+        return color;
       }
 
       switch (colorMode) {
         case 'spatial': {
-          const angle = Math.atan2(point.x, point.z)
-          const offsetAngle = angle + colorRotation
-          const normalizedAngle = ((offsetAngle + Math.PI) % (2 * Math.PI)) / (2 * Math.PI)
-          const paletteIndex = Math.floor(normalizedAngle * palette.length)
-          return palette[Math.abs(paletteIndex) % palette.length]
+          const angle = Math.atan2(point.x, point.z);
+          const offsetAngle = angle + colorRotation;
+          const normalizedAngle = ((offsetAngle + Math.PI) % (2 * Math.PI)) / (2 * Math.PI);
+          const paletteIndex = Math.floor(normalizedAngle * palette.length);
+          return palette[Math.abs(paletteIndex) % palette.length];
         }
         case 'shuffled':
-          return shuffledPalette[index % shuffledPalette.length]
+          return shuffledPalette[index % shuffledPalette.length];
         case 'sequential':
-          return palette[index % palette.length]
+          return palette[index % palette.length];
       }
     },
-    [variant, color, palette, shuffledPalette, colorMode, colorRotation]
-  )
+    [variant, color, palette, shuffledPalette, colorMode, colorRotation, isHovered]
+  );
 
   useEffect(() => {
-    if (!meshRef.current) return
+    if (!meshRef.current) return;
 
-    // Pre-calculate rotation matrices for transforming points to world space
-    const cosY = Math.cos(groupRotationY)
-    const sinY = Math.sin(groupRotationY)
-    const cosX = Math.cos(groupRotationX)
-    const sinX = Math.sin(groupRotationX)
+    const cosY = Math.cos(groupRotationY);
+    const sinY = Math.sin(groupRotationY);
+    const cosX = Math.cos(groupRotationX);
+    const sinX = Math.sin(groupRotationX);
 
     for (let i = 0; i < points.length; i++) {
-      const point = points[i]
+      const point = points[i];
 
-      // Apply group rotation to get world-space position
-      // First rotate around Y
-      const wx = point.x * cosY + point.z * sinY
-      const wyBeforeX = point.y
-      const wzBeforeX = -point.x * sinY + point.z * cosY
-      // Then rotate around X
-      const wy = wyBeforeX * cosX - wzBeforeX * sinX
-      const wz = wyBeforeX * sinX + wzBeforeX * cosX
+      const wx = point.x * cosY + point.z * sinY;
+      const wyBeforeX = point.y;
+      const wzBeforeX = -point.x * sinY + point.z * cosY;
+      const wy = wyBeforeX * cosX - wzBeforeX * sinX;
+      const wz = wyBeforeX * sinX + wzBeforeX * cosX;
 
-      // Calculate facing based on world-space z (after rotation)
-      const len = Math.sqrt(wx * wx + wy * wy + wz * wz) || 1
-      const nzWorld = wz / len
+      const len = Math.sqrt(wx * wx + wy * wy + wz * wz) || 1;
+      const nzWorld = wz / len;
 
-      // Use absolute value - both front-facing AND back-facing dots should be round
-      // Only edge dots (nz near 0) should be squashed
-      const facing = Math.abs(nzWorld)
+      const facing = Math.abs(nzWorld);
+      const squash = 0.15 + facing * 0.85;
 
-      // Squash factor: dots at edges (facing = 0) are thin, dots facing/away from camera (facing = 1) are round
-      const squash = 0.15 + facing * 0.85
+      tempPosition.set(point.x, point.y, point.z);
 
-      // Position (local space - the group handles rotation)
-      tempPosition.set(point.x, point.y, point.z)
+      const localLen = Math.sqrt(point.x * point.x + point.y * point.y + point.z * point.z) || 1;
+      tempNormal.set(point.x / localLen, point.y / localLen, point.z / localLen);
+      tempQuaternion.setFromUnitVectors(upVector, tempNormal);
 
-      // Calculate surface normal (for sphere, it's just the normalized position)
-      const localLen = Math.sqrt(point.x * point.x + point.y * point.y + point.z * point.z) || 1
-      const nx = point.x / localLen
-      const ny = point.y / localLen
-      const nz = point.z / localLen
+      tempScale.set(dotSize, dotSize * squash, 1);
 
-      // Orient the disc to face outward from sphere center (along normal)
-      const normalVector = new THREE.Vector3(nx, ny, nz)
-      tempQuaternion.setFromUnitVectors(upVector, normalVector)
+      tempMatrix.compose(tempPosition, tempQuaternion, tempScale);
+      meshRef.current.setMatrixAt(i, tempMatrix);
 
-      // Scale: squash in one direction based on viewing angle
-      tempScale.set(dotSize, dotSize * squash, 1)
+      const hex = getDotColorHex(i, point);
+      tempColor.set(hex);
 
-      // Compose the matrix
-      tempMatrix.compose(tempPosition, tempQuaternion, tempScale)
-      meshRef.current.setMatrixAt(i, tempMatrix)
+      const depthBrightness = 0.35 + (nzWorld + 1) * 0.325;
 
-      // Set color with lighting
-      const hex = getDotColorHex(i, point)
-      tempColor.set(hex)
+      const nxWorld = wx / len;
+      const nyWorld = wy / len;
+      const lightX = -0.577;
+      const lightY = 0.577;
+      const lightZ = 0.577;
+      const lightDot = Math.max(0, nxWorld * lightX + nyWorld * lightY + nzWorld * lightZ);
+      const directionalBrightness = 0.3 + lightDot * 0.7;
 
-      // Back dots get darker (nzWorld ranges from -1 to 1, map to 0.35-1.0 brightness)
-      const depthBrightness = 0.35 + (nzWorld + 1) * 0.325
+      tempColor.multiplyScalar(depthBrightness * directionalBrightness);
 
-      // Directional light from top-left in SCREEN SPACE (fixed, doesn't rotate with sphere)
-      // Use world-space position (after rotation) for lighting
-      const nxWorld = wx / len
-      const nyWorld = wy / len
-      // Light direction: top-left-front in screen space (-x = left, +y = top, +z = toward camera)
-      const lightX = -0.577
-      const lightY = 0.577
-      const lightZ = 0.577
-      // Dot product with world-space normal (clamped to 0-1)
-      const lightDot = Math.max(0, nxWorld * lightX + nyWorld * lightY + nzWorld * lightZ)
-      // Strong contrast: 30% ambient + 70% directional
-      const directionalBrightness = 0.3 + lightDot * 0.7
-
-      tempColor.multiplyScalar(depthBrightness * directionalBrightness)
-
-      meshRef.current.setColorAt(i, tempColor)
+      meshRef.current.setColorAt(i, tempColor);
     }
 
-    meshRef.current.instanceMatrix.needsUpdate = true
+    meshRef.current.instanceMatrix.needsUpdate = true;
     if (meshRef.current.instanceColor) {
-      meshRef.current.instanceColor.needsUpdate = true
+      meshRef.current.instanceColor.needsUpdate = true;
     }
-  }, [points, getDotColorHex, dotSize, groupRotationY, groupRotationX])
+  }, [points, getDotColorHex, dotSize, groupRotationY, groupRotationX]);
 
   return (
     <instancedMesh ref={meshRef} args={[undefined, undefined, points.length]}>
       <circleGeometry args={[1, 16]} />
-      <meshBasicMaterial side={THREE.DoubleSide} />
+      <meshBasicMaterial side={DoubleSide} />
     </instancedMesh>
-  )
+  );
 }
 
 interface SceneProps {
-  size: number
-  variant: 'mono' | 'color'
-  color: string
-  palette: string[]
-  colorMode: ColorMode
-  shapeSequence: ShapeType[]
-  autoMorph: boolean
-  morphDuration: number
-  holdDuration: number
-  isHovered: boolean
+  size: number;
+  variant: 'mono' | 'color';
+  color: string;
+  palette: string[];
+  colorMode: ColorMode;
+  shapeSequence: ShapeType[];
+  autoMorph: boolean;
+  morphDuration: number;
+  holdDuration: number;
+  isHovered: boolean;
 }
 
 function Scene({
@@ -233,203 +213,163 @@ function Scene({
   holdDuration,
   isHovered,
 }: SceneProps) {
-  const groupRef = useRef<THREE.Group>(null)
-  const [points, setPoints] = useState<Point3D[]>([])
-  const [colorRotation, setColorRotation] = useState(0)
-  const [groupRotation, setGroupRotation] = useState({ y: 0, x: 0 })
+  const groupRef = useRef<Group>(null);
+  const [points, setPoints] = useState<Point3D[]>([]);
+  const [colorRotation, setColorRotation] = useState(0);
+  const [groupRotation, setGroupRotation] = useState({ y: 0, x: 0 });
 
-  const currentPointsRef = useRef<Point3D[]>([])
-  const targetPointsRef = useRef<Point3D[]>([])
-  const shapeIndexRef = useRef(0)
-  const morphProgressRef = useRef(1)
-  const holdTimerRef = useRef(0)
-  const arcTimeRef = useRef(0)
-  const colorRotationRef = useRef(0)
-  const rotationRef = useRef({ y: 0, x: 0 })
+  const currentPointsRef = useRef<Point3D[]>([]);
+  const targetPointsRef = useRef<Point3D[]>([]);
+  const currentShapeRef = useRef<ShapeType>(shapeSequence[0]);
+  const morphProgressRef = useRef(1);
+  const holdTimerRef = useRef(0);
+  const arcTimeRef = useRef(0);
+  const colorRotationRef = useRef(0);
+  const rotationRef = useRef({ y: 0, x: 0 });
 
-  const radius = 1 // Normalized radius for 3D space
+  const radius = 1;
 
-  // Dot sizes proportional to sphere
   const dotSize = useMemo(() => {
-    if (size <= 32) return 0.11
-    if (size <= 64) return 0.09
-    if (size <= 200) return 0.08
-    return 0.065
-  }, [size])
+    const sizes = { tiny: 0.07, small: 0.09, medium: 0.08, large: 0.065 };
+    if (size <= 32) return sizes.tiny;
+    if (size <= 64) return sizes.small;
+    if (size <= 200) return sizes.medium;
+    return sizes.large;
+  }, [size]);
 
-  // Generate points for spinning shapes with current time (returns null for static shapes)
-  const generateSpinningShapePoints = useCallback(
-    (shapeType: ShapeType, time: number): Point3D[] | null => {
-      switch (shapeType) {
-        case 'curvedArcs':
-          return curvedArcs(radius, time, size)
-        case 'orbit':
-          return orbit(getDotCount('orbit', size), radius, time)
-        case 'doubleOrbit':
-          return doubleOrbit(getDotCount('doubleOrbit', size), radius, time)
-        case 'trefoilKnot':
-          return trefoilKnot(getDotCount('trefoilKnot', size), radius, time)
-        case 'torusKnot':
-          return torusKnot(getDotCount('torusKnot', size), radius, time)
-        case 'lemniscate':
-          return lemniscate(getDotCount('lemniscate', size), radius, time)
-        case 'helix':
-          return helix(getDotCount('helix', size), radius, time)
-        case 'blob':
-          return blob(radius, time, size)
-        case 'pulseSphere':
-          return pulseSphere(radius, time, size)
-        default:
-          return null
-      }
+  const getValidNextShapes = useCallback(
+    (currentShape: ShapeType): ShapeType[] => {
+      const allShapes = shapeSequence;
+      const isSphere = SPHERE_SHAPES.has(currentShape);
+
+      return allShapes.filter((shape) => {
+        if (shape === currentShape) return false;
+        // pulseSphere can go anywhere and anything can go to pulseSphere
+        if (currentShape === 'pulseSphere' || shape === 'pulseSphere') return true;
+        // Non-spheres can go anywhere
+        if (!isSphere) return true;
+        // Spheres can only go to non-spheres
+        return !SPHERE_SHAPES.has(shape);
+      });
     },
-    [size]
-  )
+    [shapeSequence]
+  );
 
-  // Generate shape points (static shapes or initial state)
   const generateShapePoints = useCallback(
-    (shapeType: ShapeType): Point3D[] => {
-      const count = getDotCount(shapeType, size)
+    (shapeType: ShapeType, time: number = 0): Point3D[] => {
+      const count = getDotCount(shapeType, size);
 
       switch (shapeType) {
         case 'gridSphere':
-          return gridSphere(radius, size)
+          return gridSphere(radius, size);
         case 'offsetSphere':
-          return offsetSphere(radius, size)
+          return offsetSphere(radius, size);
         case 'curvedArcs':
-          return curvedArcs(radius, 0, size)
+          return curvedArcs(radius, time, size);
         case 'fibSphere':
-          return fibSphere(count > 0 ? count : 40, radius)
+          return fibSphere(count, radius);
         case 'orbit':
-          return orbit(count > 0 ? count : 16, radius)
+          return orbit(count, radius, time);
         case 'doubleOrbit':
-          return doubleOrbit(count > 0 ? count : 24, radius)
-        case 'cylinder':
-          return cylinder(radius, size)
-        case 'capsule':
-          return capsule(radius, size)
-        case 'hourglass':
-          return hourglass(radius, size)
-        case 'diabolo':
-          return diabolo(radius, size)
-        case 'torus':
-          return torus(radius, size)
-        case 'cube':
-          return cube(radius, size)
-        case 'octahedron':
-          return octahedron(radius, size)
-        case 'stellatedSphere':
-          return stellatedSphere(radius, size)
+          return doubleOrbit(count, radius, time);
         case 'trefoilKnot':
-          return trefoilKnot(count > 0 ? count : 100, radius, 0)
+          return trefoilKnot(count, radius, time);
         case 'torusKnot':
-          return torusKnot(count > 0 ? count : 120, radius, 0)
+          return torusKnot(count, radius, time);
         case 'lemniscate':
-          return lemniscate(count > 0 ? count : 70, radius, 0)
-        case 'helix':
-          return helix(count > 0 ? count : 80, radius, 0)
-        case 'blob':
-          return blob(radius, 0, size)
+          return lemniscate(count, radius, time);
         case 'pulseSphere':
-          return pulseSphere(radius, 0, size)
+          return pulseSphere(radius, time, size);
         default:
-          return gridSphere(radius, size)
+          return gridSphere(radius, size);
       }
     },
     [size]
-  )
+  );
 
-  // Initialize
   useEffect(() => {
-    const initialShape = shapeSequence[0]
-    const pts = generateShapePoints(initialShape)
-    currentPointsRef.current = pts
-    targetPointsRef.current = pts
-    morphProgressRef.current = 1
-    setPoints(pts)
-  }, [generateShapePoints, shapeSequence])
+    const initialShape = shapeSequence[0];
+    const pts = generateShapePoints(initialShape);
+    currentPointsRef.current = pts;
+    targetPointsRef.current = pts;
+    morphProgressRef.current = 1;
+    setPoints(pts);
+  }, [generateShapePoints, shapeSequence]);
 
-  // Morph to next shape
   const morphToNextShape = useCallback(() => {
-    shapeIndexRef.current = (shapeIndexRef.current + 1) % shapeSequence.length
-    const nextShape = shapeSequence[shapeIndexRef.current]
-    const newTarget = generateShapePoints(nextShape)
+    const validNextShapes = getValidNextShapes(currentShapeRef.current);
+    const nextShape = validNextShapes[Math.floor(Math.random() * validNextShapes.length)];
+    currentShapeRef.current = nextShape;
+    const newTarget = generateShapePoints(nextShape);
 
-    const currentCount = currentPointsRef.current.length
-    const targetCount = newTarget.length
+    const currentCount = currentPointsRef.current.length;
+    const targetCount = newTarget.length;
 
     if (targetCount > currentCount) {
       while (currentPointsRef.current.length < targetCount) {
-        const idx = currentPointsRef.current.length % currentCount
-        currentPointsRef.current.push({ ...currentPointsRef.current[idx] })
+        const idx = currentPointsRef.current.length % currentCount;
+        currentPointsRef.current.push({ ...currentPointsRef.current[idx] });
       }
     } else if (targetCount < currentCount) {
-      currentPointsRef.current = currentPointsRef.current.slice(0, targetCount)
+      currentPointsRef.current = currentPointsRef.current.slice(0, targetCount);
     }
 
-    targetPointsRef.current = newTarget
-    morphProgressRef.current = 0
-    holdTimerRef.current = 0
-  }, [generateShapePoints, shapeSequence])
+    targetPointsRef.current = newTarget;
+    morphProgressRef.current = 0;
+    holdTimerRef.current = 0;
+  }, [generateShapePoints, getValidNextShapes]);
 
-  // Animation frame
   useFrame((state, delta) => {
-    const deltaMs = delta * 1000
-    const speedMultiplier = isHovered ? 2.5 : 1
+    const deltaMs = delta * 1000;
+    const speedMultiplier = isHovered ? 2.5 : 1;
 
-    // Update rotation
-    rotationRef.current.y += 0.0005 * deltaMs * speedMultiplier
-    rotationRef.current.x = Math.sin(state.clock.elapsedTime * 0.2) * 0.1
+    rotationRef.current.y += 0.0005 * deltaMs * speedMultiplier;
+    rotationRef.current.x = Math.sin(state.clock.elapsedTime * 0.2) * 0.1;
 
-    // Update arc time and color rotation
-    arcTimeRef.current += deltaMs * speedMultiplier
-    colorRotationRef.current += 0.0001875 * deltaMs * speedMultiplier
+    arcTimeRef.current += deltaMs * speedMultiplier;
+    colorRotationRef.current += 0.0001875 * deltaMs * speedMultiplier;
 
-    const currentShapeType = shapeSequence[shapeIndexRef.current]
-    const spinningPoints = generateSpinningShapePoints(currentShapeType, arcTimeRef.current)
+    const currentShapeType = currentShapeRef.current;
+    const isAnimated = ANIMATED_SHAPES.has(currentShapeType);
 
-    // Update morph
     if (morphProgressRef.current < 1) {
       morphProgressRef.current = Math.min(
         1,
         morphProgressRef.current + (deltaMs / morphDuration) * speedMultiplier
-      )
+      );
 
-      const easedProgress = easeOutExpo(morphProgressRef.current)
+      const easedProgress = easeOutQuint(morphProgressRef.current);
 
-      // Regenerate spinning shapes during morph
-      if (spinningPoints) {
-        targetPointsRef.current = spinningPoints
+      if (isAnimated) {
+        targetPointsRef.current = generateShapePoints(currentShapeType, arcTimeRef.current);
       }
 
       currentPointsRef.current = currentPointsRef.current.map((point, i) => {
-        const target = targetPointsRef.current[i] || point
-        return lerpPoint(point, target, easedProgress)
-      })
+        const target = targetPointsRef.current[i] || point;
+        return lerpPoint(point, target, easedProgress);
+      });
     } else {
-      // Not morphing - update spinning shapes directly
-      if (spinningPoints) {
-        currentPointsRef.current = spinningPoints
+      if (isAnimated) {
+        currentPointsRef.current = generateShapePoints(currentShapeType, arcTimeRef.current);
       }
 
       if (autoMorph) {
-        holdTimerRef.current += deltaMs * speedMultiplier
+        holdTimerRef.current += deltaMs * speedMultiplier;
         if (holdTimerRef.current >= holdDuration) {
-          morphToNextShape()
+          morphToNextShape();
         }
       }
     }
 
-    // Update group rotation
     if (groupRef.current) {
-      groupRef.current.rotation.y = rotationRef.current.y
-      groupRef.current.rotation.x = rotationRef.current.x
+      groupRef.current.rotation.y = rotationRef.current.y;
+      groupRef.current.rotation.x = rotationRef.current.x;
     }
 
-    setPoints([...currentPointsRef.current])
-    setColorRotation(colorRotationRef.current)
-    setGroupRotation({ y: rotationRef.current.y, x: rotationRef.current.x })
-  })
+    setPoints([...currentPointsRef.current]);
+    setColorRotation(colorRotationRef.current);
+    setGroupRotation({ y: rotationRef.current.y, x: rotationRef.current.x });
+  });
 
   return (
     <group ref={groupRef}>
@@ -443,9 +383,10 @@ function Scene({
         dotSize={dotSize}
         groupRotationY={groupRotation.y}
         groupRotationX={groupRotation.x}
+        isHovered={isHovered}
       />
     </group>
-  )
+  );
 }
 
 export function MorphingOrbGL({
@@ -457,37 +398,51 @@ export function MorphingOrbGL({
   className = '',
   shapeSequence = DEFAULT_SEQUENCE,
   autoMorph = true,
-  morphDuration = 2000,
+  morphDuration = 2800,
   holdDuration = 3000,
 }: MorphingOrbGLProps) {
-  const [isHovered, setIsHovered] = useState(false)
-  const [isVisible, setIsVisible] = useState(false)
-  const containerRef = useRef<HTMLDivElement>(null)
+  const [isHovered, setIsHovered] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+  const [activeColorMode, setActiveColorMode] = useState<ColorMode>(colorMode);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  // Lazy load canvas only when visible
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          setIsVisible(true)
-          observer.disconnect()
+          setIsVisible(true);
+          observer.disconnect();
         }
       },
       { rootMargin: '100px' }
-    )
+    );
 
     if (containerRef.current) {
-      observer.observe(containerRef.current)
+      observer.observe(containerRef.current);
     }
 
-    return () => observer.disconnect()
-  }, [])
+    return () => observer.disconnect();
+  }, []);
 
-  // Camera distance - far enough to prevent cropping
-  const cameraZ = 3.5
+  useEffect(() => {
+    if (!isHovered || variant !== 'mono') {
+      setActiveColorMode(colorMode);
+      return;
+    }
 
-  // Small orbs scale up on hover
-  const hoverScale = size <= 64 ? 1.15 : 1
+    const randomMode = COLOR_MODES[Math.floor(Math.random() * COLOR_MODES.length)];
+    setActiveColorMode(randomMode);
+
+    const interval = setInterval(() => {
+      const newMode = COLOR_MODES[Math.floor(Math.random() * COLOR_MODES.length)];
+      setActiveColorMode(newMode);
+    }, 1500);
+
+    return () => clearInterval(interval);
+  }, [isHovered, variant, colorMode]);
+
+  const cameraZ = 3.5;
+  const hoverScale = size <= 64 ? 1.15 : 1;
 
   return (
     <div
@@ -519,7 +474,7 @@ export function MorphingOrbGL({
             variant={variant}
             color={color}
             palette={palette}
-            colorMode={colorMode}
+            colorMode={activeColorMode}
             shapeSequence={shapeSequence}
             autoMorph={autoMorph}
             morphDuration={morphDuration}
@@ -529,7 +484,7 @@ export function MorphingOrbGL({
         </Canvas>
       )}
     </div>
-  )
+  );
 }
 
-export default MorphingOrbGL
+export default MorphingOrbGL;

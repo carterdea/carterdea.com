@@ -1,2 +1,2 @@
-export { MorphingOrb, type MorphingOrbProps } from './MorphingOrb'
-export { type ShapeType, DEFAULT_SHAPE_SEQUENCE } from './constants'
+export { DEFAULT_SHAPE_SEQUENCE, type ShapeType } from './constants';
+export { MorphingOrb, type MorphingOrbProps } from './MorphingOrb';

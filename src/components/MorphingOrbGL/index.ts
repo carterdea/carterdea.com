@@ -1,2 +1,2 @@
-export { MorphingOrbGL } from './MorphingOrbGL'
-export type { MorphingOrbGLProps, ShapeType, ColorMode, Point3D } from './types'
+export { MorphingOrbGL } from './MorphingOrbGL';
+export type { ColorMode, MorphingOrbGLProps, Point3D, ShapeType } from './types';

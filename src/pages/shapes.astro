@@ -1,4 +1,5 @@
 ---
+import AnimationToggle from '../components/AnimationToggle.astro';
 import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
 import Layout from '../layouts/Layout.astro';
@@ -9,23 +10,26 @@ const allShapes: { name: ShapeType; label: string; description: string; animated
   { name: 'gridSphere', label: 'Grid Sphere', description: 'Lat/long grid pattern', animated: false },
   { name: 'offsetSphere', label: 'Offset Sphere', description: 'Hexagonal close-packing', animated: false },
   { name: 'fibSphere', label: 'Fibonacci Sphere', description: 'Golden angle distribution', animated: false },
-  { name: 'cylinder', label: 'Cylinder', description: 'Simple cylinder', animated: false },
-  { name: 'capsule', label: 'Capsule', description: 'Cylinder with hemispherical caps', animated: false },
-  { name: 'hourglass', label: 'Hourglass', description: 'Pinched middle cylinder', animated: false },
-  { name: 'diabolo', label: 'Diabolo', description: 'Hourglass with concave caps', animated: false },
-  { name: 'torus', label: 'Torus', description: 'Donut surface', animated: false },
-  { name: 'cube', label: 'Cube', description: 'Dots on cube faces', animated: false },
-  { name: 'octahedron', label: 'Octahedron', description: 'Diamond wireframe', animated: false },
-  { name: 'stellatedSphere', label: 'Stellated Sphere', description: 'Sphere with spiky protrusions', animated: false },
   { name: 'curvedArcs', label: 'Curved Arcs', description: '3 spinning great circles', animated: true },
   { name: 'orbit', label: 'Orbit', description: 'Single tilted ring', animated: true },
   { name: 'doubleOrbit', label: 'Double Orbit', description: 'Two intersecting rings', animated: true },
   { name: 'trefoilKnot', label: 'Trefoil Knot', description: 'Classic 3-looped knot', animated: true },
   { name: 'torusKnot', label: 'Torus Knot', description: 'Knot wrapping a torus', animated: true },
   { name: 'lemniscate', label: 'Lemniscate', description: '3D figure-eight', animated: true },
-  { name: 'helix', label: 'Helix', description: 'DNA-like double spiral', animated: true },
-  { name: 'blob', label: 'Blob', description: 'Noise-deformed sphere', animated: true },
   { name: 'pulseSphere', label: 'Pulse Sphere', description: 'Breathing sphere', animated: true },
+];
+
+const morphSequence: ShapeType[] = [
+  'gridSphere',
+  'curvedArcs',
+  'offsetSphere',
+  'orbit',
+  'fibSphere',
+  'doubleOrbit',
+  'pulseSphere',
+  'trefoilKnot',
+  'torusKnot',
+  'lemniscate',
 ];
 
 const staticShapes = allShapes.filter(s => !s.animated);
@@ -39,10 +43,12 @@ const animatedShapes = allShapes.filter(s => s.animated);
     <main transition:name="page-content" class="flex-1 flex flex-col px-4 md:px-8 py-12">
       <div class="max-w-6xl mx-auto w-full">
         <h1 class="text-3xl md:text-4xl font-medium mb-4">Shape Gallery</h1>
-        <p class="text-white/60 mb-12 max-w-2xl">
+        <p class="text-white/60 mb-8 max-w-2xl">
           All available shapes for the morphing orb animation.
           Each shape can morph smoothly into any other.
         </p>
+
+        <AnimationToggle active="shapes" />
 
         <!-- Static Shapes -->
         <section class="mb-16">
@@ -93,16 +99,28 @@ const animatedShapes = allShapes.filter(s => s.animated);
           <h2 class="text-xl font-medium mb-2">Full Morph Sequence</h2>
           <p class="text-white/50 text-sm mb-8">All shapes cycling through morphs</p>
 
-          <div class="flex justify-center">
+          <div class="flex items-center gap-8">
             <MorphingOrbGL
               client:visible
               size={400}
-              variant="color"
-              shapeSequence={allShapes.map(s => s.name)}
+              variant="mono"
+              shapeSequence={morphSequence}
               autoMorph={true}
               morphDuration={2000}
               holdDuration={2500}
             />
+            <div class="flex flex-col items-center">
+              <p class="text-white/40 text-xs mb-3 uppercase tracking-wider">Tiny (32px)</p>
+              <MorphingOrbGL
+                client:visible
+                size={32}
+                variant="mono"
+                shapeSequence={morphSequence}
+                autoMorph={true}
+                morphDuration={2000}
+                holdDuration={2500}
+              />
+            </div>
           </div>
         </section>
 

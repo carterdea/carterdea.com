@@ -1,7 +1,7 @@
 export interface Point3D {
-  x: number
-  y: number
-  z: number
+  x: number;
+  y: number;
+  z: number;
 }
 
 export type ShapeType =
@@ -11,32 +11,22 @@ export type ShapeType =
   | 'fibSphere'
   | 'orbit'
   | 'doubleOrbit'
-  | 'cylinder'
-  | 'capsule'
-  | 'hourglass'
-  | 'diabolo'
-  | 'torus'
-  | 'cube'
-  | 'octahedron'
-  | 'stellatedSphere'
   | 'trefoilKnot'
   | 'torusKnot'
   | 'lemniscate'
-  | 'helix'
-  | 'blob'
-  | 'pulseSphere'
+  | 'pulseSphere';
 
-export type ColorMode = 'sequential' | 'spatial' | 'shuffled'
+export type ColorMode = 'sequential' | 'spatial' | 'shuffled';
 
 export interface MorphingOrbGLProps {
-  size?: number
-  variant?: 'mono' | 'color'
-  color?: string
-  palette?: string[]
-  colorMode?: ColorMode
-  className?: string
-  shapeSequence?: ShapeType[]
-  autoMorph?: boolean
-  morphDuration?: number
-  holdDuration?: number
+  size?: number;
+  variant?: 'mono' | 'color';
+  color?: string;
+  palette?: string[];
+  colorMode?: ColorMode;
+  className?: string;
+  shapeSequence?: ShapeType[];
+  autoMorph?: boolean;
+  morphDuration?: number;
+  holdDuration?: number;
 }
