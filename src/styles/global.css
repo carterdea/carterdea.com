@@ -23,6 +23,18 @@ body.mode-vacation {
   background-position: center;
 }
 
+body.mode-vacation .text-white\/60 {
+  color: rgb(255 255 255);
+}
+
+body.mode-vacation .bg-white\/5 {
+  background-color: rgb(255 255 255 / 0.2);
+}
+
+body.mode-vacation .bg-white\/10 {
+  background-color: rgb(255 255 255 / 0.35);
+}
+
 /* Fixed background only on desktop - mobile doesn't support it well and it breaks backdrop-filter */
 @media (min-width: 768px) {
   body.mode-vacation {
