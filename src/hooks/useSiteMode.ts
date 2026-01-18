@@ -1,34 +1,32 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
-export type SiteMode = 'vacation' | 'coder' | 'preview' | 'fire' | 'money' | 'matrix';
+import { emitModeChange, subscribeToModeChange } from '../lib/siteModeEvents';
+
+const VALID_MODES = ['vacation', 'coder', 'preview', 'fire', 'money', 'matrix'] as const;
+export type SiteMode = (typeof VALID_MODES)[number];
 
 const STORAGE_KEY = 'carterdea-site-mode';
 const MODE_CLASS_PREFIX = 'mode-';
 
+function isValidMode(value: string): value is SiteMode {
+  return VALID_MODES.includes(value as SiteMode);
+}
+
 function getStoredMode(): SiteMode | null {
   if (typeof window === 'undefined') return null;
   const stored = localStorage.getItem(STORAGE_KEY);
-  if (stored && isValidMode(stored)) {
-    return stored as SiteMode;
-  }
-  return null;
+  return stored && isValidMode(stored) ? stored : null;
 }
 
-function isValidMode(value: string): value is SiteMode {
-  return ['vacation', 'coder', 'preview', 'fire', 'money', 'matrix'].includes(value);
-}
-
-function applyModeToBody(mode: SiteMode | null) {
+function applyModeToBody(mode: SiteMode | null): void {
   if (typeof document === 'undefined') return;
 
-  // Remove all mode classes
   document.body.classList.forEach((cls) => {
     if (cls.startsWith(MODE_CLASS_PREFIX)) {
       document.body.classList.remove(cls);
     }
   });
 
-  // Add new mode class if set
   if (mode) {
     document.body.classList.add(`${MODE_CLASS_PREFIX}${mode}`);
   }
@@ -37,23 +35,28 @@ function applyModeToBody(mode: SiteMode | null) {
 export function useSiteMode(): [SiteMode | null, (mode: SiteMode | null) => void] {
   const [mode, setModeState] = useState<SiteMode | null>(null);
 
-  // Initialize from localStorage on mount
   useEffect(() => {
     const stored = getStoredMode();
     setModeState(stored);
     applyModeToBody(stored);
+
+    return subscribeToModeChange((newMode) => {
+      setModeState(newMode);
+      applyModeToBody(newMode);
+    });
   }, []);
 
-  const setMode = (newMode: SiteMode | null) => {
+  function setMode(newMode: SiteMode | null): void {
     setModeState(newMode);
     applyModeToBody(newMode);
+    emitModeChange(newMode);
 
     if (newMode) {
       localStorage.setItem(STORAGE_KEY, newMode);
     } else {
       localStorage.removeItem(STORAGE_KEY);
     }
-  };
+  }
 
   return [mode, setMode];
 }
