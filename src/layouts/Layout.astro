@@ -1,6 +1,7 @@
 ---
 import { ClientRouter } from 'astro:transitions';
 import '../styles/global.css';
+import { BackgroundRenderer } from '../components/BackgroundRenderer/BackgroundRenderer';
 
 interface Props {
   title: string;
@@ -98,6 +99,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site || 'https://carterde
     <ClientRouter />
   </head>
   <body class="bg-black text-white font-sans antialiased min-h-screen overscroll-none">
+    <BackgroundRenderer client:load />
     <slot />
   </body>
 </html>
