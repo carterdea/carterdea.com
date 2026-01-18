@@ -3,11 +3,10 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   DoubleSide,
   DynamicDrawUsage,
-  Matrix4,
+  InstancedBufferAttribute,
   Object3D,
   PlaneGeometry,
   TextureLoader,
-  Vector3,
 } from 'three';
 import type { InstancedMesh, Texture } from 'three';
 
@@ -17,6 +16,48 @@ const SPAWN_HEIGHT = 60;
 const DESPAWN_HEIGHT = -60;
 const SPREAD_X = 80;
 
+// Spawn separation settings
+const SPAWN_HISTORY_SIZE = 50;
+const MIN_SPAWN_SEPARATION = 3.5;
+const MAX_SPAWN_RETRIES = 3;
+
+interface SpawnHistory {
+  positions: Float32Array; // x, z pairs
+  index: number;
+  count: number;
+}
+
+function createSpawnHistory(): SpawnHistory {
+  return {
+    positions: new Float32Array(SPAWN_HISTORY_SIZE * 2),
+    index: 0,
+    count: 0,
+  };
+}
+
+function addToSpawnHistory(history: SpawnHistory, x: number, z: number) {
+  history.positions[history.index * 2] = x;
+  history.positions[history.index * 2 + 1] = z;
+  history.index = (history.index + 1) % SPAWN_HISTORY_SIZE;
+  if (history.count < SPAWN_HISTORY_SIZE) {
+    history.count++;
+  }
+}
+
+function isTooCloseToRecent(history: SpawnHistory, x: number, z: number): boolean {
+  const minDistSq = MIN_SPAWN_SEPARATION * MIN_SPAWN_SEPARATION;
+  for (let i = 0; i < history.count; i++) {
+    const hx = history.positions[i * 2];
+    const hz = history.positions[i * 2 + 1];
+    const dx = x - hx;
+    const dz = z - hz;
+    if (dx * dx + dz * dz < minDistSq) {
+      return true;
+    }
+  }
+  return false;
+}
+
 // Layer configurations
 type Layer = 'back' | 'front';
 
@@ -24,24 +65,31 @@ interface LayerConfig {
   count: number;
   zRange: [number, number]; // min, max Z position (closer to camera = larger apparent size)
   scaleRange: [number, number]; // min, max scale multiplier
+  // For back layer: bills below this scale get reduced opacity (depth effect)
+  opacityFadeScaleThreshold?: number;
+  opacityMin?: number;
 }
 
 const LAYER_CONFIGS: Record<Layer, LayerConfig> = {
   back: {
     count: 2500,
     zRange: [-25, 5],
-    scaleRange: [0.3, 1.2], // More variation: tiny to medium
+    scaleRange: [0.2, 2.2], // Wide variance: tiny to large
+    opacityFadeScaleThreshold: 0.6, // Bills below this scale fade
+    opacityMin: 0.5, // Smallest bills fade to this opacity
   },
   front: {
-    count: 800,
+    count: 200,
     zRange: [8, 20],
-    scaleRange: [1.0, 2.5], // More variation: medium to very large
+    scaleRange: [1.4, 2.0], // Larger minimum, same maximum
   },
 };
 
 interface BillState {
   positions: Float32Array;
   scales: Float32Array;
+  opacities: Float32Array;
+  baseRotZ: Float32Array; // Base Z rotation (0 = landscape, PI/2 = portrait, continuous range)
   velocitiesX: Float32Array;
   fallSpeeds: Float32Array;
   phaseX: Float32Array;
@@ -74,10 +122,25 @@ function createCurvedBillGeometry(): PlaneGeometry {
   return geometry;
 }
 
+function computeOpacity(scale: number, config: LayerConfig): number {
+  const { scaleRange, opacityFadeScaleThreshold, opacityMin } = config;
+  if (opacityFadeScaleThreshold === undefined || opacityMin === undefined) {
+    return 1.0;
+  }
+  if (scale >= opacityFadeScaleThreshold) {
+    return 1.0;
+  }
+  // Linearly interpolate opacity from opacityMin to 1.0 based on scale
+  const t = (scale - scaleRange[0]) / (opacityFadeScaleThreshold - scaleRange[0]);
+  return opacityMin + t * (1.0 - opacityMin);
+}
+
 function initializeBillState(config: LayerConfig): BillState {
   const { count, zRange, scaleRange } = config;
   const positions = new Float32Array(count * 3);
   const scales = new Float32Array(count);
+  const opacities = new Float32Array(count);
+  const baseRotZ = new Float32Array(count);
   const velocitiesX = new Float32Array(count);
   const fallSpeeds = new Float32Array(count);
   const phaseX = new Float32Array(count);
@@ -100,8 +163,14 @@ function initializeBillState(config: LayerConfig): BillState {
     positions[i * 3 + 2] = zRange[0] + Math.random() * (zRange[1] - zRange[0]);
 
     scales[i] = scaleRange[0] + Math.random() * (scaleRange[1] - scaleRange[0]);
+    opacities[i] = computeOpacity(scales[i], config);
+    // Continuous base Z rotation: 0 to PI/2 range (landscape to portrait)
+    // ~20% are more upright (higher rotation), fall speed scales with rotation
+    baseRotZ[i] = Math.random() * (Math.PI / 2);
     velocitiesX[i] = 0;
-    fallSpeeds[i] = 0.03 + Math.random() * 0.04; // 50% slower
+    // Fall speed increases with rotation (more upright = faster fall)
+    const rotationFactor = baseRotZ[i] / (Math.PI / 2); // 0 to 1
+    fallSpeeds[i] = 0.03 + Math.random() * 0.04 + rotationFactor * 0.08;
 
     phaseX[i] = Math.random() * Math.PI * 2;
     phaseY[i] = Math.random() * Math.PI * 2;
@@ -125,6 +194,8 @@ function initializeBillState(config: LayerConfig): BillState {
   return {
     positions,
     scales,
+    opacities,
+    baseRotZ,
     velocitiesX,
     fallSpeeds,
     phaseX,
@@ -143,15 +214,33 @@ function initializeBillState(config: LayerConfig): BillState {
   };
 }
 
-function resetBill(state: BillState, index: number, config: LayerConfig) {
+function resetBill(state: BillState, index: number, config: LayerConfig, spawnHistory: SpawnHistory) {
   const { zRange, scaleRange } = config;
 
-  state.positions[index * 3] = (Math.random() - 0.5) * SPREAD_X;
+  // Generate position with staggered spawning to reduce overlap
+  let x: number;
+  let z: number;
+  let retries = 0;
+
+  do {
+    x = (Math.random() - 0.5) * SPREAD_X;
+    z = zRange[0] + Math.random() * (zRange[1] - zRange[0]);
+    retries++;
+  } while (retries <= MAX_SPAWN_RETRIES && isTooCloseToRecent(spawnHistory, x, z));
+
+  addToSpawnHistory(spawnHistory, x, z);
+
+  state.positions[index * 3] = x;
   state.positions[index * 3 + 1] = SPAWN_HEIGHT + Math.random() * 20;
-  state.positions[index * 3 + 2] = zRange[0] + Math.random() * (zRange[1] - zRange[0]);
+  state.positions[index * 3 + 2] = z;
   state.scales[index] = scaleRange[0] + Math.random() * (scaleRange[1] - scaleRange[0]);
+  state.opacities[index] = computeOpacity(state.scales[index], config);
+  // Continuous base Z rotation: 0 to PI/2 range (landscape to portrait)
+  state.baseRotZ[index] = Math.random() * (Math.PI / 2);
   state.velocitiesX[index] = 0;
-  state.fallSpeeds[index] = 0.03 + Math.random() * 0.04; // 50% slower
+  // Fall speed increases with rotation (more upright = faster fall)
+  const rotationFactor = state.baseRotZ[index] / (Math.PI / 2);
+  state.fallSpeeds[index] = 0.03 + Math.random() * 0.04 + rotationFactor * 0.08;
 
   state.phaseX[index] = Math.random() * Math.PI * 2;
   state.phaseY[index] = Math.random() * Math.PI * 2;
@@ -198,6 +287,8 @@ function Bills({ frontTexture, backTexture, layer }: BillsProps) {
   const config = LAYER_CONFIGS[layer];
   const meshRef = useRef<InstancedMesh>(null);
   const stateRef = useRef<BillState>(initializeBillState(config));
+  const spawnHistoryRef = useRef<SpawnHistory>(createSpawnHistory());
+  const opacityAttrRef = useRef<InstancedBufferAttribute | null>(null);
   const timeRef = useRef(0);
   const dummy = useMemo(() => new Object3D(), []);
 
@@ -206,6 +297,12 @@ function Bills({ frontTexture, backTexture, layer }: BillsProps) {
   useEffect(() => {
     if (!meshRef.current) return;
     meshRef.current.instanceMatrix.setUsage(DynamicDrawUsage);
+
+    // Set up per-instance opacity attribute
+    const opacityAttr = new InstancedBufferAttribute(stateRef.current.opacities, 1);
+    opacityAttr.setUsage(DynamicDrawUsage);
+    meshRef.current.geometry.setAttribute('instanceOpacity', opacityAttr);
+    opacityAttrRef.current = opacityAttr;
   }, []);
 
   useFrame((_, delta) => {
@@ -226,10 +323,11 @@ function Bills({ frontTexture, backTexture, layer }: BillsProps) {
 
       const rotX = Math.sin(t * state.freqX[i] + state.phaseX[i]) * state.ampX[i];
       const rotY = state.baseRotY[i] + Math.sin(t * state.freqY[i] + state.phaseY[i]) * state.ampY[i];
-      const rotZ = Math.sin(t * state.freqZ[i] + state.phaseZ[i]) * state.ampZ[i];
+      // Add base Z rotation (continuous 0 to PI/2 range)
+      const rotZ = Math.sin(t * state.freqZ[i] + state.phaseZ[i]) * state.ampZ[i] + state.baseRotZ[i];
 
       if (state.positions[i * 3 + 1] < DESPAWN_HEIGHT) {
-        resetBill(state, i, config);
+        resetBill(state, i, config, spawnHistoryRef.current);
       }
 
       const scale = state.scales[i];
@@ -245,7 +343,12 @@ function Bills({ frontTexture, backTexture, layer }: BillsProps) {
     }
 
     meshRef.current.instanceMatrix.needsUpdate = true;
+    if (opacityAttrRef.current) {
+      opacityAttrRef.current.needsUpdate = true;
+    }
   });
+
+  const hasOpacityFade = config.opacityFadeScaleThreshold !== undefined;
 
   return (
     <instancedMesh ref={meshRef} args={[geometry, undefined, config.count]}>
@@ -254,14 +357,34 @@ function Bills({ frontTexture, backTexture, layer }: BillsProps) {
         map={frontTexture}
         roughness={0.8}
         metalness={0.1}
+        transparent={hasOpacityFade}
         onBeforeCompile={(shader) => {
           shader.uniforms.backTexture = { value: backTexture };
+
+          // Add varying for per-instance opacity
+          shader.vertexShader = shader.vertexShader.replace(
+            '#include <common>',
+            `
+            #include <common>
+            attribute float instanceOpacity;
+            varying float vInstanceOpacity;
+            `
+          );
+
+          shader.vertexShader = shader.vertexShader.replace(
+            '#include <begin_vertex>',
+            `
+            #include <begin_vertex>
+            vInstanceOpacity = instanceOpacity;
+            `
+          );
 
           shader.fragmentShader = shader.fragmentShader.replace(
             '#include <common>',
             `
             #include <common>
             uniform sampler2D backTexture;
+            varying float vInstanceOpacity;
             `
           );
 
@@ -270,9 +393,20 @@ function Bills({ frontTexture, backTexture, layer }: BillsProps) {
             `
             #ifdef USE_MAP
               vec4 frontColor = texture2D(map, vMapUv);
-              vec4 backColor = texture2D(backTexture, vMapUv);
+              // Flip UV horizontally for back face
+              vec2 backUv = vec2(1.0 - vMapUv.x, vMapUv.y);
+              vec4 backColor = texture2D(backTexture, backUv);
               diffuseColor *= gl_FrontFacing ? frontColor : backColor;
             #endif
+            `
+          );
+
+          // Apply per-instance opacity
+          shader.fragmentShader = shader.fragmentShader.replace(
+            '#include <opaque_fragment>',
+            `
+            #include <opaque_fragment>
+            gl_FragColor.a *= vInstanceOpacity;
             `
           );
         }}
