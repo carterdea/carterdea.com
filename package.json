@@ -25,13 +25,16 @@
     "@astrojs/sitemap": "^3.7.0",
     "@astrojs/vercel": "^9.0.3",
     "@headlessui/react": "^2.2.9",
+    "@heroicons/react": "^2.2.0",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.5.0",
     "astro": "^5.16.9",
     "embla-carousel": "^8.6.0",
+    "odometer": "^0.4.8",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "react-hook-form": "^7.71.1",
+    "react-odometerjs": "^3.1.3",
     "resend": "^6.7.0",
     "three": "^0.182.0"
   }
