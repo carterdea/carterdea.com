@@ -17,27 +17,38 @@ import {
   MIN_STEP_INTERVAL,
   MIN_TRAIL_LENGTH,
   MUTATION_CHANCE,
+  MUTATION_THROTTLE_FRAMES,
   randomInRange,
 } from './constants';
 import type { Column } from './types';
 
-const createColumn = (x: number, initialSpawn = false): Column => {
-  const fontSize = randomInRange(MIN_FONT_SIZE, MAX_FONT_SIZE);
-  const startY = -fontSize * Math.floor(Math.random() * 10 + 1);
+// Threshold for detecting tab switches (ms)
+// Must be high enough to not trigger on normal frame drops (GC, etc.)
+const TAB_SWITCH_THRESHOLD = 500;
+
+function randomizeColumnParams(): Pick<Column, 'stepInterval' | 'trailLength' | 'brightness' | 'fontSize'> {
+  return {
+    stepInterval: randomInRange(MIN_STEP_INTERVAL, MAX_STEP_INTERVAL),
+    trailLength: randomInRange(MIN_TRAIL_LENGTH, MAX_TRAIL_LENGTH),
+    brightness: randomInRange(MIN_BRIGHTNESS, MAX_BRIGHTNESS),
+    fontSize: randomInRange(MIN_FONT_SIZE, MAX_FONT_SIZE),
+  };
+}
+
+function createColumn(x: number, initialSpawn = false): Column {
+  const params = randomizeColumnParams();
+  const startY = -params.fontSize * Math.floor(Math.random() * 10 + 1);
 
   return {
     x,
     y: startY,
     trail: [],
     nextStepTime: performance.now() + (initialSpawn ? Math.random() * 8000 : 0),
-    stepInterval: randomInRange(MIN_STEP_INTERVAL, MAX_STEP_INTERVAL),
-    trailLength: randomInRange(MIN_TRAIL_LENGTH, MAX_TRAIL_LENGTH),
-    brightness: randomInRange(MIN_BRIGHTNESS, MAX_BRIGHTNESS),
-    fontSize,
+    ...params,
   };
-};
+}
 
-const initializeColumns = (width: number): Column[] => {
+function initializeColumns(width: number): Column[] {
   const numColumns = Math.ceil(width / COLUMN_WIDTH);
   const columns: Column[] = [];
 
@@ -47,20 +58,23 @@ const initializeColumns = (width: number): Column[] => {
     }
   }
 
-  return columns;
-};
+  // Sort by fontSize once - smaller (distant) columns render first
+  columns.sort((a, b) => a.fontSize - b.fontSize);
 
-const mutateTrail = (column: Column): void => {
+  return columns;
+}
+
+function mutateTrail(column: Column): void {
   for (let i = 1; i < column.trail.length; i++) {
     if (Math.random() < MUTATION_CHANCE) {
       column.trail[i].char = getRandomCharacter();
     }
   }
-};
+}
 
-const updateColumn = (column: Column, canvasHeight: number, currentTime: number): void => {
+function updateColumn(column: Column, canvasHeight: number, currentTime: number, shouldMutate: boolean): void {
   if (currentTime < column.nextStepTime) {
-    mutateTrail(column);
+    if (shouldMutate) mutateTrail(column);
     return;
   }
 
@@ -79,100 +93,99 @@ const updateColumn = (column: Column, canvasHeight: number, currentTime: number)
   mutateTrail(column);
 
   const lowestTrailY = column.trail.length > 0 ? column.trail[column.trail.length - 1].y : column.y;
-
   const lineHeight = column.fontSize * LINE_HEIGHT_MULTIPLIER;
+  const offscreenThreshold = canvasHeight + lineHeight * 5;
 
-  if (lowestTrailY > canvasHeight + lineHeight * 5) {
-    column.y = -lineHeight * Math.floor(Math.random() * 5 + 1);
+  if (lowestTrailY > offscreenThreshold) {
+    const params = randomizeColumnParams();
+    const newLineHeight = params.fontSize * LINE_HEIGHT_MULTIPLIER;
+    column.y = -newLineHeight * Math.floor(Math.random() * 5 + 1);
     column.trail = [];
     column.nextStepTime = currentTime + Math.random() * 500;
-    column.stepInterval = randomInRange(MIN_STEP_INTERVAL, MAX_STEP_INTERVAL);
-    column.trailLength = randomInRange(MIN_TRAIL_LENGTH, MAX_TRAIL_LENGTH);
-    column.brightness = randomInRange(MIN_BRIGHTNESS, MAX_BRIGHTNESS);
-    column.fontSize = randomInRange(MIN_FONT_SIZE, MAX_FONT_SIZE);
+    Object.assign(column, params);
   }
-};
+}
 
-const drawColumn = (ctx: CanvasRenderingContext2D, column: Column): void => {
+function drawColumn(ctx: CanvasRenderingContext2D, column: Column): void {
   const { trail, fontSize } = column;
-
-  ctx.font = `bold ${fontSize}px ${FONT_FAMILY}`;
 
   // Depth-based opacity: smaller (distant) drops are more transparent
   const sizeRange = MAX_FONT_SIZE - MIN_FONT_SIZE;
   const normalizedSize = (fontSize - MIN_FONT_SIZE) / sizeRange;
   const depthOpacity = 0.7 + normalizedSize * 0.3;
 
+  const xPos = column.x + COLUMN_WIDTH / 4;
+  const canvasHeight = ctx.canvas.height;
+
   for (let i = 0; i < trail.length; i++) {
     const { char, y } = trail[i];
 
-    if (y < -fontSize || y > ctx.canvas.height + fontSize) {
-      continue;
-    }
+    // Skip off-screen characters
+    if (y < -fontSize || y > canvasHeight + fontSize) continue;
 
     const { color, glow, glowColor } = getTrailColor(i, column.trailLength, column.brightness);
 
-    ctx.save();
-    ctx.translate(column.x + COLUMN_WIDTH / 2, y);
-    ctx.scale(-1, 1);
-    ctx.globalAlpha = depthOpacity;
-
     if (i === 0) {
-      // Multiple glow passes for strong bloom effect
+      // Head character with glow effect
       ctx.globalAlpha = 0.8;
       ctx.shadowColor = glowColor;
       ctx.fillStyle = glowColor;
 
-      ctx.shadowBlur = 80;
-      ctx.fillText(char, -COLUMN_WIDTH / 4, 0);
-      ctx.shadowBlur = 50;
-      ctx.fillText(char, -COLUMN_WIDTH / 4, 0);
-      ctx.shadowBlur = 25;
-      ctx.fillText(char, -COLUMN_WIDTH / 4, 0);
-      ctx.shadowBlur = 10;
-      ctx.fillText(char, -COLUMN_WIDTH / 4, 0);
+      ctx.shadowBlur = 40;
+      ctx.fillText(char, xPos, y);
+      ctx.shadowBlur = 15;
+      ctx.fillText(char, xPos, y);
 
       // Sharp white text on top
       ctx.globalAlpha = depthOpacity;
       ctx.shadowBlur = 0;
       ctx.fillStyle = color;
-      ctx.fillText(char, -COLUMN_WIDTH / 4, 0);
+      ctx.fillText(char, xPos, y);
     } else {
-      if (glow > 0.1) {
-        ctx.shadowColor = glowColor;
-        ctx.shadowBlur = 20 * glow;
-      }
+      // Trail characters
+      ctx.globalAlpha = depthOpacity;
+      ctx.shadowBlur = glow > 0.1 ? 20 * glow : 0;
+      if (glow > 0.1) ctx.shadowColor = glowColor;
       ctx.fillStyle = color;
-      ctx.fillText(char, -COLUMN_WIDTH / 4, 0);
+      ctx.fillText(char, xPos, y);
     }
-
-    ctx.restore();
   }
-};
+}
 
-const render = (ctx: CanvasRenderingContext2D, columns: Column[], currentTime: number) => {
+function render(ctx: CanvasRenderingContext2D, columns: Column[], currentTime: number, frameCount: number): void {
   const { width, height } = ctx.canvas;
 
+  // Reset shadow state before clearing to prevent glow bleeding into background
+  ctx.shadowBlur = 0;
+  ctx.globalAlpha = 1;
   ctx.fillStyle = BACKGROUND_COLOR;
   ctx.fillRect(0, 0, width, height);
   ctx.textBaseline = 'top';
 
+  const shouldMutate = frameCount % MUTATION_THROTTLE_FRAMES === 0;
+
   for (const column of columns) {
-    updateColumn(column, height, currentTime);
+    updateColumn(column, height, currentTime, shouldMutate);
   }
 
-  const sortedColumns = [...columns].sort((a, b) => a.fontSize - b.fontSize);
+  // Columns are pre-sorted by fontSize - batch font changes
+  let currentFontSize = -1;
 
-  for (const column of sortedColumns) {
+  for (const column of columns) {
+    if (column.fontSize !== currentFontSize) {
+      currentFontSize = column.fontSize;
+      ctx.font = `bold ${currentFontSize}px ${FONT_FAMILY}`;
+    }
     drawColumn(ctx, column);
   }
-};
+}
 
 export default function MatrixRain() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const columnsRef = useRef<Column[]>([]);
   const animationRef = useRef<number>(0);
   const lastFrameTimeRef = useRef<number>(0);
+  const frameCountRef = useRef<number>(0);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -197,19 +210,19 @@ export default function MatrixRain() {
     window.addEventListener('resize', resize);
 
     const animate = (currentTime: number) => {
-      // Detect tab switch: if more than 100ms passed, adjust all nextStepTime values
-      // to preserve the stagger instead of having them all fire at once
+      // Detect tab switch and adjust timing to preserve stagger
       if (lastFrameTimeRef.current > 0) {
         const delta = currentTime - lastFrameTimeRef.current;
-        if (delta > 100) {
+        if (delta > TAB_SWITCH_THRESHOLD) {
           for (const column of columnsRef.current) {
             column.nextStepTime += delta;
           }
         }
       }
       lastFrameTimeRef.current = currentTime;
+      frameCountRef.current++;
 
-      render(ctx, columnsRef.current, currentTime);
+      render(ctx, columnsRef.current, currentTime, frameCountRef.current);
       animationRef.current = requestAnimationFrame(animate);
     };
 

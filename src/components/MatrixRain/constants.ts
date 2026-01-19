@@ -18,6 +18,7 @@ export const DROPS_PER_COLUMN = 2;
 export const MIN_TRAIL_LENGTH = 8;
 export const MAX_TRAIL_LENGTH = 30;
 export const MUTATION_CHANCE = 0.1; // 10% chance per frame for trail chars to change
+export const MUTATION_THROTTLE_FRAMES = 3; // Only run mutation every N frames
 
 export const MIN_BRIGHTNESS = 0.4;
 export const MAX_BRIGHTNESS = 1.0;
