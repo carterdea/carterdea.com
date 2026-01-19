@@ -1,7 +1,7 @@
 import { Canvas, useFrame } from '@react-three/fiber';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { Group, InstancedMesh } from 'three';
 import { Color, DoubleSide, Matrix4, Quaternion, Vector3 } from 'three';
-import type { InstancedMesh, Group } from 'three';
 import {
   curvedArcs,
   doubleOrbit,
@@ -54,6 +54,9 @@ const DEFAULT_PALETTE = [
   '#f472b6', // pink-400
   '#fb7185', // rose-400
 ];
+
+// Maximum instance count to avoid recreating instancedMesh on point count changes
+const MAX_INSTANCES = 300;
 
 interface ParticlesProps {
   points: Point3D[];
@@ -130,6 +133,12 @@ function Particles({
     const cosX = Math.cos(groupRotationX);
     const sinX = Math.sin(groupRotationX);
 
+    // Hide unused instances by scaling to zero
+    for (let i = points.length; i < MAX_INSTANCES; i++) {
+      tempMatrix.makeScale(0, 0, 0);
+      meshRef.current.setMatrixAt(i, tempMatrix);
+    }
+
     for (let i = 0; i < points.length; i++) {
       const point = points[i];
 
@@ -181,7 +190,7 @@ function Particles({
   }, [points, getDotColorHex, dotSize, groupRotationY, groupRotationX]);
 
   return (
-    <instancedMesh ref={meshRef} args={[undefined, undefined, points.length]}>
+    <instancedMesh ref={meshRef} args={[undefined, undefined, MAX_INSTANCES]}>
       <circleGeometry args={[1, 16]} />
       <meshBasicMaterial side={DoubleSide} />
     </instancedMesh>

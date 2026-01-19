@@ -42,27 +42,6 @@ body.mode-vacation .bg-white\/10 {
   }
 }
 
-/* Placeholder styles for other modes - implement as needed */
-body.mode-coder {
-  /* TBD */
-}
-
-body.mode-preview {
-  /* TBD */
-}
-
-body.mode-fire {
-  /* TBD */
-}
-
-body.mode-money {
-  /* TBD */
-}
-
-body.mode-matrix {
-  /* TBD */
-}
-
 /* Animation easing - smooth deceleration curve */
 :root {
   --ease-out-expo: cubic-bezier(0.22, 0.61, 0.36, 1);
