@@ -1,0 +1,257 @@
+/* Power Macintosh 9500-style monitor - Pure CSS matching Figma specs */
+
+.monitor {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  user-select: none;
+  cursor: grab;
+  touch-action: none;
+}
+
+.monitor.dragging {
+  cursor: grabbing;
+}
+
+/* Main bezel/shell - 428x338, border-radius: 11px */
+.shell {
+  position: relative;
+  width: 428px;
+  height: 338px;
+  border-radius: 11px;
+  background: linear-gradient(180deg, #e7e1c9 0%, #e0dac2 100%);
+  box-shadow: 0px 4px 12px 0px rgba(0, 0, 0, 0.24);
+}
+
+/* Inner bezel - 364x274, border-radius: 6px, positioned 32px from left, 32px from top */
+.innerBezel {
+  position: absolute;
+  left: 32px;
+  top: 32px;
+  width: 364px;
+  height: 274px;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #a8a491 0%, #cbc39c 100%);
+  border: 2px solid #bfb88e;
+  box-sizing: border-box;
+}
+
+/* Bezel highlight overlay */
+.bezelOverlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 6px;
+  background: linear-gradient(135deg, rgba(168, 164, 145, 0.28) 8.58%, rgba(245, 243, 235, 0.28) 100%);
+  pointer-events: none;
+}
+
+/* Bottom highlight line on bezel */
+.bezelBottomLine {
+  position: absolute;
+  left: 3px;
+  right: 2px;
+  bottom: 1px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 1px;
+}
+
+/* CRT screen inset - 348x258, border-radius: 4px */
+.crtInset {
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  width: 348px;
+  height: 258px;
+  border-radius: 4px;
+  background: #121212;
+  border: 2px solid #000;
+  box-sizing: border-box;
+}
+
+/* Actual screen area with glow - 334x244, centered in crtInset */
+.screen {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 334px;
+  height: 244px;
+  border-radius: 4px;
+  background: #fff;
+  box-shadow: 0px 0px 5px 5px rgba(255, 255, 255, 0.25);
+  overflow: hidden;
+}
+
+.screenContent {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+  object-position: top center;
+}
+
+.screen.screenOff {
+  background: #0a0a0a;
+  box-shadow: none;
+}
+
+/* CRT power-off animation */
+.screen.turningOff {
+  animation: crtOff 0.4s ease-out forwards;
+}
+
+/* CRT power-on animation */
+.screen.turningOn {
+  animation: crtOn 0.5s ease-out forwards;
+}
+
+@keyframes crtOff {
+  0% {
+    transform: translate(-50%, -50%) scale(1, 1);
+    filter: brightness(1);
+  }
+  40% {
+    transform: translate(-50%, -50%) scale(1, 0.01);
+    filter: brightness(2);
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(0, 0);
+    filter: brightness(0);
+  }
+}
+
+@keyframes crtOn {
+  0% {
+    transform: translate(-50%, -50%) scale(0, 0);
+    filter: brightness(0);
+    background: #0a0a0a;
+  }
+  30% {
+    transform: translate(-50%, -50%) scale(1, 0.01);
+    filter: brightness(2.5);
+    background: #fff;
+  }
+  60% {
+    transform: translate(-50%, -50%) scale(1, 0.5);
+    filter: brightness(1.5);
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1, 1);
+    filter: brightness(1);
+  }
+}
+
+/* Scanlines overlay */
+.scanlines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: 4px;
+  overflow: hidden;
+  z-index: 10;
+}
+
+.scanlines::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0px,
+    transparent 1px,
+    rgba(0, 0, 0, 0.08) 1px,
+    rgba(0, 0, 0, 0.08) 2px
+  );
+}
+
+/* Subtle screen flicker */
+.screenFlicker {
+  animation: flicker 0.15s infinite;
+}
+
+@keyframes flicker {
+  0%, 100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(0.97);
+  }
+}
+
+/* Bottom bar with Apple logo and power LED */
+.bottomBar {
+  position: absolute;
+  left: 32px;
+  right: 32px;
+  bottom: 9px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.appleLogo {
+  width: 12px;
+  height: 14px;
+  overflow: hidden;
+}
+
+/* Power LED - 12x2 */
+.powerLed {
+  width: 12px;
+  height: 2px;
+  border-radius: 1px;
+  border: 1px solid rgba(126, 113, 59, 0.22);
+  background: #3a3a2a;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0;
+}
+
+.powerLed.powerOn {
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.094) 47.115%, rgba(255, 255, 255, 0) 100%),
+    linear-gradient(90deg, rgb(154, 249, 64) 0%, rgb(154, 249, 64) 100%);
+  box-shadow:
+    0px 0px 8px 0px rgba(178, 253, 101, 0.21),
+    0px 0px 3px 0px #b2fd65;
+}
+
+/* Monitor stand pieces */
+.stand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: -8px;
+}
+
+/* Top stand piece - 222x25 */
+.standTop {
+  width: 222px;
+  height: 25px;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #ae9e6b 0%, #a09a7e 100%);
+}
+
+/* Middle stand piece (narrower) - 118x31, goes BEHIND top piece */
+.standMiddle {
+  width: 118px;
+  height: 31px;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #73673f 0%, #5e5631 100%);
+  margin-top: -12px;
+  position: relative;
+  z-index: -1;
+}
+
+/* Bottom stand piece - 222x12, goes in front */
+.standBottom {
+  width: 222px;
+  height: 12px;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #999380 0%, #aba68c 100%);
+  margin-top: -6px;
+  position: relative;
+  z-index: 1;
+}
