@@ -296,9 +296,6 @@ interface BillsProps {
 // Maximum bills to spawn per frame (prevents all bills spawning at once)
 const MAX_SPAWNS_PER_FRAME = 3;
 
-// Debug counter to track mounts
-let billsMountCount = 0;
-
 function Bills({ frontTexture, backTexture, layer, intensityRef }: BillsProps) {
   const config = LAYER_CONFIGS[layer];
   const meshRef = useRef<InstancedMesh>(null);
@@ -306,15 +303,7 @@ function Bills({ frontTexture, backTexture, layer, intensityRef }: BillsProps) {
   const spawnHistoryRef = useRef<SpawnHistory>(createSpawnHistory());
   const timeRef = useRef(0);
   const dummy = useMemo(() => new Object3D(), []);
-  const frameCountRef = useRef(0);
   const camera = useThree((s) => s.camera);
-
-  // Debug: Track mounts
-  useEffect(() => {
-    billsMountCount++;
-    console.log(`[MoneyFall] Bills MOUNT #${billsMountCount}`, layer);
-    return () => console.log(`[MoneyFall] Bills UNMOUNT`, layer);
-  }, [layer]);
 
   // Ensure per-instance attributes exist *before* the material compiles on initial mount.
   // If the shader references `instanceOpacity` but the geometry doesn't have it yet,
@@ -349,10 +338,6 @@ function Bills({ frontTexture, backTexture, layer, intensityRef }: BillsProps) {
 
     // Target number of active bills based on intensity
     const targetActiveBills = Math.floor(config.count * currentIntensity);
-
-    // Debug: Log first 10 frames then every 60 frames
-    frameCountRef.current++;
-    const shouldLog = frameCountRef.current <= 10 || frameCountRef.current % 60 === 0;
 
     // Count how many bills are currently visible (on screen)
     let visibleCount = 0;
@@ -399,9 +384,6 @@ function Bills({ frontTexture, backTexture, layer, intensityRef }: BillsProps) {
           resetBill(state, i, config, spawnHistoryRef.current, spawnYForZ);
           visibleCount++;
           spawnsThisFrame++;
-          if (shouldLog && spawnsThisFrame === 1) {
-            console.log(`[MoneyFall] ${layer} spawning bill ${i} at y=${state.positions[i * 3 + 1].toFixed(1)} visible=${visibleCount} target=${targetActiveBills}`);
-          }
 
           const scale = state.scales[i];
           dummy.position.set(
@@ -423,10 +405,6 @@ function Bills({ frontTexture, backTexture, layer, intensityRef }: BillsProps) {
 
     meshRef.current.instanceMatrix.needsUpdate = true;
     opacityAttr.needsUpdate = true;
-
-    if (shouldLog) {
-      console.log(`[MoneyFall] ${layer} frame=${frameCountRef.current} visible=${visibleCount} spawned=${spawnsThisFrame} target=${targetActiveBills} intensity=${currentIntensity.toFixed(3)}`);
-    }
   });
 
   const hasOpacityFade = config.opacityFadeScaleThreshold !== undefined;
@@ -647,15 +625,6 @@ export function MoneyFall({ zIndex = 1, layer = 'back' }: MoneyFallProps) {
           dpr={[1, 2]}
           camera={{ position: [0, 0, 30], fov: 60 }}
           gl={{ alpha: true, antialias: true }}
-          onCreated={({ gl, size }) => {
-            // Useful for diagnosing "logic runs but nothing visible" on cold load.
-            // If size is 0x0 or shader compilation fails, you'll usually see it here/nearby in console.
-            console.log(
-              `[MoneyFall] Canvas created (${layer}) size=${Math.round(size.width)}x${Math.round(
-                size.height
-              )} dpr=${gl.getPixelRatio().toFixed(2)}`
-            );
-          }}
         >
           <Scene layer={layer} intensityRef={billsIntensityRef} />
         </Canvas>
