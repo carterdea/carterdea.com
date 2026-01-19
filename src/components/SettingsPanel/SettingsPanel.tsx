@@ -83,7 +83,7 @@ function ToggleIndicator({ checked }: { checked: boolean }) {
     >
       <div
         className={`absolute top-1/2 -translate-y-1/2 h-[10px] w-[10px] rounded-lg bg-white transition-all duration-200 ${
-          checked ? 'left-[14px]' : 'left-[1px]'
+          checked ? 'left-[14px]' : 'left-px'
         }`}
         style={{ transitionTimingFunction: 'cubic-bezier(0.22, 0.61, 0.36, 1)' }}
       />
