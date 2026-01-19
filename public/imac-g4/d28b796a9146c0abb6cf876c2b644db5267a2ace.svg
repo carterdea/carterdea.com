@@ -1,0 +1,41 @@
+<svg preserveAspectRatio="none" width="100%" height="100%" overflow="visible" style="display: block;" viewBox="0 0 33.6585 32.1951" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Group 16">
+<mask id="mask0_61_830" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="34" height="33">
+<path id="Rectangle 39" d="M0 0H33.6585V15.3659C33.6585 24.6604 26.1238 32.1951 16.8293 32.1951V32.1951C7.53472 32.1951 0 24.6604 0 15.3659V0Z" fill="var(--fill-0, white)"/>
+</mask>
+<g mask="url(#mask0_61_830)">
+<path id="Rectangle 40" d="M0 0H33.6585V15.3659C33.6585 24.6604 26.1238 32.1951 16.8293 32.1951V32.1951C7.53472 32.1951 0 24.6604 0 15.3659V0Z" fill="url(#paint0_linear_61_830)"/>
+<g id="Ellipse 1">
+<ellipse cx="16.8291" cy="26.3414" rx="16.8293" ry="5.85366" fill="url(#paint1_radial_61_830)"/>
+<ellipse cx="16.8291" cy="26.3414" rx="16.8293" ry="5.85366" fill="url(#paint2_linear_61_830)" fill-opacity="0.2"/>
+<ellipse cx="16.8291" cy="26.3414" rx="16.8293" ry="5.85366" fill="var(--fill-2, white)" fill-opacity="0.2"/>
+</g>
+</g>
+</g>
+<defs>
+<linearGradient id="paint0_linear_61_830" x1="0" y1="17.561" x2="33.6585" y2="17.561" gradientUnits="userSpaceOnUse">
+<stop stop-color="#C1C1C3"/>
+<stop offset="0.0288462" stop-color="#30393E"/>
+<stop offset="0.1875" stop-color="#252F31"/>
+<stop offset="0.230769" stop-color="#CFD4DA"/>
+<stop offset="0.365385" stop-color="#E9E9EB"/>
+<stop offset="0.389423" stop-color="#FEFFFF"/>
+<stop offset="0.5" stop-color="#121A1D"/>
+<stop offset="0.663462" stop-color="#17212A"/>
+<stop offset="0.692308" stop-color="#676E76"/>
+<stop offset="0.826087" stop-color="#9AA2A5"/>
+<stop offset="0.879808" stop-color="#252E33"/>
+<stop offset="1" stop-color="#050C12"/>
+</linearGradient>
+<radialGradient id="paint1_radial_61_830" cx="0" cy="0" r="1" gradientTransform="matrix(-0.885751 10.2439 -29.4512 -1.7378 17.7149 21.9511)" gradientUnits="userSpaceOnUse">
+<stop stop-color="#D6D7DB"/>
+<stop offset="1" stop-color="#8F939C"/>
+</radialGradient>
+<linearGradient id="paint2_linear_61_830" x1="2.19496" y1="25.2771" x2="32.9267" y2="25.2771" gradientUnits="userSpaceOnUse">
+<stop stop-color="#BCC1C5"/>
+<stop offset="0.322115" stop-color="#C8CBD0"/>
+<stop offset="0.529762" stop-color="#B3B6BB"/>
+<stop offset="1"/>
+</linearGradient>
+</defs>
+</svg>
