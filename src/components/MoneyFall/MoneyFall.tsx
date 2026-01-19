@@ -1,5 +1,6 @@
-import { Canvas, useFrame, useLoader } from '@react-three/fiber';
+import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import type { InstancedMesh, Texture } from 'three';
 import {
   DoubleSide,
   DynamicDrawUsage,
@@ -8,11 +9,10 @@ import {
   PlaneGeometry,
   TextureLoader,
 } from 'three';
-import type { InstancedMesh, Texture } from 'three';
+import { subscribeToIntensity, subscribeToPhase, subscribeToReset } from '../../lib/moneyFallIntensity';
 
 const BILL_WIDTH = 2.35;
 const BILL_HEIGHT = 1;
-const SPAWN_HEIGHT = 60;
 const DESPAWN_HEIGHT = -60;
 const SPREAD_X = 80;
 
@@ -114,7 +114,7 @@ function createCurvedBillGeometry(): PlaneGeometry {
   for (let i = 0; i < positions.count; i++) {
     const x = positions.getX(i);
     const normalizedX = x / (BILL_WIDTH / 2);
-    const curve = 0.15 * Math.pow(normalizedX, 2);
+    const curve = 0.15 * normalizedX ** 2;
     positions.setZ(i, curve);
   }
 
@@ -159,7 +159,9 @@ function initializeBillState(config: LayerConfig): BillState {
 
   for (let i = 0; i < count; i++) {
     positions[i * 3] = (Math.random() - 0.5) * SPREAD_X;
-    positions[i * 3 + 1] = Math.random() * (SPAWN_HEIGHT - DESPAWN_HEIGHT) + DESPAWN_HEIGHT;
+    // Start all bills BELOW despawn height so they're hidden initially
+    // They will spawn from top only when intensity allows
+    positions[i * 3 + 1] = DESPAWN_HEIGHT - 10 - Math.random() * 50;
     positions[i * 3 + 2] = zRange[0] + Math.random() * (zRange[1] - zRange[0]);
 
     scales[i] = scaleRange[0] + Math.random() * (scaleRange[1] - scaleRange[0]);
@@ -170,7 +172,7 @@ function initializeBillState(config: LayerConfig): BillState {
     velocitiesX[i] = 0;
     // Fall speed increases with rotation (more upright = faster fall)
     const rotationFactor = baseRotZ[i] / (Math.PI / 2); // 0 to 1
-    fallSpeeds[i] = 0.03 + Math.random() * 0.04 + rotationFactor * 0.08;
+    fallSpeeds[i] = 0.06 + Math.random() * 0.08 + rotationFactor * 0.16;
 
     phaseX[i] = Math.random() * Math.PI * 2;
     phaseY[i] = Math.random() * Math.PI * 2;
@@ -214,7 +216,13 @@ function initializeBillState(config: LayerConfig): BillState {
   };
 }
 
-function resetBill(state: BillState, index: number, config: LayerConfig, spawnHistory: SpawnHistory) {
+function resetBill(
+  state: BillState,
+  index: number,
+  config: LayerConfig,
+  spawnHistory: SpawnHistory,
+  spawnYForZ: (z: number) => number
+) {
   const { zRange, scaleRange } = config;
 
   // Generate position with staggered spawning to reduce overlap
@@ -231,7 +239,8 @@ function resetBill(state: BillState, index: number, config: LayerConfig, spawnHi
   addToSpawnHistory(spawnHistory, x, z);
 
   state.positions[index * 3] = x;
-  state.positions[index * 3 + 1] = SPAWN_HEIGHT + Math.random() * 20;
+  // Spawn just above the top of the current view so bills enter from offscreen.
+  state.positions[index * 3 + 1] = spawnYForZ(z) + Math.random() * 3;
   state.positions[index * 3 + 2] = z;
   state.scales[index] = scaleRange[0] + Math.random() * (scaleRange[1] - scaleRange[0]);
   state.opacities[index] = computeOpacity(state.scales[index], config);
@@ -240,7 +249,7 @@ function resetBill(state: BillState, index: number, config: LayerConfig, spawnHi
   state.velocitiesX[index] = 0;
   // Fall speed increases with rotation (more upright = faster fall)
   const rotationFactor = state.baseRotZ[index] / (Math.PI / 2);
-  state.fallSpeeds[index] = 0.03 + Math.random() * 0.04 + rotationFactor * 0.08;
+  state.fallSpeeds[index] = 0.06 + Math.random() * 0.08 + rotationFactor * 0.16;
 
   state.phaseX[index] = Math.random() * Math.PI * 2;
   state.phaseY[index] = Math.random() * Math.PI * 2;
@@ -281,70 +290,142 @@ interface BillsProps {
   frontTexture: Texture;
   backTexture: Texture;
   layer: Layer;
+  intensityRef: React.RefObject<number>;
 }
 
-function Bills({ frontTexture, backTexture, layer }: BillsProps) {
+// Maximum bills to spawn per frame (prevents all bills spawning at once)
+const MAX_SPAWNS_PER_FRAME = 3;
+
+// Debug counter to track mounts
+let billsMountCount = 0;
+
+function Bills({ frontTexture, backTexture, layer, intensityRef }: BillsProps) {
   const config = LAYER_CONFIGS[layer];
   const meshRef = useRef<InstancedMesh>(null);
   const stateRef = useRef<BillState>(initializeBillState(config));
   const spawnHistoryRef = useRef<SpawnHistory>(createSpawnHistory());
-  const opacityAttrRef = useRef<InstancedBufferAttribute | null>(null);
   const timeRef = useRef(0);
   const dummy = useMemo(() => new Object3D(), []);
+  const frameCountRef = useRef(0);
+  const camera = useThree((s) => s.camera);
 
-  const geometry = useMemo(() => createCurvedBillGeometry(), []);
+  // Debug: Track mounts
+  useEffect(() => {
+    billsMountCount++;
+    console.log(`[MoneyFall] Bills MOUNT #${billsMountCount}`, layer);
+    return () => console.log(`[MoneyFall] Bills UNMOUNT`, layer);
+  }, [layer]);
+
+  // Ensure per-instance attributes exist *before* the material compiles on initial mount.
+  // If the shader references `instanceOpacity` but the geometry doesn't have it yet,
+  // WebGL can fail to link the program, resulting in nothing rendering on cold load.
+  const opacityAttr = useMemo(() => {
+    const attr = new InstancedBufferAttribute(stateRef.current.opacities, 1);
+    attr.setUsage(DynamicDrawUsage);
+    return attr;
+  }, []);
+
+  const geometry = useMemo(() => {
+    const geom = createCurvedBillGeometry();
+    geom.setAttribute('instanceOpacity', opacityAttr);
+    return geom;
+  }, [opacityAttr]);
 
   useEffect(() => {
     if (!meshRef.current) return;
     meshRef.current.instanceMatrix.setUsage(DynamicDrawUsage);
-
-    // Set up per-instance opacity attribute
-    const opacityAttr = new InstancedBufferAttribute(stateRef.current.opacities, 1);
-    opacityAttr.setUsage(DynamicDrawUsage);
-    meshRef.current.geometry.setAttribute('instanceOpacity', opacityAttr);
-    opacityAttrRef.current = opacityAttr;
   }, []);
 
   useFrame((_, delta) => {
     if (!meshRef.current) return;
 
     const state = stateRef.current;
-    const deltaScale = delta * 60;
+    const currentIntensity = intensityRef.current ?? 0;
+    // Clamp to prevent large first-frame jumps (e.g. tab inactive / slow device),
+    // which can make bills appear to "spawn" mid-screen.
+    const deltaScale = Math.min(delta, 1 / 30) * 60;
     timeRef.current += delta;
     const t = timeRef.current;
 
+    // Target number of active bills based on intensity
+    const targetActiveBills = Math.floor(config.count * currentIntensity);
+
+    // Debug: Log first 10 frames then every 60 frames
+    frameCountRef.current++;
+    const shouldLog = frameCountRef.current <= 10 || frameCountRef.current % 60 === 0;
+
+    // Count how many bills are currently visible (on screen)
+    let visibleCount = 0;
+    // Track spawns this frame to prevent spawning too many at once
+    let spawnsThisFrame = 0;
+
+    const spawnYForZ = (z: number) => {
+      // Compute half-height of the frustum at this bill's Z, then add margin above top edge.
+      const fovRad = ((camera as any).fov ?? 60) * (Math.PI / 180);
+      const dist = Math.max(0.1, camera.position.z - z);
+      const halfHeight = Math.tan(fovRad / 2) * dist;
+      return halfHeight + BILL_HEIGHT * 2.5;
+    };
+
     for (let i = 0; i < config.count; i++) {
-      state.positions[i * 3 + 1] -= state.fallSpeeds[i] * deltaScale;
+      const y = state.positions[i * 3 + 1];
 
-      const drift = Math.sin(t * state.driftSpeed[i] + state.driftPhase[i]) * 0.02 * deltaScale;
-      state.positions[i * 3] += drift;
+      if (y > DESPAWN_HEIGHT) {
+        visibleCount++;
 
-      state.baseRotY[i] += state.spinSpeed[i] * deltaScale;
+        // Bill is active (may be slightly above the viewport) - keep animating it
+        state.positions[i * 3 + 1] -= state.fallSpeeds[i] * deltaScale;
 
-      const rotX = Math.sin(t * state.freqX[i] + state.phaseX[i]) * state.ampX[i];
-      const rotY = state.baseRotY[i] + Math.sin(t * state.freqY[i] + state.phaseY[i]) * state.ampY[i];
-      // Add base Z rotation (continuous 0 to PI/2 range)
-      const rotZ = Math.sin(t * state.freqZ[i] + state.phaseZ[i]) * state.ampZ[i] + state.baseRotZ[i];
+        const drift = Math.sin(t * state.driftSpeed[i] + state.driftPhase[i]) * 0.02 * deltaScale;
+        state.positions[i * 3] += drift;
 
-      if (state.positions[i * 3 + 1] < DESPAWN_HEIGHT) {
-        resetBill(state, i, config, spawnHistoryRef.current);
+        state.baseRotY[i] += state.spinSpeed[i] * deltaScale;
+
+        const rotX = Math.sin(t * state.freqX[i] + state.phaseX[i]) * state.ampX[i];
+        const rotY = state.baseRotY[i] + Math.sin(t * state.freqY[i] + state.phaseY[i]) * state.ampY[i];
+        const rotZ = Math.sin(t * state.freqZ[i] + state.phaseZ[i]) * state.ampZ[i] + state.baseRotZ[i];
+
+        const scale = state.scales[i];
+        dummy.position.set(
+          state.positions[i * 3],
+          state.positions[i * 3 + 1],
+          state.positions[i * 3 + 2]
+        );
+        dummy.rotation.set(rotX, rotY, rotZ);
+        dummy.scale.set(scale, scale, scale);
+      } else {
+        // Bill fell off bottom or is hidden - only respawn if we're under target AND haven't spawned too many this frame
+        if (visibleCount < targetActiveBills && spawnsThisFrame < MAX_SPAWNS_PER_FRAME) {
+          resetBill(state, i, config, spawnHistoryRef.current, spawnYForZ);
+          visibleCount++;
+          spawnsThisFrame++;
+          if (shouldLog && spawnsThisFrame === 1) {
+            console.log(`[MoneyFall] ${layer} spawning bill ${i} at y=${state.positions[i * 3 + 1].toFixed(1)} visible=${visibleCount} target=${targetActiveBills}`);
+          }
+
+          const scale = state.scales[i];
+          dummy.position.set(
+            state.positions[i * 3],
+            state.positions[i * 3 + 1],
+            state.positions[i * 3 + 2]
+          );
+          dummy.rotation.set(0, state.baseRotY[i], state.baseRotZ[i]);
+          dummy.scale.set(scale, scale, scale);
+        } else {
+          // Don't respawn - hide it
+          dummy.scale.set(0, 0, 0);
+        }
       }
 
-      const scale = state.scales[i];
-      dummy.position.set(
-        state.positions[i * 3],
-        state.positions[i * 3 + 1],
-        state.positions[i * 3 + 2]
-      );
-      dummy.rotation.set(rotX, rotY, rotZ);
-      dummy.scale.set(scale, scale, scale);
       dummy.updateMatrix();
       meshRef.current.setMatrixAt(i, dummy.matrix);
     }
 
     meshRef.current.instanceMatrix.needsUpdate = true;
-    if (opacityAttrRef.current) {
-      opacityAttrRef.current.needsUpdate = true;
+    opacityAttr.needsUpdate = true;
+
+    if (shouldLog) {
+      console.log(`[MoneyFall] ${layer} frame=${frameCountRef.current} visible=${visibleCount} spawned=${spawnsThisFrame} target=${targetActiveBills} intensity=${currentIntensity.toFixed(3)}`);
     }
   });
 
@@ -401,12 +482,13 @@ function Bills({ frontTexture, backTexture, layer }: BillsProps) {
             `
           );
 
-          // Apply per-instance opacity
+          // Apply per-instance opacity at a safe point (right before final output).
+          // Modifying gl_FragColor inside other includes can break compilation depending on renderer/shader chunk order.
           shader.fragmentShader = shader.fragmentShader.replace(
-            '#include <opaque_fragment>',
+            '#include <output_fragment>',
             `
-            #include <opaque_fragment>
-            gl_FragColor.a *= vInstanceOpacity;
+            diffuseColor.a *= vInstanceOpacity;
+            #include <output_fragment>
             `
           );
         }}
@@ -417,9 +499,10 @@ function Bills({ frontTexture, backTexture, layer }: BillsProps) {
 
 interface SceneProps {
   layer: Layer;
+  intensityRef: React.RefObject<number>;
 }
 
-function Scene({ layer }: SceneProps) {
+function Scene({ layer, intensityRef }: SceneProps) {
   const [frontTexture, backTexture] = useLoader(TextureLoader, [
     '/100-front.jpg',
     '/100-rear.jpg',
@@ -430,7 +513,7 @@ function Scene({ layer }: SceneProps) {
       <ambientLight intensity={0.6} />
       <directionalLight position={[5, 10, 5]} intensity={1} />
       <directionalLight position={[-5, -5, -5]} intensity={0.3} />
-      <Bills frontTexture={frontTexture} backTexture={backTexture} layer={layer} />
+      <Bills frontTexture={frontTexture} backTexture={backTexture} layer={layer} intensityRef={intensityRef} />
     </>
   );
 }
@@ -440,27 +523,111 @@ interface MoneyFallProps {
   layer?: Layer;
 }
 
+// Lerp factor for smooth intensity transitions
+const LERP_FACTOR = 0.15;
+
+// Initial intensity so bills appear immediately on load/reset
+const INITIAL_FRONT_INTENSITY = 0.3;
+const INITIAL_BACK_INTENSITY = 0.05; // Small amount to start
+
+// Phase-based intensity targets
+const TRICKLE_INTENSITY = 0.05; // 5% trickle after done
+const TRICKLE_DURATION_MS = 3000; // How long trickle lasts after done
+
 export function MoneyFall({ zIndex = 1, layer = 'back' }: MoneyFallProps) {
-  const [isVisible, setIsVisible] = useState(false);
+  const isVisible = true; // Full-viewport fixed element, always visible
+  const [isEnabled, setIsEnabled] = useState(true); // Hide front layer after crash
+  const initialIntensity = layer === 'front' ? INITIAL_FRONT_INTENSITY : INITIAL_BACK_INTENSITY;
   const containerRef = useRef<HTMLDivElement>(null);
+  const intensityStateRef = useRef({ target: initialIntensity, current: initialIntensity });
+  const billsIntensityRef = useRef(initialIntensity); // Passed to Bills component
 
+
+  // Subscribe to intensity (climb phase) and phase changes
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true);
-          observer.disconnect();
+    const state = intensityStateRef.current;
+    let trickleTimeoutId: ReturnType<typeof setTimeout> | null = null;
+    let currentPhase: 'climb' | 'crash' | 'done' = 'climb';
+
+    // During climb: intensity comes from chart progress
+    // Only accept intensity updates once the chart has started (progress > 0)
+    // This preserves initial intensity until the animation actually begins
+    let hasReceivedNonZeroIntensity = false;
+    const unsubscribeIntensity = subscribeToIntensity((newTarget) => {
+      if (currentPhase === 'climb') {
+        // Once we've seen any positive intensity, follow the chart
+        if (newTarget > 0) {
+          hasReceivedNonZeroIntensity = true;
         }
-      },
-      { rootMargin: '100px' }
-    );
+        // Only update if chart has started OR we're explicitly going to zero after starting
+        if (hasReceivedNonZeroIntensity) {
+          state.target = newTarget;
+        }
+      }
+    });
 
-    if (containerRef.current) {
-      observer.observe(containerRef.current);
-    }
+    // Phase changes drive crash/done behavior
+    const unsubscribePhase = subscribeToPhase((phase) => {
+      currentPhase = phase;
 
-    return () => observer.disconnect();
-  }, []);
+      if (phase === 'crash') {
+        // Stop spawning immediately
+        state.target = 0;
+        state.current = 0;
+        billsIntensityRef.current = 0;
+      } else if (phase === 'done') {
+        // Trickle at 5%, then stop after 3 seconds
+        state.target = TRICKLE_INTENSITY;
+
+        trickleTimeoutId = setTimeout(() => {
+          state.target = 0;
+        }, TRICKLE_DURATION_MS);
+
+        // Hide front layer so reset button is clickable
+        if (layer === 'front') {
+          setIsEnabled(false);
+        }
+      }
+    });
+
+    const unsubscribeReset = subscribeToReset(() => {
+      // Clear any pending trickle timeout
+      if (trickleTimeoutId) {
+        clearTimeout(trickleTimeoutId);
+        trickleTimeoutId = null;
+      }
+
+      // Reset all state for new animation cycle
+      currentPhase = 'climb';
+      const resetIntensity = layer === 'front' ? INITIAL_FRONT_INTENSITY : INITIAL_BACK_INTENSITY;
+      state.target = resetIntensity;
+      state.current = resetIntensity;
+      billsIntensityRef.current = resetIntensity;
+      setIsEnabled(true);
+    });
+
+    let animationId: number;
+    const animate = () => {
+      // Smooth lerp toward target
+      state.current += (state.target - state.current) * LERP_FACTOR;
+      // Update ref that Bills component reads
+      billsIntensityRef.current = state.current;
+
+      animationId = requestAnimationFrame(animate);
+    };
+
+    animationId = requestAnimationFrame(animate);
+
+    return () => {
+      unsubscribeIntensity();
+      unsubscribePhase();
+      unsubscribeReset();
+      if (trickleTimeoutId) {
+        clearTimeout(trickleTimeoutId);
+      }
+      cancelAnimationFrame(animationId);
+    };
+  }, [layer]);
 
   return (
     <div
@@ -475,13 +642,22 @@ export function MoneyFall({ zIndex = 1, layer = 'back' }: MoneyFallProps) {
         pointerEvents: 'none',
       }}
     >
-      {isVisible && (
+      {isVisible && isEnabled && (
         <Canvas
           dpr={[1, 2]}
           camera={{ position: [0, 0, 30], fov: 60 }}
           gl={{ alpha: true, antialias: true }}
+          onCreated={({ gl, size }) => {
+            // Useful for diagnosing "logic runs but nothing visible" on cold load.
+            // If size is 0x0 or shader compilation fails, you'll usually see it here/nearby in console.
+            console.log(
+              `[MoneyFall] Canvas created (${layer}) size=${Math.round(size.width)}x${Math.round(
+                size.height
+              )} dpr=${gl.getPixelRatio().toFixed(2)}`
+            );
+          }}
         >
-          <Scene layer={layer} />
+          <Scene layer={layer} intensityRef={billsIntensityRef} />
         </Canvas>
       )}
     </div>
