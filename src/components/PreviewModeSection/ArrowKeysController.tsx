@@ -1,5 +1,7 @@
 import { useState } from 'react';
 
+type Direction = 'up' | 'down' | 'left' | 'right';
+
 interface ArrowKeysControllerProps {
   onLeft: () => void;
   onRight: () => void;
@@ -8,7 +10,7 @@ interface ArrowKeysControllerProps {
 }
 
 interface KeyProps {
-  direction: 'up' | 'down' | 'left' | 'right';
+  direction: Direction;
   onClick?: () => void;
   disabled?: boolean;
 }
@@ -25,51 +27,26 @@ const SA_PROFILE = {
 // White keycaps with directional lighting (light from top-left)
 const SA_COLORS = {
   legend: '#3e3e3e',
-  // Key top surface
   base: '#f8f8f8',
   topHighlight: '#ffffff',
-  // Bevel faces - top/left lighter, bottom/right darker
-  bevelTop: '#e8e8e8',    // light - facing up
-  bevelLeft: '#e0e0e0',   // light - facing left
-  bevelRight: '#c8c8c8',  // dark - facing right (in shadow)
-  bevelBottom: '#b8b8b8', // darkest - facing down (in shadow)
-  // Shadow under key
+  bevelTop: '#e8e8e8',
+  bevelLeft: '#e0e0e0',
+  bevelRight: '#c8c8c8',
+  bevelBottom: '#b8b8b8',
   shadow: '#2a2a2a',
+};
+
+const KEY_CONFIG: Record<Direction, { label: string; width: number; height: number; path: string }> = {
+  up: { label: 'Up', width: 10, height: 6, path: 'M1.5 4.5L5 1.5L8.5 4.5' },
+  down: { label: 'Down', width: 10, height: 6, path: 'M1.5 1.5L5 4.5L8.5 1.5' },
+  left: { label: 'Previous computer', width: 6, height: 10, path: 'M4.5 1.5L1.5 5L4.5 8.5' },
+  right: { label: 'Next computer', width: 6, height: 10, path: 'M1.5 1.5L4.5 5L1.5 8.5' },
 };
 
 function Key({ direction, onClick, disabled }: KeyProps) {
   const [isPressed, setIsPressed] = useState(false);
 
-  const arrows = {
-    up: (
-      <svg width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true">
-        <path d="M1.5 4.5L5 1.5L8.5 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    ),
-    down: (
-      <svg width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true">
-        <path d="M1.5 1.5L5 4.5L8.5 1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    ),
-    left: (
-      <svg width="6" height="10" viewBox="0 0 6 10" fill="none" aria-hidden="true">
-        <path d="M4.5 1.5L1.5 5L4.5 8.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    ),
-    right: (
-      <svg width="6" height="10" viewBox="0 0 6 10" fill="none" aria-hidden="true">
-        <path d="M1.5 1.5L4.5 5L1.5 8.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    ),
-  };
-
-  const labels = {
-    up: 'Up',
-    down: 'Down',
-    left: 'Previous computer',
-    right: 'Next computer',
-  };
-
+  const { label, width, height, path } = KEY_CONFIG[direction];
   const { bevelTop, bevelSide, bevelBottom, radiusBase, radiusTop } = SA_PROFILE;
   const pressedOffset = isPressed && !disabled ? 2 : 0;
 
@@ -78,7 +55,7 @@ function Key({ direction, onClick, disabled }: KeyProps) {
       type="button"
       onClick={onClick}
       disabled={disabled}
-      aria-label={labels[direction]}
+      aria-label={label}
       onPointerDown={() => setIsPressed(true)}
       onPointerUp={() => setIsPressed(false)}
       onPointerLeave={() => setIsPressed(false)}
@@ -141,7 +118,9 @@ function Key({ direction, onClick, disabled }: KeyProps) {
           borderTop: `1px solid ${SA_COLORS.topHighlight}`,
         }}
       >
-        {arrows[direction]}
+        <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} fill="none" aria-hidden="true">
+          <path d={path} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
       </div>
     </button>
   );
