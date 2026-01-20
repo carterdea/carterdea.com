@@ -1,6 +1,6 @@
 import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { InstancedMesh, Texture } from 'three';
+import type { InstancedMesh, PerspectiveCamera, Texture } from 'three';
 import {
   DoubleSide,
   DynamicDrawUsage,
@@ -9,15 +9,40 @@ import {
   PlaneGeometry,
   TextureLoader,
 } from 'three';
-import { subscribeToIntensity, subscribeToPhase, subscribeToReset } from '../../lib/moneyFallIntensity';
+import {
+  type Phase,
+  subscribeToIntensity,
+  subscribeToPhase,
+  subscribeToReset,
+} from '../../lib/moneyFallIntensity';
 
-const BILL_WIDTH = 2.35;
-const BILL_HEIGHT = 1;
-const DESPAWN_HEIGHT = -60;
-const SPREAD_X = 80;
-const SPAWN_HISTORY_SIZE = 50;
-const MIN_SPAWN_SEPARATION = 3.5;
-const MAX_SPAWN_RETRIES = 3;
+const BILL = {
+  WIDTH: 2.35,
+  HEIGHT: 1,
+  DESPAWN_Y: -60,
+  SPREAD_X: 80,
+  CURVE_AMOUNT: 0.15,
+  GEOMETRY_SEGMENTS: 20,
+} as const;
+
+const SPAWN = {
+  HISTORY_SIZE: 50,
+  MIN_SEPARATION: 3.5,
+  MAX_RETRIES: 3,
+  MAX_PER_FRAME: 3,
+} as const;
+
+const INTENSITY = {
+  LERP_FACTOR: 0.15,
+  INITIAL_FRONT: 0.3,
+  INITIAL_BACK: 0.05,
+  MIN_FRONT: 0.05,
+  TRICKLE: 0.05,
+  TRICKLE_DURATION_MS: 3000,
+} as const;
+
+const TWO_PI = Math.PI * 2;
+const HALF_PI = Math.PI / 2;
 
 interface SpawnHistory {
   positions: Float32Array;
@@ -27,23 +52,23 @@ interface SpawnHistory {
 
 function createSpawnHistory(): SpawnHistory {
   return {
-    positions: new Float32Array(SPAWN_HISTORY_SIZE * 2),
+    positions: new Float32Array(SPAWN.HISTORY_SIZE * 2),
     index: 0,
     count: 0,
   };
 }
 
-function addToSpawnHistory(history: SpawnHistory, x: number, z: number) {
+function addToSpawnHistory(history: SpawnHistory, x: number, z: number): void {
   history.positions[history.index * 2] = x;
   history.positions[history.index * 2 + 1] = z;
-  history.index = (history.index + 1) % SPAWN_HISTORY_SIZE;
-  if (history.count < SPAWN_HISTORY_SIZE) {
+  history.index = (history.index + 1) % SPAWN.HISTORY_SIZE;
+  if (history.count < SPAWN.HISTORY_SIZE) {
     history.count++;
   }
 }
 
 function isTooCloseToRecent(history: SpawnHistory, x: number, z: number): boolean {
-  const minDistSq = MIN_SPAWN_SEPARATION * MIN_SPAWN_SEPARATION;
+  const minDistSq = SPAWN.MIN_SEPARATION * SPAWN.MIN_SEPARATION;
   for (let i = 0; i < history.count; i++) {
     const hx = history.positions[i * 2];
     const hz = history.positions[i * 2 + 1];
@@ -104,13 +129,13 @@ interface BillState {
 }
 
 function createCurvedBillGeometry(): PlaneGeometry {
-  const geometry = new PlaneGeometry(BILL_WIDTH, BILL_HEIGHT, 20, 1);
+  const geometry = new PlaneGeometry(BILL.WIDTH, BILL.HEIGHT, BILL.GEOMETRY_SEGMENTS, 1);
   const positions = geometry.attributes.position;
 
   for (let i = 0; i < positions.count; i++) {
     const x = positions.getX(i);
-    const normalizedX = x / (BILL_WIDTH / 2);
-    const curve = 0.15 * normalizedX ** 2;
+    const normalizedX = x / (BILL.WIDTH / 2);
+    const curve = BILL.CURVE_AMOUNT * normalizedX ** 2;
     positions.setZ(i, curve);
   }
 
@@ -128,6 +153,10 @@ function computeOpacity(scale: number, config: LayerConfig): number {
   }
   const t = (scale - scaleRange[0]) / (opacityFadeScaleThreshold - scaleRange[0]);
   return opacityMin + t * (1.0 - opacityMin);
+}
+
+function randomInRange(min: number, max: number): number {
+  return min + Math.random() * (max - min);
 }
 
 function initializeBillState(config: LayerConfig): BillState {
@@ -153,20 +182,20 @@ function initializeBillState(config: LayerConfig): BillState {
   const driftPhase = new Float32Array(count);
 
   for (let i = 0; i < count; i++) {
-    positions[i * 3] = (Math.random() - 0.5) * SPREAD_X;
-    positions[i * 3 + 1] = DESPAWN_HEIGHT - 10 - Math.random() * 50;
-    positions[i * 3 + 2] = zRange[0] + Math.random() * (zRange[1] - zRange[0]);
+    positions[i * 3] = (Math.random() - 0.5) * BILL.SPREAD_X;
+    positions[i * 3 + 1] = BILL.DESPAWN_Y - 10 - Math.random() * 50;
+    positions[i * 3 + 2] = randomInRange(zRange[0], zRange[1]);
 
-    scales[i] = scaleRange[0] + Math.random() * (scaleRange[1] - scaleRange[0]);
+    scales[i] = randomInRange(scaleRange[0], scaleRange[1]);
     opacities[i] = computeOpacity(scales[i], config);
-    baseRotZ[i] = Math.random() * (Math.PI / 2);
+    baseRotZ[i] = Math.random() * HALF_PI;
     velocitiesX[i] = 0;
-    const rotationFactor = baseRotZ[i] / (Math.PI / 2);
+    const rotationFactor = baseRotZ[i] / HALF_PI;
     fallSpeeds[i] = 0.06 + Math.random() * 0.08 + rotationFactor * 0.16;
 
-    phaseX[i] = Math.random() * Math.PI * 2;
-    phaseY[i] = Math.random() * Math.PI * 2;
-    phaseZ[i] = Math.random() * Math.PI * 2;
+    phaseX[i] = Math.random() * TWO_PI;
+    phaseY[i] = Math.random() * TWO_PI;
+    phaseZ[i] = Math.random() * TWO_PI;
 
     freqX[i] = 1.5 + Math.random() * 2;
     freqY[i] = 0.8 + Math.random() * 1.2;
@@ -176,11 +205,11 @@ function initializeBillState(config: LayerConfig): BillState {
     ampY[i] = 0.3 + Math.random() * 0.4;
     ampZ[i] = 0.2 + Math.random() * 0.3;
 
-    baseRotY[i] = Math.random() * Math.PI * 2;
-    spinSpeed[i] = Math.random() < 0.3 ? (0.01 + Math.random() * 0.02) : 0;
+    baseRotY[i] = Math.random() * TWO_PI;
+    spinSpeed[i] = Math.random() < 0.3 ? 0.01 + Math.random() * 0.02 : 0;
 
     driftSpeed[i] = 0.3 + Math.random() * 0.4;
-    driftPhase[i] = Math.random() * Math.PI * 2;
+    driftPhase[i] = Math.random() * TWO_PI;
   }
 
   return {
@@ -206,13 +235,71 @@ function initializeBillState(config: LayerConfig): BillState {
   };
 }
 
+// Flutter presets: [ampX, ampY, ampZ, freqX, freqY, freqZ] as [base, variance] pairs
+const FLUTTER_PRESETS = [
+  // Gentle (20% chance)
+  {
+    threshold: 0.2,
+    amp: [
+      [0.05, 0.1],
+      [0.05, 0.1],
+      [0.02, 0.05],
+    ],
+    freq: [
+      [0.5, 0.5],
+      [0.3, 0.3],
+      [0.4, 0.4],
+    ],
+  },
+  // Medium (40% chance)
+  {
+    threshold: 0.6,
+    amp: [
+      [0.3, 0.3],
+      [0.2, 0.3],
+      [0.15, 0.2],
+    ],
+    freq: [
+      [1.2, 1.5],
+      [0.6, 0.8],
+      [0.9, 1.0],
+    ],
+  },
+  // Strong (40% chance)
+  {
+    threshold: 1.0,
+    amp: [
+      [0.6, 0.6],
+      [0.4, 0.5],
+      [0.3, 0.4],
+    ],
+    freq: [
+      [2.0, 2.5],
+      [1.0, 1.5],
+      [1.5, 2.0],
+    ],
+  },
+] as const;
+
+function applyFlutterPreset(state: BillState, index: number): void {
+  const roll = Math.random();
+  const preset = FLUTTER_PRESETS.find((p) => roll < p.threshold) ?? FLUTTER_PRESETS[2];
+
+  state.ampX[index] = preset.amp[0][0] + Math.random() * preset.amp[0][1];
+  state.ampY[index] = preset.amp[1][0] + Math.random() * preset.amp[1][1];
+  state.ampZ[index] = preset.amp[2][0] + Math.random() * preset.amp[2][1];
+  state.freqX[index] = preset.freq[0][0] + Math.random() * preset.freq[0][1];
+  state.freqY[index] = preset.freq[1][0] + Math.random() * preset.freq[1][1];
+  state.freqZ[index] = preset.freq[2][0] + Math.random() * preset.freq[2][1];
+}
+
 function resetBill(
   state: BillState,
   index: number,
   config: LayerConfig,
   spawnHistory: SpawnHistory,
   spawnYForZ: (z: number) => number
-) {
+): void {
   const { zRange, scaleRange } = config;
 
   let x: number;
@@ -220,56 +307,34 @@ function resetBill(
   let retries = 0;
 
   do {
-    x = (Math.random() - 0.5) * SPREAD_X;
-    z = zRange[0] + Math.random() * (zRange[1] - zRange[0]);
+    x = (Math.random() - 0.5) * BILL.SPREAD_X;
+    z = randomInRange(zRange[0], zRange[1]);
     retries++;
-  } while (retries <= MAX_SPAWN_RETRIES && isTooCloseToRecent(spawnHistory, x, z));
+  } while (retries <= SPAWN.MAX_RETRIES && isTooCloseToRecent(spawnHistory, x, z));
 
   addToSpawnHistory(spawnHistory, x, z);
 
   state.positions[index * 3] = x;
   state.positions[index * 3 + 1] = spawnYForZ(z) + Math.random() * 3;
   state.positions[index * 3 + 2] = z;
-  state.scales[index] = scaleRange[0] + Math.random() * (scaleRange[1] - scaleRange[0]);
+  state.scales[index] = randomInRange(scaleRange[0], scaleRange[1]);
   state.opacities[index] = computeOpacity(state.scales[index], config);
-  state.baseRotZ[index] = Math.random() * (Math.PI / 2);
+  state.baseRotZ[index] = Math.random() * HALF_PI;
   state.velocitiesX[index] = 0;
-  const rotationFactor = state.baseRotZ[index] / (Math.PI / 2);
+  const rotationFactor = state.baseRotZ[index] / HALF_PI;
   state.fallSpeeds[index] = 0.06 + Math.random() * 0.08 + rotationFactor * 0.16;
 
-  state.phaseX[index] = Math.random() * Math.PI * 2;
-  state.phaseY[index] = Math.random() * Math.PI * 2;
-  state.phaseZ[index] = Math.random() * Math.PI * 2;
+  state.phaseX[index] = Math.random() * TWO_PI;
+  state.phaseY[index] = Math.random() * TWO_PI;
+  state.phaseZ[index] = Math.random() * TWO_PI;
 
-  const flutterIntensity = Math.random();
-  if (flutterIntensity < 0.2) {
-    state.ampX[index] = 0.05 + Math.random() * 0.1;
-    state.ampY[index] = 0.05 + Math.random() * 0.1;
-    state.ampZ[index] = 0.02 + Math.random() * 0.05;
-    state.freqX[index] = 0.5 + Math.random() * 0.5;
-    state.freqY[index] = 0.3 + Math.random() * 0.3;
-    state.freqZ[index] = 0.4 + Math.random() * 0.4;
-  } else if (flutterIntensity < 0.6) {
-    state.ampX[index] = 0.3 + Math.random() * 0.3;
-    state.ampY[index] = 0.2 + Math.random() * 0.3;
-    state.ampZ[index] = 0.15 + Math.random() * 0.2;
-    state.freqX[index] = 1.2 + Math.random() * 1.5;
-    state.freqY[index] = 0.6 + Math.random() * 0.8;
-    state.freqZ[index] = 0.9 + Math.random() * 1.0;
-  } else {
-    state.ampX[index] = 0.6 + Math.random() * 0.6;
-    state.ampY[index] = 0.4 + Math.random() * 0.5;
-    state.ampZ[index] = 0.3 + Math.random() * 0.4;
-    state.freqX[index] = 2.0 + Math.random() * 2.5;
-    state.freqY[index] = 1.0 + Math.random() * 1.5;
-    state.freqZ[index] = 1.5 + Math.random() * 2.0;
-  }
+  applyFlutterPreset(state, index);
 
-  state.baseRotY[index] = Math.random() * Math.PI * 2;
-  state.spinSpeed[index] = Math.random() < 0.25 ? (0.01 + Math.random() * 0.025) : 0;
+  state.baseRotY[index] = Math.random() * TWO_PI;
+  state.spinSpeed[index] = Math.random() < 0.25 ? 0.01 + Math.random() * 0.025 : 0;
 
   state.driftSpeed[index] = 0.3 + Math.random() * 0.5;
-  state.driftPhase[index] = Math.random() * Math.PI * 2;
+  state.driftPhase[index] = Math.random() * TWO_PI;
 }
 
 interface BillsProps {
@@ -279,9 +344,7 @@ interface BillsProps {
   intensityRef: React.RefObject<number>;
 }
 
-const MAX_SPAWNS_PER_FRAME = 3;
-
-function Bills({ frontTexture, backTexture, layer, intensityRef }: BillsProps) {
+function Bills({ frontTexture, backTexture, layer, intensityRef }: BillsProps): React.JSX.Element {
   const config = LAYER_CONFIGS[layer];
   const meshRef = useRef<InstancedMesh>(null);
   const stateRef = useRef<BillState>(initializeBillState(config));
@@ -321,16 +384,17 @@ function Bills({ frontTexture, backTexture, layer, intensityRef }: BillsProps) {
     let spawnsThisFrame = 0;
 
     const spawnYForZ = (z: number) => {
-      const fovRad = ((camera as any).fov ?? 60) * (Math.PI / 180);
+      const fov = (camera as PerspectiveCamera).fov ?? 60;
+      const fovRad = fov * (Math.PI / 180);
       const dist = Math.max(0.1, camera.position.z - z);
       const halfHeight = Math.tan(fovRad / 2) * dist;
-      return halfHeight + BILL_HEIGHT * 2.5;
+      return halfHeight + BILL.HEIGHT * 2.5;
     };
 
     for (let i = 0; i < config.count; i++) {
       const y = state.positions[i * 3 + 1];
 
-      if (y > DESPAWN_HEIGHT) {
+      if (y > BILL.DESPAWN_Y) {
         visibleCount++;
         state.positions[i * 3 + 1] -= state.fallSpeeds[i] * deltaScale;
 
@@ -340,8 +404,10 @@ function Bills({ frontTexture, backTexture, layer, intensityRef }: BillsProps) {
         state.baseRotY[i] += state.spinSpeed[i] * deltaScale;
 
         const rotX = Math.sin(t * state.freqX[i] + state.phaseX[i]) * state.ampX[i];
-        const rotY = state.baseRotY[i] + Math.sin(t * state.freqY[i] + state.phaseY[i]) * state.ampY[i];
-        const rotZ = Math.sin(t * state.freqZ[i] + state.phaseZ[i]) * state.ampZ[i] + state.baseRotZ[i];
+        const rotY =
+          state.baseRotY[i] + Math.sin(t * state.freqY[i] + state.phaseY[i]) * state.ampY[i];
+        const rotZ =
+          Math.sin(t * state.freqZ[i] + state.phaseZ[i]) * state.ampZ[i] + state.baseRotZ[i];
 
         const scale = state.scales[i];
         dummy.position.set(
@@ -352,7 +418,7 @@ function Bills({ frontTexture, backTexture, layer, intensityRef }: BillsProps) {
         dummy.rotation.set(rotX, rotY, rotZ);
         dummy.scale.set(scale, scale, scale);
       } else {
-        if (visibleCount < targetActiveBills && spawnsThisFrame < MAX_SPAWNS_PER_FRAME) {
+        if (visibleCount < targetActiveBills && spawnsThisFrame < SPAWN.MAX_PER_FRAME) {
           resetBill(state, i, config, spawnHistoryRef.current, spawnYForZ);
           visibleCount++;
           spawnsThisFrame++;
@@ -449,8 +515,8 @@ interface SceneProps {
 
 function Scene({ layer, intensityRef }: SceneProps) {
   const [frontTexture, backTexture] = useLoader(TextureLoader, [
-    '/100-front.jpg',
-    '/100-rear.jpg',
+    '/assets/images/bills/100-front.jpg',
+    '/assets/images/bills/100-rear.jpg',
   ]);
 
   return (
@@ -458,7 +524,12 @@ function Scene({ layer, intensityRef }: SceneProps) {
       <ambientLight intensity={0.6} />
       <directionalLight position={[5, 10, 5]} intensity={1} />
       <directionalLight position={[-5, -5, -5]} intensity={0.3} />
-      <Bills frontTexture={frontTexture} backTexture={backTexture} layer={layer} intensityRef={intensityRef} />
+      <Bills
+        frontTexture={frontTexture}
+        backTexture={backTexture}
+        layer={layer}
+        intensityRef={intensityRef}
+      />
     </>
   );
 }
@@ -468,30 +539,31 @@ interface MoneyFallProps {
   layer?: Layer;
 }
 
-const LERP_FACTOR = 0.15;
-const INITIAL_FRONT_INTENSITY = 0.3;
-const INITIAL_BACK_INTENSITY = 0.05;
-const TRICKLE_INTENSITY = 0.05;
-const TRICKLE_DURATION_MS = 3000;
+function getInitialIntensity(layer: Layer): number {
+  return layer === 'front' ? INTENSITY.INITIAL_FRONT : INTENSITY.INITIAL_BACK;
+}
 
-export function MoneyFall({ zIndex = 1, layer = 'back' }: MoneyFallProps) {
+export function MoneyFall({ zIndex = 1, layer = 'back' }: MoneyFallProps): React.JSX.Element {
   const [isEnabled, setIsEnabled] = useState(true);
-  const initialIntensity = layer === 'front' ? INITIAL_FRONT_INTENSITY : INITIAL_BACK_INTENSITY;
+  const initialIntensity = getInitialIntensity(layer);
   const intensityStateRef = useRef({ target: initialIntensity, current: initialIntensity });
   const billsIntensityRef = useRef(initialIntensity);
+  const phaseRef = useRef<Phase>('climb');
+  const hasSeenNonZeroIntensityRef = useRef(false);
+  const canvasDpr: [number, number] | number = layer === 'front' ? 1 : [1, 2];
+  const canvasAntialias = layer !== 'front';
 
   useEffect(() => {
     const state = intensityStateRef.current;
     let trickleTimeoutId: ReturnType<typeof setTimeout> | null = null;
-    let currentPhase: 'climb' | 'crash' | 'done' = 'climb';
-    let hasReceivedNonZeroIntensity = false;
+    let currentPhase: Phase = 'climb';
 
     const unsubscribeIntensity = subscribeToIntensity((newTarget) => {
       if (currentPhase === 'climb') {
         if (newTarget > 0) {
-          hasReceivedNonZeroIntensity = true;
+          hasSeenNonZeroIntensityRef.current = true;
         }
-        if (hasReceivedNonZeroIntensity) {
+        if (hasSeenNonZeroIntensityRef.current) {
           state.target = newTarget;
         }
       }
@@ -499,16 +571,17 @@ export function MoneyFall({ zIndex = 1, layer = 'back' }: MoneyFallProps) {
 
     const unsubscribePhase = subscribeToPhase((phase) => {
       currentPhase = phase;
+      phaseRef.current = phase;
 
       if (phase === 'crash') {
         state.target = 0;
         state.current = 0;
         billsIntensityRef.current = 0;
       } else if (phase === 'done') {
-        state.target = TRICKLE_INTENSITY;
+        state.target = INTENSITY.TRICKLE;
         trickleTimeoutId = setTimeout(() => {
           state.target = 0;
-        }, TRICKLE_DURATION_MS);
+        }, INTENSITY.TRICKLE_DURATION_MS);
         if (layer === 'front') {
           setIsEnabled(false);
         }
@@ -521,7 +594,9 @@ export function MoneyFall({ zIndex = 1, layer = 'back' }: MoneyFallProps) {
         trickleTimeoutId = null;
       }
       currentPhase = 'climb';
-      const resetIntensity = layer === 'front' ? INITIAL_FRONT_INTENSITY : INITIAL_BACK_INTENSITY;
+      phaseRef.current = 'climb';
+      hasSeenNonZeroIntensityRef.current = false;
+      const resetIntensity = getInitialIntensity(layer);
       state.target = resetIntensity;
       state.current = resetIntensity;
       billsIntensityRef.current = resetIntensity;
@@ -530,8 +605,12 @@ export function MoneyFall({ zIndex = 1, layer = 'back' }: MoneyFallProps) {
 
     let animationId: number;
     const animate = () => {
-      state.current += (state.target - state.current) * LERP_FACTOR;
-      billsIntensityRef.current = state.current;
+      state.current += (state.target - state.current) * INTENSITY.LERP_FACTOR;
+      const phase = phaseRef.current;
+      const shouldApplyFrontFloor = layer === 'front' && phase === 'climb';
+      billsIntensityRef.current = shouldApplyFrontFloor
+        ? Math.max(state.current, INTENSITY.MIN_FRONT)
+        : state.current;
 
       animationId = requestAnimationFrame(animate);
     };
@@ -563,9 +642,10 @@ export function MoneyFall({ zIndex = 1, layer = 'back' }: MoneyFallProps) {
     >
       {isEnabled && (
         <Canvas
-          dpr={[1, 2]}
+          dpr={canvasDpr}
           camera={{ position: [0, 0, 30], fov: 60 }}
-          gl={{ alpha: true, antialias: true }}
+          gl={{ alpha: true, antialias: canvasAntialias }}
+          style={{ pointerEvents: 'none' }}
         >
           <Scene layer={layer} intensityRef={billsIntensityRef} />
         </Canvas>
