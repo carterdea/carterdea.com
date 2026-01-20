@@ -2,7 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import styles from './PowerMacintosh.module.css';
 
 // Classic Mac startup chime
-const MAC_CHIME_URL = '/power-macintosh-startup-chime.mp3';
+const MAC_CHIME_URL = '/assets/sounds/power-macintosh-startup-chime.mp3';
 
 // Rainbow Apple logo - matches Figma export exactly
 const AppleLogo = () => (
@@ -28,15 +28,17 @@ interface PowerMacintoshProps {
   className?: string;
   initialPosition?: { x: number; y: number };
   enableStartupChime?: boolean;
+  disableDrag?: boolean;
 }
 
 type ScreenState = 'on' | 'off' | 'turningOn' | 'turningOff';
 
 export default function PowerMacintosh({
-  screenshotSrc = '/previews/stussy-screenshot.png',
+  screenshotSrc = '/assets/previews/stussy-screenshot.png',
   className = '',
   initialPosition = { x: 0, y: 0 },
-  enableStartupChime = true
+  enableStartupChime = true,
+  disableDrag = false
 }: PowerMacintoshProps) {
   const [screenState, setScreenState] = useState<ScreenState>('on');
   const [position, setPosition] = useState(initialPosition);
@@ -79,7 +81,8 @@ export default function PowerMacintosh({
   const isPoweredOn = screenState === 'on' || screenState === 'turningOn';
 
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
-    // Don't drag if clicking on the power button
+    // Don't drag if disabled or clicking on the power button
+    if (disableDrag) return;
     if ((e.target as HTMLElement).closest('button')) return;
 
     setIsDragging(true);
@@ -88,7 +91,7 @@ export default function PowerMacintosh({
       y: e.clientY - position.y
     };
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
-  }, [position]);
+  }, [position, disableDrag]);
 
   const handlePointerMove = useCallback((e: React.PointerEvent) => {
     if (!isDragging) return;

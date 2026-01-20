@@ -1,4 +1,6 @@
 ---
+import { MoneyModeChart } from './MoneyModeSection';
+
 interface Props {
   title?: string;
   subtitle?: string;
@@ -7,19 +9,27 @@ interface Props {
 const { title, subtitle } = Astro.props;
 ---
 
-<section class="px-4 pt-20 pb-8 md:pt-30 md:pb-18 md:px-0">
-  <div class="max-w-sm md:max-w-[50%] md:mx-auto">
-    <h1
-      class="animate-fade-in-up text-lg text-white leading-normal tracking-[-0.36px]"
-      style="--delay: 150ms;"
-    >
-      {title}
-    </h1>
-    <h2
-      class="animate-fade-in-up mt-4 text-sm text-white/60 leading-normal tracking-[-0.28px]"
-      style="--delay: 250ms;"
-    >
-      {subtitle}
-    </h2>
+<div class="relative">
+  <section class="hero-content px-4 pt-20 pb-8 md:pt-30 md:pb-18 md:px-0">
+    <div class="max-w-sm md:max-w-[50%] md:mx-auto">
+      <h1
+        class="animate-fade-in-up text-lg text-white leading-normal tracking-[-0.36px]"
+        style="--delay: 150ms;"
+      >
+        {title}
+      </h1>
+      <h2
+        class="animate-fade-in-up mt-4 text-sm text-white/60 leading-normal tracking-[-0.28px]"
+        style="--delay: 250ms;"
+      >
+        {subtitle}
+      </h2>
+    </div>
+  </section>
+  <!-- Money mode chart - overlays hero area -->
+  <div class="money-chart-overlay">
+    <div class="max-w-4xl mx-auto px-4 md:px-0">
+      <MoneyModeChart client:load />
+    </div>
   </div>
-</section>
+</div>

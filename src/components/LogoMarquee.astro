@@ -14,7 +14,7 @@ const shuffledClients = [...clients].sort(() => Math.random() - 0.5);
 ---
 
 <!-- Mobile: Swipeable carousel -->
-<section class="animate-fade-in-up relative md:hidden overflow-hidden" style="--delay: 350ms;">
+<section class="logo-marquee animate-fade-in-up relative md:hidden overflow-hidden" style="--delay: 350ms;">
   <div id="mobile-carousel-viewport" class="overflow-hidden px-4 pb-4">
     <div id="mobile-carousel-container" class="flex gap-4">
       {shuffledClients.map((client) => (
@@ -47,7 +47,7 @@ const shuffledClients = [...clients].sort(() => Math.random() - 0.5);
   </div>
 </section>
 
-<section class="hidden md:block relative overflow-hidden desktop-marquee-mask md:-mx-10 shrink-0">
+<section class="logo-marquee hidden md:block relative overflow-hidden desktop-marquee-mask md:-mx-10 shrink-0">
   <h2 class="sr-only">Some of our Clients</h2>
   <div id="marquee-track" class="marquee-track flex items-start gap-24 py-24">
     {[0, 1].map((setIndex) => (

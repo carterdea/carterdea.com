@@ -6,7 +6,7 @@
  *   bun scripts/sanitize-shopify.js https://www.stussy.com stussy
  *   bun scripts/sanitize-shopify.js https://www.neweracap.com new-era
  *
- * Output: public/previews/{name}.html
+ * Output: public/assets/previews/{name}.html
  */
 
 const url = process.argv[2];
@@ -355,7 +355,7 @@ async function fetchAndSanitize() {
   html = html.replace('</body>', fakeDrawers + '</body>');
 
   // Write output
-  const outputPath = `public/previews/${name}.html`;
+  const outputPath = `public/assets/previews/${name}.html`;
   await Bun.write(outputPath, html);
 
   const scriptCount = (html.match(/<script/gi) || []).length;

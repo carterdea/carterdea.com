@@ -223,7 +223,7 @@ export default function ContactForm() {
             </select>
             <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
               <img
-                src="/select-carets.svg"
+                src="/assets/images/select-carets.svg"
                 alt=""
                 aria-hidden="true"
                 className="w-2 h-4 opacity-50"

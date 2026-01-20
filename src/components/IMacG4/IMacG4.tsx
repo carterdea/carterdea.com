@@ -2,22 +2,24 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import styles from './IMacG4.module.css';
 
 // iMac G4 startup chime
-const MAC_CHIME_URL = '/imac-startup-chime.mp3';
+const MAC_CHIME_URL = '/assets/sounds/imac-startup-chime.mp3';
 
 interface IMacG4Props {
   screenshotSrc?: string;
   className?: string;
   initialPosition?: { x: number; y: number };
   enableStartupChime?: boolean;
+  disableDrag?: boolean;
 }
 
 type ScreenState = 'on' | 'off' | 'turningOn' | 'turningOff';
 
 export default function IMacG4({
-  screenshotSrc = '/previews/stussy-screenshot.png',
+  screenshotSrc = '/assets/previews/stussy-screenshot.png',
   className = '',
   initialPosition = { x: 0, y: 0 },
-  enableStartupChime = true
+  enableStartupChime = true,
+  disableDrag = false
 }: IMacG4Props) {
   const [screenState, setScreenState] = useState<ScreenState>('on');
   const [position, setPosition] = useState(initialPosition);
@@ -59,6 +61,7 @@ export default function IMacG4({
   const isPoweredOn = screenState === 'on' || screenState === 'turningOn';
 
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    if (disableDrag) return;
     if ((e.target as HTMLElement).closest('button')) return;
 
     setIsDragging(true);
@@ -67,7 +70,7 @@ export default function IMacG4({
       y: e.clientY - position.y
     };
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
-  }, [position]);
+  }, [position, disableDrag]);
 
   const handlePointerMove = useCallback((e: React.PointerEvent) => {
     if (!isDragging) return;
@@ -133,7 +136,7 @@ export default function IMacG4({
       <div className={styles.arm}>
         <div className={styles.armJoint}>
           <img
-            src="/imac-g4/d28b796a9146c0abb6cf876c2b644db5267a2ace.svg"
+            src="/assets/devices/imac-g4/d28b796a9146c0abb6cf876c2b644db5267a2ace.svg"
             alt=""
             className={styles.armJointSvg}
             draggable={false}
@@ -145,7 +148,7 @@ export default function IMacG4({
       {/* Dome base */}
       <div className={styles.base}>
         <img
-          src="/imac-g4/c2547ceeb6fb0e60d5ce8b90a445a5db0751cb1b.svg"
+          src="/assets/devices/imac-g4/c2547ceeb6fb0e60d5ce8b90a445a5db0751cb1b.svg"
           alt=""
           className={styles.baseSvg}
           draggable={false}
