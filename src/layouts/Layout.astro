@@ -2,6 +2,8 @@
 import { ClientRouter } from 'astro:transitions';
 import '../styles/global.css';
 import { BackgroundRenderer } from '../components/BackgroundRenderer/BackgroundRenderer';
+import { MoneyModeSection } from '../components/MoneyModeSection';
+import { PreviewModeSection } from '../components/PreviewModeSection';
 
 interface Props {
   title: string;
@@ -26,11 +28,11 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site || 'https://carterde
 
     <!-- Favicons -->
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-    <link rel="icon" type="image/svg+xml" href="/logos/carterdea-icon.svg" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <link rel="apple-touch-icon" sizes="76x76" href="/apple-touch-icon-76.png" />
-    <link rel="apple-touch-icon" sizes="120x120" href="/apple-touch-icon-120.png" />
-    <link rel="apple-touch-icon" sizes="152x152" href="/apple-touch-icon-152.png" />
+    <link rel="icon" type="image/svg+xml" href="/assets/logos/carterdea-icon.svg" />
+    <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" sizes="76x76" href="/assets/icons/apple-touch-icon-76.png" />
+    <link rel="apple-touch-icon" sizes="120x120" href="/assets/icons/apple-touch-icon-120.png" />
+    <link rel="apple-touch-icon" sizes="152x152" href="/assets/icons/apple-touch-icon-152.png" />
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
@@ -48,7 +50,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site || 'https://carterde
     <meta name="twitter:image" content="https://carterdea.com/og-image.png" />
 
     <!-- Font Preload -->
-    <link rel="preload" href="/font.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/assets/fonts/font.woff2" as="font" type="font/woff2" crossorigin />
 
     <!-- JSON-LD Structured Data -->
     <script is:inline type="application/ld+json">
@@ -57,7 +59,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site || 'https://carterde
         "@type": "ProfessionalService",
         "name": "Carterdea",
         "url": "https://carterdea.com",
-        "logo": "https://carterdea.com/logos/carterdea-icon.svg",
+        "logo": "https://carterdea.com/assets/logos/carterdea-icon.svg",
         "image": "https://carterdea.com/og-image.png",
         "description": "Product design, AI engineering, and Shopify development focused on business outcomes. UX audits and conversion rate optimization for ecommerce and SaaS.",
         "address": {
@@ -91,8 +93,47 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site || 'https://carterde
           "Front-end Development",
           "Backend Development"
         ],
-        "priceRange": "$$$$",
-        "sameAs": []
+        "priceRange": "$$$",
+        "sameAs": [
+          "https://www.linkedin.com/in/carterdea",
+          "https://github.com/carterdea"
+        ],
+        "founder": {
+          "@type": "Person",
+          "name": "Carter DeAngelis",
+          "jobTitle": "Founder & Principal",
+          "url": "https://www.linkedin.com/in/carterdea"
+        },
+        "foundingDate": "2013",
+        "knowsAbout": [
+          "Product Design",
+          "AI Engineering",
+          "Shopify Development",
+          "Conversion Rate Optimization",
+          "UX Design",
+          "React",
+          "Next.js"
+        ]
+      }
+    </script>
+
+    <script is:inline type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "Carterdea",
+        "alternateName": "Carter DeAngelis",
+        "url": "https://carterdea.com",
+        "description": "Product design, AI engineering, and Shopify development agency",
+        "publisher": {
+          "@type": "Organization",
+          "name": "Carterdea",
+          "url": "https://carterdea.com",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://carterdea.com/assets/logos/carterdea-icon.svg"
+          }
+        }
       }
     </script>
 
@@ -100,6 +141,8 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site || 'https://carterde
   </head>
   <body class="bg-black text-white font-sans antialiased min-h-screen overscroll-none">
     <BackgroundRenderer client:load />
+    <MoneyModeSection client:load />
+    <PreviewModeSection client:load />
     <slot />
   </body>
 </html>

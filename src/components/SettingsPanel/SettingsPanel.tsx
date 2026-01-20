@@ -15,12 +15,12 @@ interface ModeOption {
 }
 
 const modes: ModeOption[] = [
-  { id: 'vacation', label: 'Throwback mode', icon: <img src="/throwback.svg" alt="" className="size-full" /> },
+  { id: 'vacation', label: 'Throwback mode', icon: <img src="/assets/images/throwback.svg" alt="" className="size-full" /> },
   { id: 'coder', label: 'Developer mode', icon: <CommandLineIcon className="size-full text-white" /> },
   { id: 'preview', label: 'Preview mode', icon: <ComputerDesktopIcon className="size-full text-white" /> },
   { id: 'fire', label: 'Fire mode', icon: <FireIcon className="size-full text-white" /> },
   { id: 'money', label: 'Money mode', icon: <BanknotesIcon className="size-full text-white" /> },
-  { id: 'matrix', label: 'Matrix mode', icon: <img src="/matrix.svg" alt="" className="size-full" /> },
+  { id: 'matrix', label: 'Matrix mode', icon: <img src="/assets/images/matrix.svg" alt="" className="size-full" /> },
 ];
 
 export function SettingsPanel() {

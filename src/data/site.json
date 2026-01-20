@@ -45,14 +45,14 @@
       "author": "David Sinatra",
       "role": "CEO",
       "company": "Stussy",
-      "logoSrc": "/logos/stussy-crown.svg"
+      "logoSrc": "/assets/logos/stussy-crown.svg"
     },
     {
       "quote": "Carter delivered a complex headless Shopify build in just three weeks and played a key role in a major revenue initiative that transformed our digital business.",
       "author": "Jonathan Smalley",
       "role": "VP of Ecommerce",
       "company": "New Era",
-      "logoSrc": "/logos/new-era.svg"
+      "logoSrc": "/assets/logos/new-era.svg"
     }
   ],
   "cta": {
@@ -64,91 +64,91 @@
       "id": "adopttogether",
       "name": "AdoptTogether",
       "description": "Designed and developed a crowdfunding platform for families trying to adopt",
-      "logoSrc": "/logos/adopttogether.svg",
+      "logoSrc": "/assets/logos/adopttogether.svg",
       "logoHeight": 30
     },
     {
       "id": "ap",
       "name": "Associated Press",
       "description": "Redesigned AP Stylebook web platform",
-      "logoSrc": "/logos/ap.svg",
+      "logoSrc": "/assets/logos/ap.svg",
       "logoHeight": 80
     },
     {
       "id": "code-climate",
       "name": "Code Climate",
       "description": "Dashboard for engineering team performance and PR velocity",
-      "logoSrc": "/logos/code-climate.svg",
+      "logoSrc": "/assets/logos/code-climate.svg",
       "logoHeight": 30
     },
     {
       "id": "datascience",
       "name": "DataScience",
       "description": "Designed tooling for data scientists and model management for AI engineers",
-      "logoSrc": "/logos/datascience.svg",
+      "logoSrc": "/assets/logos/datascience.svg",
       "logoHeight": 30
     },
     {
       "id": "ford",
       "name": "Ford",
       "description": "Infotainment UX concepts for vehicle service scheduling",
-      "logoSrc": "/logos/ford.svg",
+      "logoSrc": "/assets/logos/ford.svg",
       "logoHeight": 48
     },
     {
       "id": "gotomeeting",
       "name": "GoToMeeting",
       "description": "Designed AI features including virtual backgrounds and meeting transcriptions",
-      "logoSrc": "/logos/gotomeeting.svg",
+      "logoSrc": "/assets/logos/gotomeeting.svg",
       "logoHeight": 30
     },
     {
       "id": "grasshopper",
       "name": "Grasshopper",
       "description": "Redesigned mobile and desktop apps",
-      "logoSrc": "/logos/grasshopper.svg",
+      "logoSrc": "/assets/logos/grasshopper.svg",
       "logoHeight": 30
     },
     {
       "id": "microsoft",
       "name": "Microsoft",
       "description": "Designed ASP.net and Silverlight.net developer portals",
-      "logoSrc": "/logos/microsoft.svg",
+      "logoSrc": "/assets/logos/microsoft.svg",
       "logoHeight": 30
     },
     {
       "id": "new-era",
       "name": "New Era",
       "description": "3x revenue growth after CVR optimization and redesign",
-      "logoSrc": "/logos/new-era.svg",
+      "logoSrc": "/assets/logos/new-era.svg",
       "logoHeight": 24
     },
     {
       "id": "oracle",
       "name": "Oracle",
       "description": "Redesigned data science platform, acquired by Oracle",
-      "logoSrc": "/logos/oracle.svg",
+      "logoSrc": "/assets/logos/oracle.svg",
       "logoHeight": 24
     },
     {
       "id": "protectai",
       "name": "ProtectAI",
       "description": "Designed security reporting for ML pipelines",
-      "logoSrc": "/logos/protect-ai.svg",
+      "logoSrc": "/assets/logos/protect-ai.svg",
       "logoHeight": 30
     },
     {
       "id": "spinlister",
       "name": "Spinlister",
       "description": "Designed and built web, iOS, and Android apps",
-      "logoSrc": "/logos/spinlister.svg",
+      "logoSrc": "/assets/logos/spinlister.svg",
       "logoHeight": 30
     },
     {
       "id": "stussy",
       "name": "Stussy",
       "description": "4x revenue growth after CVR optimization and redesign",
-      "logoSrc": "/logos/stussy.svg",
+      "logoSrc": "/assets/logos/stussy.svg",
       "logoHeight": 80
     }
   ]
