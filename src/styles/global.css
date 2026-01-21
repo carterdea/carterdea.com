@@ -67,7 +67,8 @@ body.mode-money .logo-marquee {
 }
 
 .money-title {
-  font-family: "UniversPro55Roman", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family:
+    "UniversPro55Roman", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 1rem;
   font-weight: 400;
   color: white;
@@ -75,7 +76,8 @@ body.mode-money .logo-marquee {
 }
 
 .money-price {
-  font-family: "UniversPro55Roman", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family:
+    "UniversPro55Roman", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 1.5rem;
   font-weight: 400;
   color: rgba(255, 255, 255, 0.9);
@@ -90,7 +92,8 @@ body.mode-money .logo-marquee {
   display: inline-block;
   vertical-align: middle;
   position: relative;
-  font-family: "UniversPro55Roman", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family:
+    "UniversPro55Roman", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 1.5rem;
   font-weight: 400;
   line-height: 1.2;
@@ -126,11 +129,13 @@ body.mode-money .logo-marquee {
 .odometer.odometer-auto-theme .odometer-digit .odometer-ribbon-inner {
   display: block;
   -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 
 .odometer.odometer-auto-theme .odometer-digit .odometer-value {
   display: block;
   -webkit-transform: translateZ(0);
+  transform: translateZ(0);
 }
 
 .odometer.odometer-auto-theme .odometer-digit .odometer-value.odometer-last-value {
@@ -222,4 +227,194 @@ body.mode-money .logo-marquee {
 /* Ensure inspector overlays don't capture pointer events */
 [data-inspector-overlay] {
   pointer-events: none;
+}
+
+/* Fire mode */
+body.mode-fire {
+  background-color: #0a0605;
+}
+
+body.mode-fire h1,
+body.mode-fire h2,
+body.mode-fire h3 {
+  text-shadow:
+    0 0 2px rgba(255, 200, 100, calc(var(--fire-glow-intensity, 0.4) * 0.8)),
+    0 0 8px rgba(255, 120, 40, var(--fire-glow-intensity, 0.4)),
+    0 0 20px rgba(255, 80, 20, calc(var(--fire-glow-intensity, 0.4) * 0.7)),
+    0 0 40px rgba(255, 40, 0, calc(var(--fire-glow-intensity, 0.4) * 0.4));
+  transition: text-shadow 0.15s ease-out;
+}
+
+body.mode-fire .ember-text {
+  background-image: var(--ember-gradient);
+  background-size: 100% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  text-shadow: none !important;
+  mix-blend-mode: normal;
+  isolation: isolate;
+  will-change: background-image;
+}
+
+body.mode-fire p,
+body.mode-fire a,
+body.mode-fire span,
+body.mode-fire li {
+  text-shadow:
+    0 0 1px rgba(255, 180, 80, calc(var(--fire-glow-intensity, 0.4) * 0.6)),
+    0 0 4px rgba(255, 100, 30, calc(var(--fire-glow-intensity, 0.4) * 0.5)),
+    0 0 12px rgba(255, 60, 10, calc(var(--fire-glow-intensity, 0.4) * 0.3));
+  transition: text-shadow 0.15s ease-out;
+}
+
+body.mode-fire .singed-1 {
+  filter: brightness(0.95);
+  transition:
+    filter 0.3s ease-out,
+    box-shadow 0.3s ease-out;
+}
+
+body.mode-fire .singed-2 {
+  filter: brightness(0.9);
+  box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.3);
+  transition:
+    filter 0.3s ease-out,
+    box-shadow 0.3s ease-out;
+}
+
+body.mode-fire .singed-3 {
+  filter: brightness(0.85);
+  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.5);
+  transition:
+    filter 0.3s ease-out,
+    box-shadow 0.3s ease-out;
+}
+
+/* Fire shimmer effect - static gradient with organic filter breathing
+   Ash positions fixed. Long animation with irregular keyframes for organic feel. */
+body.mode-fire h1.fire-shimmer-heading,
+body.mode-fire h2.fire-shimmer-heading,
+body.mode-fire h3.fire-shimmer-heading {
+  background: linear-gradient(
+    90deg,
+    #8b2200 0%,
+    #993300 5%,
+    /* Hot spot 1 */
+    #cc5500 10%,
+    #ff8833 14%,
+    #ffbb55 17%,
+    #ffdd77 18%,
+    #ffbb55 19%,
+    #ff7722 22%,
+    #bb4400 26%,
+    /* Ash 1 - static grey */
+    #666 30%,
+    #555 32%,
+    #666 34%,
+    /* Hot spot 2 */
+    #bb4400 38%,
+    #ee6600 42%,
+    #ffaa44 45%,
+    #ffcc66 46%,
+    #ffaa44 47%,
+    #dd5500 50%,
+    #aa3800 54%,
+    /* Hot spot 3 */
+    #cc5500 58%,
+    #ff8833 62%,
+    #ffbb55 65%,
+    #ffe088 66%,
+    #ffbb55 67%,
+    #ff7722 70%,
+    #bb4400 74%,
+    /* Ash 2 - static grey */
+    #555 78%,
+    #666 80%,
+    #555 82%,
+    /* Hot spot 4 */
+    #aa3800 86%,
+    #dd5500 90%,
+    #ff9933 94%,
+    #dd5500 97%,
+    #993300 100%
+  );
+  background-size: 100% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  display: inline-block;
+  text-shadow: none !important;
+  animation: ember-breathe 8s ease-in-out infinite;
+}
+
+/* Single animation with many irregular keyframes for organic feel */
+@keyframes ember-breathe {
+  0% {
+    filter: brightness(0.92) saturate(1.1) hue-rotate(0deg);
+  }
+  7% {
+    filter: brightness(1.1) saturate(1.25) hue-rotate(-5deg);
+  }
+  13% {
+    filter: brightness(0.95) saturate(1.15) hue-rotate(3deg);
+  }
+  21% {
+    filter: brightness(1.15) saturate(1.3) hue-rotate(-8deg);
+  }
+  28% {
+    filter: brightness(0.88) saturate(1.05) hue-rotate(5deg);
+  }
+  36% {
+    filter: brightness(1.08) saturate(1.2) hue-rotate(-3deg);
+  }
+  42% {
+    filter: brightness(0.9) saturate(1.12) hue-rotate(6deg);
+  }
+  51% {
+    filter: brightness(1.12) saturate(1.28) hue-rotate(-6deg);
+  }
+  58% {
+    filter: brightness(0.93) saturate(1.1) hue-rotate(4deg);
+  }
+  67% {
+    filter: brightness(1.05) saturate(1.22) hue-rotate(-4deg);
+  }
+  74% {
+    filter: brightness(0.87) saturate(1.08) hue-rotate(7deg);
+  }
+  82% {
+    filter: brightness(1.1) saturate(1.25) hue-rotate(-7deg);
+  }
+  91% {
+    filter: brightness(0.95) saturate(1.15) hue-rotate(2deg);
+  }
+  100% {
+    filter: brightness(0.92) saturate(1.1) hue-rotate(0deg);
+  }
+}
+
+/* Combine fade-in animations with ember effects */
+body.mode-fire h1.fire-shimmer-heading.animate-fade-in,
+body.mode-fire h2.fire-shimmer-heading.animate-fade-in,
+body.mode-fire h3.fire-shimmer-heading.animate-fade-in {
+  animation-name: fade-in, ember-breathe;
+  animation-duration: 400ms, 8s;
+  animation-timing-function: var(--ease-out-expo), ease-in-out;
+  animation-delay: var(--delay, 0ms), 0ms;
+  animation-iteration-count: 1, infinite;
+  animation-fill-mode: forwards, none;
+}
+
+body.mode-fire h1.fire-shimmer-heading.animate-fade-in-up,
+body.mode-fire h2.fire-shimmer-heading.animate-fade-in-up,
+body.mode-fire h3.fire-shimmer-heading.animate-fade-in-up {
+  animation-name: fade-in-up, ember-breathe;
+  animation-duration: 500ms, 8s;
+  animation-timing-function: var(--ease-out-expo), ease-in-out;
+  animation-delay: var(--delay, 0ms), 0ms;
+  animation-iteration-count: 1, infinite;
+  animation-fill-mode: forwards, none;
 }
