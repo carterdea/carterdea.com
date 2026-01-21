@@ -5,6 +5,7 @@ import { BackgroundRenderer } from '../components/BackgroundRenderer/BackgroundR
 import { MoneyModeSection } from '../components/MoneyModeSection';
 import { PreviewModeSection } from '../components/PreviewModeSection';
 import { InspectorModeSection } from '../components/InspectorModeSection';
+import { FireModeSection } from '../components/FireModeSection';
 
 interface Props {
   title: string;
@@ -145,6 +146,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site || 'https://carterde
     <MoneyModeSection client:load />
     <PreviewModeSection client:load />
     <InspectorModeSection client:load />
+    <FireModeSection client:load />
     <slot />
   </body>
 </html>
