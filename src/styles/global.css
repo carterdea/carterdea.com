@@ -218,3 +218,8 @@ body.mode-money .logo-marquee {
     transform: none;
   }
 }
+
+/* Ensure inspector overlays don't capture pointer events */
+[data-inspector-overlay] {
+  pointer-events: none;
+}
