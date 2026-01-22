@@ -64,7 +64,7 @@ export function RollingNumber({ value, prevValue }: RollingNumberProps) {
           if (curr > prev) direction = 'up';
           else if (curr < prev) direction = 'down';
         }
-        return <RollingDigit key={i} digit={char} direction={direction} />;
+        return <RollingDigit key={`digit-${i}-${char}`} digit={char} direction={direction} />;
       })}
     </span>
   );

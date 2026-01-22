@@ -86,7 +86,6 @@ export default function ContactForm() {
     }
   }
 
-  // Handle fade transition timing
   useEffect(() => {
     if (transitionState === 'form-hiding') {
       const timer = setTimeout(() => {
@@ -96,7 +95,6 @@ export default function ContactForm() {
     }
   }, [transitionState]);
 
-  // Show success view after form fades out
   if (transitionState === 'success-visible') {
     return (
       <div className="flex-1 flex flex-col pt-32 w-full md:max-w-1/2 md:mx-auto">

@@ -33,7 +33,6 @@ export function AmbientFireLight(): React.JSX.Element {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Initialize blobs with independent movement axes
     blobsRef.current = [
       {
         x: 0.5,
@@ -117,12 +116,9 @@ export function AmbientFireLight(): React.JSX.Element {
       ctx.clearRect(0, 0, width, height);
       ctx.globalCompositeOperation = 'screen';
 
-      // Sync EmberText to the same tick so it stays in step with a proven RAF loop.
       window.dispatchEvent(new CustomEvent('firemode:tick', { detail: { time: currentTime } }));
 
-      // Update and draw each blob
       for (const blob of blobsRef.current) {
-        // Independent oscillation for each axis
         blob.phaseX += blob.speedX * delta;
         blob.phaseY += blob.speedY * delta;
         blob.phaseScale += blob.speedScale * delta;
@@ -130,23 +126,18 @@ export function AmbientFireLight(): React.JSX.Element {
 
         const xOffset = Math.sin(blob.phaseX) * blob.amplitudeX;
         const yOffset = Math.sin(blob.phaseY) * blob.amplitudeY;
-
-        // Scale oscillates between 0.7 and 1.3 of base
         const scaleOscillation = 0.85 + Math.sin(blob.phaseScale) * 0.15;
 
-        // Flicker: rapid, irregular brightness changes
         const flicker1 = Math.sin(blob.flickerPhase * 7.3) * 0.15;
         const flicker2 = Math.sin(blob.flickerPhase * 11.7) * 0.1;
         const flicker3 = Math.sin(blob.flickerPhase * 3.1) * 0.08;
         const flickerAmount = 0.7 + flicker1 + flicker2 + flicker3;
 
-        // Draw radial gradient blob
         const centerX = (blob.baseX + xOffset) * width;
         const centerY = height + height * 0.1 - yOffset * height;
         const radiusX = width * 0.4 * blob.baseRadius * scaleOscillation;
         const radiusY = height * 0.5 * blob.baseRadius * scaleOscillation;
 
-        // Create elliptical gradient using transform
         ctx.save();
         ctx.translate(centerX, centerY);
         ctx.scale(radiusX / radiusY, 1);

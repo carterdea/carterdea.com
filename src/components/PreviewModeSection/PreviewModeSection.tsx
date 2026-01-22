@@ -19,38 +19,6 @@ interface PreviewState {
   position: Position;
 }
 
-function getDefaultPosition(): Position {
-  if (typeof window === 'undefined') return { x: 700, y: 280 };
-  return {
-    x: window.innerWidth * 0.55,
-    y: window.innerHeight * 0.35,
-  };
-}
-
-function getStoredState(): PreviewState | null {
-  if (typeof window === 'undefined') return null;
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      if (parsed.computer && parsed.position) {
-        return {
-          computer: parsed.computer,
-          position: parsed.position,
-        };
-      }
-    }
-  } catch {
-    // Invalid JSON
-  }
-  return null;
-}
-
-function saveState(state: PreviewState): void {
-  if (typeof window === 'undefined') return;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-}
-
 export function PreviewModeSection() {
   const [mode] = useSiteMode();
   const [computer, setComputer] = useState<ComputerId>('power-macintosh');
@@ -62,13 +30,24 @@ export function PreviewModeSection() {
   const dragOffset = useRef<Position>({ x: 0, y: 0 });
 
   useEffect(() => {
-    const stored = getStoredState();
-    if (stored) {
-      setComputer(stored.computer);
-      setPosition(stored.position);
-    } else {
-      setPosition(getDefaultPosition());
-    }
+    if (typeof window === 'undefined') return;
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed.computer && parsed.position) {
+          setComputer(parsed.computer);
+          setPosition(parsed.position);
+          setHasMounted(true);
+          return;
+        }
+      }
+    } catch {}
+
+    setPosition({
+      x: window.innerWidth * 0.55,
+      y: window.innerHeight * 0.35,
+    });
     setHasMounted(true);
   }, []);
 
@@ -110,7 +89,9 @@ export function PreviewModeSection() {
   const handlePointerUp = useCallback(() => {
     if (isDragging) {
       setIsDragging(false);
-      saveState({ computer, position });
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ computer, position }));
+      }
     }
   }, [isDragging, computer, position]);
 
@@ -120,7 +101,9 @@ export function PreviewModeSection() {
         const currentIndex = COMPUTERS.findIndex((c) => c.id === prev);
         const nextIndex = (currentIndex + direction + COMPUTERS.length) % COMPUTERS.length;
         const newComputer = COMPUTERS[nextIndex].id;
-        saveState({ computer: newComputer, position });
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify({ computer: newComputer, position }));
+        }
         return newComputer;
       });
     },
@@ -166,6 +149,8 @@ export function PreviewModeSection() {
   return (
     <div className="fixed inset-0 pointer-events-none z-40" style={{ isolation: 'isolate' }}>
       <div
+        role="application"
+        aria-label="Draggable computer preview"
         className={`
           absolute pointer-events-auto
           transition-opacity duration-300 ease-out
@@ -190,6 +175,8 @@ export function PreviewModeSection() {
         />
 
         <div
+          role="toolbar"
+          aria-label="Computer navigation"
           className={`
             absolute pointer-events-auto
             transition-opacity duration-200
