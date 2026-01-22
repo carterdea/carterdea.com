@@ -130,6 +130,16 @@ const VENDOR_PATTERNS = [
   'xgen-tracking',
   'gdpr_cookie_consent',
   'app.v1.0.368',
+  // Additional tracking/apps
+  'tapcart',
+  'bundler.nice-team.net',
+  'bingshoppingtool',
+  'kiwisizing',
+  'hulkapps',
+  'form-builder',
+  'portable-wallets',
+  'consent-tracking-api',
+  'storefront/load_feature',
 ];
 
 // Essential Shopify scripts to preserve (only search & cart functionality)
@@ -230,6 +240,14 @@ async function sanitizeHTML(options: SanitizeOptions): Promise<void> {
   );
   for (const link of unwantedLinks) {
     link.remove();
+  }
+
+  // Patch theme.js to remove GeolizrAPI references (causes errors when Geolizr is removed)
+  for (const script of document.querySelectorAll('script[src*="theme.js"]')) {
+    // GeolizrAPI is loaded by a removed script, so we need to stub it in theme.js
+    const stubScript = document.createElement('script');
+    stubScript.textContent = 'window.GeolizrAPI = { init: () => {}, getCountry: () => "US" };';
+    script.parentNode?.insertBefore(stubScript, script);
   }
 
   // Add robots meta tag
