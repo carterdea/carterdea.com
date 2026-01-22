@@ -174,12 +174,27 @@ async function sanitizeHTML(options: SanitizeOptions): Promise<void> {
   const preserved: string[] = [];
   const flagged: string[] = [];
 
+  // Script IDs to remove (tracking/analytics inline scripts)
+  const BLOCKED_SCRIPT_IDS = [
+    'web-pixels-manager-setup',
+    'shop-js-analytics',
+    'shopify-features',
+    'gorgias-chat-bundle',
+    'rev-script-bundle',
+    'xgen-sdk-script-app-embed',
+    '__st',
+    'apple-pay-shop-capabilities',
+  ];
+
   // Remove vendor scripts
   const scripts = Array.from(document.querySelectorAll('script'));
   for (const script of scripts) {
     const src = script.getAttribute('src') || '';
     const id = script.getAttribute('id') || '';
     const content = script.textContent || '';
+
+    // Check if script ID is blocked
+    const isBlockedId = BLOCKED_SCRIPT_IDS.includes(id);
 
     const isEssential =
       matchesPattern(src, ESSENTIAL_PATTERNS) || matchesPattern(content, ESSENTIAL_PATTERNS);
@@ -189,7 +204,7 @@ async function sanitizeHTML(options: SanitizeOptions): Promise<void> {
       matchesPattern(id, VENDOR_PATTERNS);
     const hasShopJs = hasShopJsReference(src, id, content);
 
-    if ((isVendor && !isEssential) || hasShopJs) {
+    if (isBlockedId || (isVendor && !isEssential) || hasShopJs) {
       removed.push(src || id || `inline: ${content.substring(0, 50)}...`);
       script.remove();
     } else {
