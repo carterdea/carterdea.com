@@ -339,32 +339,32 @@ public/assets/previews/
 
 ### Phase 5: Computer Component Integration
 
-**Goal:** Wire InteractivePreview into existing computers
+**Goal:** Wire InteractivePreview into existing computers with site cycling
 
 **PowerMacintosh:**
-- [ ] Add `previewSite?: 'stussy' | 'new-era'` prop
-- [ ] Add `previewPage?: 'home' | 'plp' | 'pdp'` prop
-- [ ] Conditional render: `previewSite` → InteractivePreview, else → screenshot
-- [ ] Pass screen dimensions to InteractivePreview for scaling
-- [ ] Test with Stussy homepage
+- [x] Add `previewHtmlPath` and `previewViewportWidth` props (Phase 3)
+- [x] Conditional render: `previewHtmlPath` → InteractivePreview, else → screenshot
+- [x] Pass screen dimensions to InteractivePreview for scaling (334×244px)
+- [x] Test with Stussy homepage
 
 **IMacG4:**
-- [ ] Add same props as PowerMacintosh
-- [ ] Conditional render logic
-- [ ] Test with New Era homepage
+- [x] Add `previewHtmlPath` and `previewViewportWidth` props (Phase 3)
+- [x] Conditional render logic
+- [x] Test with New Era homepage (344×214px)
 
 **PreviewModeSection:**
-- [ ] Add page state: `currentPage: 'home' | 'plp' | 'pdp'`
-- [ ] Add page cycling via Up/Down arrow keys (or other keys)
-- [ ] Pass `previewSite` and `previewPage` to computer components
-- [ ] Persist page state to localStorage
-- [ ] Update ArrowKeysController to show page navigation hint
+- [x] Integrate preview-sites config
+- [x] Add site state: `currentSite: SiteId`
+- [x] Add site cycling via Up/Down arrow keys
+- [x] Pass dynamic site/page via `getPreviewPath()` to computer components
+- [x] Persist site state to localStorage
+- [x] Update ArrowKeysController labels (Previous/Next site)
 
 **Acceptance:**
-- Left/Right arrows cycle computers (existing)
-- Up/Down arrows cycle pages (new)
-- Correct HTML loads for each site/page combination
-- State persists across page reloads
+- [x] Left/Right arrows cycle computers (existing)
+- [x] Up/Down arrows cycle sites (Stussy ↔ New Era)
+- [x] Correct HTML loads for each site (currently showing homepage)
+- [x] State persists across page reloads
 
 ---
 
