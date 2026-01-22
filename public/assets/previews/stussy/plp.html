@@ -7003,7 +7003,14 @@ height: 45px !important;
     </script>
 
     <script src="//www.stussy.com/cdn/shop/t/550/assets/vendor.js?v=37289180580284631741760598476" defer="defer"></script>
-    <script>window.GeolizrAPI = { init: () => {}, getCountry: () => "US" };</script><script src="//www.stussy.com/cdn/shop/t/550/assets/theme.js?v=176570525962966355241768587829" defer="defer"></script>
+    <script>
+      window.GeolizrAPI = {
+        init: () => {},
+        getCountry: () => "US",
+        addEventListener: () => {},
+        removeEventListener: () => {}
+      };
+    </script><script src="//www.stussy.com/cdn/shop/t/550/assets/theme.js?v=176570525962966355241768587829" defer="defer"></script>
     
     
 

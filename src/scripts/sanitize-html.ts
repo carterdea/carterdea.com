@@ -242,12 +242,20 @@ async function sanitizeHTML(options: SanitizeOptions): Promise<void> {
     link.remove();
   }
 
-  // Patch theme.js to remove GeolizrAPI references (causes errors when Geolizr is removed)
-  for (const script of document.querySelectorAll('script[src*="theme.js"]')) {
-    // GeolizrAPI is loaded by a removed script, so we need to stub it in theme.js
+  // Patch theme.js/global.js to stub GeolizrAPI (causes errors when Geolizr is removed)
+  const themeScripts = document.querySelectorAll('script[src*="theme.js"], script[src*="global.js"]');
+  if (themeScripts.length > 0) {
+    // GeolizrAPI is loaded by a removed script, so we need to stub it
     const stubScript = document.createElement('script');
-    stubScript.textContent = 'window.GeolizrAPI = { init: () => {}, getCountry: () => "US" };';
-    script.parentNode?.insertBefore(stubScript, script);
+    stubScript.textContent = `
+      window.GeolizrAPI = {
+        init: () => {},
+        getCountry: () => "US",
+        addEventListener: () => {},
+        removeEventListener: () => {}
+      };
+    `;
+    themeScripts[0].parentNode?.insertBefore(stubScript, themeScripts[0]);
   }
 
   // Add robots meta tag
