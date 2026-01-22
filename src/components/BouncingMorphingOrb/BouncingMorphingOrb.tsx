@@ -21,7 +21,7 @@ interface RippleData {
   isCornerHit: boolean;
 }
 
-const DEFAULT_SPEED = 5.5;
+const DEFAULT_SPEED = 3.5;
 const DEFAULT_RANDOMNESS = 0.05;
 const CORNER_HIT_THRESHOLD_MS = 100;
 const TRAJECTORY_CHECK_INTERVAL = 10;
@@ -192,8 +192,8 @@ export function BouncingMorphingOrb({
       x += vx;
       y += vy;
 
-      const xResult = handleBounce(x, vx, 0, viewportWidth - size);
-      const yResult = handleBounce(y, vy, 0, viewportHeight - size);
+      const xResult = handleBounce(x, vx, -size / 2, viewportWidth - size / 2);
+      const yResult = handleBounce(y, vy, -size / 2, viewportHeight - size / 2);
 
       x = xResult.pos;
       y = yResult.pos;
@@ -204,14 +204,12 @@ export function BouncingMorphingOrb({
         lastBounceTimeRef.current.x = now;
         bounceCountRef.current++;
         cycleColor();
-        addRipple(x + size / 2, y + size / 2, false);
       }
 
       if (yResult.bounced) {
         lastBounceTimeRef.current.y = now;
         bounceCountRef.current++;
         cycleColor();
-        addRipple(x + size / 2, y + size / 2, false);
       }
 
       const timeSinceXBounce = now - lastBounceTimeRef.current.x;
