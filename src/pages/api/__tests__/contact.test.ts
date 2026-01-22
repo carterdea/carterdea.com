@@ -40,7 +40,7 @@ describe('POST /api/contact', () => {
 
   describe('Happy Path', () => {
     it('should successfully send email with valid data', async () => {
-      const { POST } = await import('./contact');
+      const { POST } = await import('../contact');
 
       const request = createRequest({
         name: 'John Doe',
@@ -57,7 +57,7 @@ describe('POST /api/contact', () => {
     });
 
     it('should handle optional budget field', async () => {
-      const { POST } = await import('./contact');
+      const { POST } = await import('../contact');
 
       const request = createRequest({
         name: 'Jane Smith',
@@ -75,7 +75,7 @@ describe('POST /api/contact', () => {
 
   describe('Validation', () => {
     it('should reject missing name', async () => {
-      const { POST } = await import('./contact');
+      const { POST } = await import('../contact');
 
       const request = createRequest({
         email: 'test@example.com',
@@ -90,7 +90,7 @@ describe('POST /api/contact', () => {
     });
 
     it('should reject empty name', async () => {
-      const { POST } = await import('./contact');
+      const { POST } = await import('../contact');
 
       const request = createRequest({
         name: '   ',
@@ -106,7 +106,7 @@ describe('POST /api/contact', () => {
     });
 
     it('should reject missing email', async () => {
-      const { POST } = await import('./contact');
+      const { POST } = await import('../contact');
 
       const request = createRequest({
         name: 'John Doe',
@@ -121,7 +121,7 @@ describe('POST /api/contact', () => {
     });
 
     it('should reject invalid email format', async () => {
-      const { POST } = await import('./contact');
+      const { POST } = await import('../contact');
 
       const request = createRequest({
         name: 'John Doe',
@@ -137,7 +137,7 @@ describe('POST /api/contact', () => {
     });
 
     it('should reject email that is too long', async () => {
-      const { POST } = await import('./contact');
+      const { POST } = await import('../contact');
 
       const longEmail = 'a'.repeat(255) + '@example.com';
       const request = createRequest({
@@ -154,7 +154,7 @@ describe('POST /api/contact', () => {
     });
 
     it('should reject missing message', async () => {
-      const { POST } = await import('./contact');
+      const { POST } = await import('../contact');
 
       const request = createRequest({
         name: 'John Doe',
@@ -169,7 +169,7 @@ describe('POST /api/contact', () => {
     });
 
     it('should reject empty message', async () => {
-      const { POST } = await import('./contact');
+      const { POST } = await import('../contact');
 
       const request = createRequest({
         name: 'John Doe',
@@ -187,7 +187,7 @@ describe('POST /api/contact', () => {
 
   describe('Security', () => {
     it.skip('should reject cross-origin requests', async () => {
-      const { POST } = await import('./contact');
+      const { POST } = await import('../contact');
 
       // Create a request with evil.com origin and carterdea.com host
       const request = new Request('http://localhost:4321/api/contact', {
@@ -213,7 +213,7 @@ describe('POST /api/contact', () => {
     });
 
     it('should sanitize long inputs', async () => {
-      const { POST } = await import('./contact');
+      const { POST } = await import('../contact');
 
       const longName = 'a'.repeat(200);
       const longMessage = 'b'.repeat(3000);
@@ -233,7 +233,7 @@ describe('POST /api/contact', () => {
     });
 
     it('should reject malformed JSON', async () => {
-      const { POST } = await import('./contact');
+      const { POST } = await import('../contact');
 
       const request = new Request('http://localhost:4321/api/contact', {
         method: 'POST',
@@ -256,7 +256,7 @@ describe('POST /api/contact', () => {
 
   describe('Rate Limiting', () => {
     it('should allow up to 5 requests', async () => {
-      const { POST } = await import('./contact');
+      const { POST } = await import('../contact');
 
       const makeRequest = () =>
         createRequest(
@@ -277,7 +277,7 @@ describe('POST /api/contact', () => {
     });
 
     it('should rate limit 6th request within time window', async () => {
-      const { POST } = await import('./contact');
+      const { POST } = await import('../contact');
 
       const makeRequest = () =>
         createRequest(
