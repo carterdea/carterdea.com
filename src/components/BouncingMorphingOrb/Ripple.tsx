@@ -8,20 +8,19 @@ interface RippleProps {
   isCornerHit?: boolean;
 }
 
-export function Ripple({ x, y, size, color, isCornerHit = false }: RippleProps) {
+export function Ripple({ x, y, size, color, isCornerHit = false }: RippleProps): React.ReactNode {
   const [isVisible, setIsVisible] = useState(true);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsVisible(false);
-    }, isCornerHit ? 1000 : 600);
+  const duration = isCornerHit ? 1000 : 600;
+  const animationDuration = isCornerHit ? '1s' : '0.6s';
+  const scaleFactor = isCornerHit ? 3 : 1.5;
 
+  useEffect(() => {
+    const timer = setTimeout(() => setIsVisible(false), duration);
     return () => clearTimeout(timer);
-  }, [isCornerHit]);
+  }, [duration]);
 
   if (!isVisible) return null;
-
-  const maxSize = isCornerHit ? size * 3 : size * 1.5;
 
   return (
     <div
@@ -45,7 +44,7 @@ export function Ripple({ x, y, size, color, isCornerHit = false }: RippleProps) 
           borderRadius: '50%',
           border: `2px solid ${color}`,
           transform: 'translate(-50%, -50%)',
-          animation: `ripple-expand ${isCornerHit ? '1s' : '0.6s'} ease-out forwards`,
+          animation: `ripple-expand ${animationDuration} ease-out forwards`,
           opacity: 0.8,
         }}
       />
@@ -56,7 +55,7 @@ export function Ripple({ x, y, size, color, isCornerHit = false }: RippleProps) 
             opacity: 0.8;
           }
           to {
-            transform: translate(-50%, -50%) scale(${maxSize / size});
+            transform: translate(-50%, -50%) scale(${scaleFactor});
             opacity: 0;
           }
         }
