@@ -2,7 +2,7 @@
  * Shared CLI utilities for preview scripts
  */
 
-import { siteIds, pageIds, type SiteId, type PageId } from '../../config/preview-sites';
+import { type PageId, pageIds, type SiteId, siteIds } from '../../config/preview-sites';
 
 export interface BaseOptions {
   site: SiteId;

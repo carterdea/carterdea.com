@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import styles from './PowerMacintosh.module.css';
 import InteractivePreview from '../InteractivePreview';
+import styles from './PowerMacintosh.module.css';
 
 // Classic Mac startup chime
 const MAC_CHIME_URL = '/assets/sounds/power-macintosh-startup-chime.mp3';

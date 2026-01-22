@@ -139,7 +139,7 @@ describe('POST /api/contact', () => {
     it('should reject email that is too long', async () => {
       const { POST } = await import('../contact');
 
-      const longEmail = 'a'.repeat(255) + '@example.com';
+      const longEmail = `${'a'.repeat(255)}@example.com`;
       const request = createRequest({
         name: 'John Doe',
         email: longEmail,

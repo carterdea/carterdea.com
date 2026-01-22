@@ -74,7 +74,15 @@ async function captureHTML(options: CaptureOptions): Promise<void> {
     console.log('   Extracting HTML...');
     const html = await browserPage.content();
 
-    const outputPath = join(process.cwd(), 'public', 'assets', 'previews', site, 'raw', `${page}.html`);
+    const outputPath = join(
+      process.cwd(),
+      'public',
+      'assets',
+      'previews',
+      site,
+      'raw',
+      `${page}.html`
+    );
 
     console.log(`   Creating output directory...`);
     await mkdir(dirname(outputPath), { recursive: true });

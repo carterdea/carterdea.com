@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import styles from './IMacG4.module.css';
 import InteractivePreview from '../InteractivePreview';
+import styles from './IMacG4.module.css';
 
 // iMac G4 startup chime
 const MAC_CHIME_URL = '/assets/sounds/imac-startup-chime.mp3';

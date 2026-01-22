@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { getPreviewPath, getViewportWidth, type SiteId, siteIds } from '../../config/preview-sites';
 import { useSiteMode } from '../../hooks/useSiteMode';
 import IMacG4 from '../IMacG4/IMacG4';
 import PowerMacintosh from '../PowerMacintosh/PowerMacintosh';
 import { ArrowKeysController } from './ArrowKeysController';
-import { siteIds, getPreviewPath, getViewportWidth, type SiteId } from '../../config/preview-sites';
 
 const STORAGE_KEY = 'carterdea-preview-state';
 
@@ -14,12 +14,6 @@ const COMPUTERS = [
 
 type ComputerId = (typeof COMPUTERS)[number]['id'];
 type Position = { x: number; y: number };
-
-interface PreviewState {
-  computer: ComputerId;
-  site: SiteId;
-  position: Position;
-}
 
 export function PreviewModeSection() {
   const [mode] = useSiteMode();
@@ -108,7 +102,10 @@ export function PreviewModeSection() {
         const nextIndex = (currentIndex + direction + COMPUTERS.length) % COMPUTERS.length;
         const newComputer = COMPUTERS[nextIndex].id;
         if (typeof window !== 'undefined') {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify({ computer: newComputer, site, position }));
+          localStorage.setItem(
+            STORAGE_KEY,
+            JSON.stringify({ computer: newComputer, site, position })
+          );
         }
         return newComputer;
       });

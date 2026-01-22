@@ -179,7 +179,15 @@ async function sanitizeHTML(options: SanitizeOptions): Promise<void> {
 
   console.log(`\nSanitizing ${site} ${page}...`);
 
-  const inputPath = join(process.cwd(), 'public', 'assets', 'previews', site, 'raw', `${page}.html`);
+  const inputPath = join(
+    process.cwd(),
+    'public',
+    'assets',
+    'previews',
+    site,
+    'raw',
+    `${page}.html`
+  );
   console.log(`   Reading: ${inputPath}`);
 
   const html = await readFile(inputPath, 'utf-8');
@@ -263,7 +271,9 @@ async function sanitizeHTML(options: SanitizeOptions): Promise<void> {
   }
 
   // Patch theme.js/global.js to stub GeolizrAPI and prevent cart errors
-  const themeScripts = document.querySelectorAll('script[src*="theme.js"], script[src*="global.js"]');
+  const themeScripts = document.querySelectorAll(
+    'script[src*="theme.js"], script[src*="global.js"]'
+  );
   if (themeScripts.length > 0) {
     // Create stub script for missing APIs and elements
     const stubScript = document.createElement('script');
