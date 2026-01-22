@@ -14,7 +14,11 @@
     "test:all": "vitest run && playwright test",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
-    "format": "biome format --write ."
+    "format": "biome format --write .",
+    "capture:html": "bun run src/scripts/capture-html.ts",
+    "sanitize:html": "bun run src/scripts/sanitize-html.ts",
+    "verify:sanitized": "bun run src/scripts/verify-sanitized.ts",
+    "verify:html": "bun run src/scripts/verify-html.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.11",
@@ -24,6 +28,7 @@
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
     "@types/bun": "latest",
+    "@types/jsdom": "^27.0.0",
     "@types/node": "^25.0.10",
     "@types/react": "^19.2.8",
     "@types/react-dom": "^19.2.3",
@@ -44,6 +49,7 @@
     "@react-three/fiber": "^9.5.0",
     "astro": "^5.16.9",
     "embla-carousel": "^8.6.0",
+    "jsdom": "^27.4.0",
     "odometer": "^0.4.8",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",

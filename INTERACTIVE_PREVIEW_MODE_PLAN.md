@@ -104,7 +104,108 @@ Keep only essential Shopify functionality:
 - Predictive search
 - Product variant selection
 
+## Link Rewriting Rules
+
+Rewrite all links to keep navigation within our sanitized pages, preventing external navigation:
+
+**Logo links:**
+- All logo/brand links → `/assets/previews/{site}/home.html`
+
+**Navigation links:**
+- All header/footer nav links (except search/cart) → `/assets/previews/{site}/plp.html`
+
+**Homepage links:**
+- Featured product/category links → `/assets/previews/{site}/plp.html`
+
+**PLP (Product Listing Page) links:**
+- All product card links → `/assets/previews/{site}/pdp.html`
+- Category/filter links → `/assets/previews/{site}/plp.html` (same page)
+
+**PDP (Product Detail Page) links:**
+- Breadcrumb links → respective page (`home.html` or `plp.html`)
+- Related product links → `/assets/previews/{site}/pdp.html` (same page)
+
+**Disabled links (set to `href="#"` to preserve styling):**
+- Footer links (legal, help, about, etc.) → `#`
+- External links (social media, help center, etc.) → `#`
+- Account/login links → `#`
+- Checkout links → `#` (cart drawer can stay visual-only)
+- Any other non-critical links → `#`
+
+**Preserved functionality:**
+- Search inputs/buttons (keep functional)
+- Cart drawer toggle (keep functional)
+- Product variant selectors on PDP (keep functional)
+
 ## Implementation Phases
+
+### Phase 0: Content Capture
+
+**Goal:** Download raw HTML from target websites
+
+**Best Practice Approach:** Use Playwright to capture fully-rendered HTML with all dynamic content and Shopify scripts loaded.
+
+**Tool Setup:**
+- [x] Verify Playwright is installed: `bun add -d playwright`
+- [x] Create capture script: `src/scripts/capture-html.ts`
+
+**URLs to Capture:**
+
+**Stussy (stussy.com):**
+- [x] Homepage: `https://www.stussy.com/`
+- [x] PLP: `https://www.stussy.com/collections/tees`
+- [x] PDP: `https://www.stussy.com/collections/tees/products/1905000-basic-stussy-tee-black`
+
+**New Era (neweracap.com):**
+- [x] Homepage: `https://www.neweracap.com/`
+- [x] PLP: `https://www.neweracap.com/collections/new-york-yankees`
+- [x] PDP: `https://www.neweracap.com/products/new-york-yankees-authentic-collection-59fifty-fitted`
+
+**Capture Script Features:**
+```typescript
+// src/scripts/capture-html.ts
+// - Launch headless browser at 1280px viewport
+// - Wait for page load + network idle
+// - Wait for critical Shopify scripts to execute
+// - Extract full HTML including dynamic content
+// - Save to public/assets/previews/{site}/raw/{page}.html
+// - CLI: bun run capture:html --site stussy --page home --url https://...
+```
+
+**Process:**
+1. Run capture script for each URL
+2. Verify captured HTML loads in browser
+3. Check that search/cart elements exist in HTML
+4. Store raw files in `/raw/` subdirectory before sanitization
+
+**File Structure:**
+```
+public/assets/previews/
+├── stussy/
+│   └── raw/
+│       ├── home.html       # Raw captured HTML
+│       ├── plp.html
+│       └── pdp.html
+└── new-era/
+    └── raw/
+        ├── home.html
+        ├── plp.html
+        └── pdp.html
+```
+
+**Acceptance:**
+- 6 raw HTML files captured (2 sites × 3 pages)
+- Each file loads correctly in standalone browser
+- Search and cart elements present in HTML
+- Files include all dynamically-loaded Shopify content
+- Viewport captured at 1280px width
+
+**Alternative Methods (Not Recommended):**
+- Browser "Save Page As" - misses dynamically loaded content
+- `curl`/`wget` - gets initial HTML only, misses JS-rendered content
+- Manual copy/paste - tedious, error-prone
+
+---
 
 ### Phase 1: Sanitization Tooling
 
@@ -113,6 +214,12 @@ Keep only essential Shopify functionality:
 - [ ] Create `src/scripts/sanitize-html.ts` CLI script
 - [ ] Implement vendor script removal logic
 - [ ] Preserve essential Shopify scripts in original order
+- [ ] Implement link rewriting logic:
+  - [ ] Rewrite logo links → `home.html`
+  - [ ] Rewrite nav links → `plp.html`
+  - [ ] Rewrite product links (on PLP) → `pdp.html`
+  - [ ] Disable/remove external links (social, help, account, checkout)
+  - [ ] Preserve search and cart functionality
 - [ ] Add `<meta name="robots" content="noindex">` to output
 - [ ] CLI interface: `bun run sanitize:html --site <site> --page <page>`
 - [ ] Test on existing `stussy.html` homepage
@@ -121,35 +228,59 @@ Keep only essential Shopify functionality:
 - Script removes all vendor tracking
 - Preserves Shopify cart/search functionality
 - Maintains script execution order
+- All links rewritten to internal preview pages
+- No external navigation possible
 - Outputs clean HTML ready for iframe
 
 ---
 
-### Phase 2: Content Collection & Sanitization
+### Phase 2: HTML Sanitization
 
-**Goal:** Gather and clean all page HTML
+**Goal:** Clean raw HTML files and remove tracking scripts
 
-**Stussy:**
-- [ ] Download homepage HTML (already have)
-- [ ] Download PLP HTML (e.g., /collections/tees)
-- [ ] Download PDP HTML (e.g., /products/example-tee)
-- [ ] Run sanitization on all 3 pages
-- [ ] Manual review and cleanup
-- [ ] Verify search/cart work in standalone browser
+**Process:**
 
-**New Era:**
-- [ ] Download homepage HTML (already have)
-- [ ] Download PLP HTML (e.g., /collections/fitted-caps)
-- [ ] Download PDP HTML (e.g., /products/example-cap)
-- [ ] Run sanitization on all 3 pages
-- [ ] Manual review and cleanup
-- [ ] Verify search/cart work in standalone browser
+1. Run sanitization on captured files:
+   ```bash
+   bun run sanitize:html --site stussy --page home
+   bun run sanitize:html --site stussy --page plp
+   bun run sanitize:html --site stussy --page pdp
+   bun run sanitize:html --site new-era --page home
+   bun run sanitize:html --site new-era --page plp
+   bun run sanitize:html --site new-era --page pdp
+   ```
+
+2. Script reads from `raw/` and writes to parent directory:
+   - Input: `public/assets/previews/{site}/raw/{page}.html`
+   - Output: `public/assets/previews/{site}/{page}.html`
+
+3. Manual review of each sanitized file
+
+4. Test each file in standalone browser
+
+**Tasks:**
+- [ ] Sanitize Stussy homepage
+- [ ] Sanitize Stussy PLP
+- [ ] Sanitize Stussy PDP
+- [ ] Sanitize New Era homepage
+- [ ] Sanitize New Era PLP
+- [ ] Sanitize New Era PDP
+- [ ] Manual review and cleanup of all 6 files
+- [ ] Verify search functionality in each file
+- [ ] Verify cart functionality in each file
 
 **Acceptance:**
 - 6 sanitized HTML files total (2 sites × 3 pages)
 - All files load without console errors
 - Search and cart interactive in each file
 - File sizes reduced 80-95% from original
+- All vendor tracking scripts removed
+- All links rewritten correctly:
+  - Logo links navigate to `home.html`
+  - Nav links navigate to `plp.html`
+  - Product links (from PLP) navigate to `pdp.html`
+  - External links disabled or removed
+  - No navigation outside preview files
 
 ---
 
@@ -265,6 +396,13 @@ Keep only essential Shopify functionality:
 - [ ] Test all 6 page combinations (2 sites × 3 pages)
 - [ ] Verify search works on all pages
 - [ ] Verify cart works on all pages
+- [ ] Test link navigation:
+  - [ ] Logo clicks navigate to homepage
+  - [ ] Nav links navigate to PLP
+  - [ ] Product cards (on PLP) navigate to PDP
+  - [ ] Breadcrumbs work correctly
+  - [ ] External links are disabled/don't navigate away
+  - [ ] No navigation outside preview files
 - [ ] Test interaction mode toggle on each page
 - [ ] Test drag functionality when not interacting
 - [ ] Test scrolling within iframe (both mouse wheel and touch-style drag)
