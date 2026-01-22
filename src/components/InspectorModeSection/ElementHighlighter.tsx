@@ -15,7 +15,11 @@ function BoxOverlay({ className, style }: BoxOverlayProps): React.JSX.Element {
   return <div className={`absolute ${className}`} style={style} />;
 }
 
-export function ElementHighlighter({ rect, padding, margin }: ElementHighlighterProps): React.JSX.Element {
+export function ElementHighlighter({
+  rect,
+  padding,
+  margin,
+}: ElementHighlighterProps): React.JSX.Element {
   const outerTop = rect.top - margin.top;
   const outerLeft = rect.left - margin.left;
   const outerWidth = rect.width + margin.left + margin.right;
@@ -93,7 +97,12 @@ export function ElementHighlighter({ rect, padding, margin }: ElementHighlighter
         {/* Content box */}
         <div
           className="absolute bg-cyan-400/8 border border-cyan-400/40"
-          style={{ top: padding.top, left: padding.left, width: contentWidth, height: contentHeight }}
+          style={{
+            top: padding.top,
+            left: padding.left,
+            width: contentWidth,
+            height: contentHeight,
+          }}
         />
       </div>
     </div>

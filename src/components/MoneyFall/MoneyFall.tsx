@@ -235,9 +235,7 @@ function initializeBillState(config: LayerConfig): BillState {
   };
 }
 
-// Flutter presets: [ampX, ampY, ampZ, freqX, freqY, freqZ] as [base, variance] pairs
 const FLUTTER_PRESETS = [
-  // Gentle (20% chance)
   {
     threshold: 0.2,
     amp: [
@@ -251,7 +249,6 @@ const FLUTTER_PRESETS = [
       [0.4, 0.4],
     ],
   },
-  // Medium (40% chance)
   {
     threshold: 0.6,
     amp: [
@@ -265,7 +262,6 @@ const FLUTTER_PRESETS = [
       [0.9, 1.0],
     ],
   },
-  // Strong (40% chance)
   {
     threshold: 1.0,
     amp: [

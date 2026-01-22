@@ -202,7 +202,8 @@
 }
 
 @keyframes breathe {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0.3;
     box-shadow:
       0 0 2px 0px rgba(255, 255, 255, 0.3),

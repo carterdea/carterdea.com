@@ -26,7 +26,10 @@ import type { Column } from './types';
 // Must be high enough to not trigger on normal frame drops (GC, etc.)
 const TAB_SWITCH_THRESHOLD = 500;
 
-function randomizeColumnParams(): Pick<Column, 'stepInterval' | 'trailLength' | 'brightness' | 'fontSize'> {
+function randomizeColumnParams(): Pick<
+  Column,
+  'stepInterval' | 'trailLength' | 'brightness' | 'fontSize'
+> {
   return {
     stepInterval: randomInRange(MIN_STEP_INTERVAL, MAX_STEP_INTERVAL),
     trailLength: randomInRange(MIN_TRAIL_LENGTH, MAX_TRAIL_LENGTH),
@@ -72,7 +75,12 @@ function mutateTrail(column: Column): void {
   }
 }
 
-function updateColumn(column: Column, canvasHeight: number, currentTime: number, shouldMutate: boolean): void {
+function updateColumn(
+  column: Column,
+  canvasHeight: number,
+  currentTime: number,
+  shouldMutate: boolean
+): void {
   if (currentTime < column.nextStepTime) {
     if (shouldMutate) mutateTrail(column);
     return;
@@ -152,7 +160,12 @@ function drawColumn(ctx: CanvasRenderingContext2D, column: Column): void {
   }
 }
 
-function render(ctx: CanvasRenderingContext2D, columns: Column[], currentTime: number, frameCount: number): void {
+function render(
+  ctx: CanvasRenderingContext2D,
+  columns: Column[],
+  currentTime: number,
+  frameCount: number
+): void {
   const { width, height } = ctx.canvas;
 
   // Reset shadow state before clearing to prevent glow bleeding into background

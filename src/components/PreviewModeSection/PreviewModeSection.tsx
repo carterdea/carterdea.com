@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSiteMode } from '../../hooks/useSiteMode';
-import PowerMacintosh from '../PowerMacintosh/PowerMacintosh';
 import IMacG4 from '../IMacG4/IMacG4';
+import PowerMacintosh from '../PowerMacintosh/PowerMacintosh';
 import { ArrowKeysController } from './ArrowKeysController';
 
 const STORAGE_KEY = 'carterdea-preview-state';
@@ -114,18 +114,23 @@ export function PreviewModeSection() {
     }
   }, [isDragging, computer, position]);
 
-  const cycleComputer = useCallback((direction: 1 | -1) => {
-    setComputer((prev) => {
-      const currentIndex = COMPUTERS.findIndex((c) => c.id === prev);
-      const nextIndex = (currentIndex + direction + COMPUTERS.length) % COMPUTERS.length;
-      const newComputer = COMPUTERS[nextIndex].id;
-      saveState({ computer: newComputer, position });
-      return newComputer;
-    });
-  }, [position]);
+  const cycleComputer = useCallback(
+    (direction: 1 | -1) => {
+      setComputer((prev) => {
+        const currentIndex = COMPUTERS.findIndex((c) => c.id === prev);
+        const nextIndex = (currentIndex + direction + COMPUTERS.length) % COMPUTERS.length;
+        const newComputer = COMPUTERS[nextIndex].id;
+        saveState({ computer: newComputer, position });
+        return newComputer;
+      });
+    },
+    [position]
+  );
 
   const handlePrevComputer = useCallback(() => cycleComputer(-1), [cycleComputer]);
   const handleNextComputer = useCallback(() => cycleComputer(1), [cycleComputer]);
+  const handleMouseEnter = useCallback(() => setIsHovering(true), []);
+  const handleMouseLeave = useCallback(() => setIsHovering(false), []);
 
   // Keyboard navigation
   useEffect(() => {
@@ -159,10 +164,7 @@ export function PreviewModeSection() {
   const keyboardCenterX = computerWidth / 2;
 
   return (
-    <div
-      className="fixed inset-0 pointer-events-none z-40"
-      style={{ isolation: 'isolate' }}
-    >
+    <div className="fixed inset-0 pointer-events-none z-40" style={{ isolation: 'isolate' }}>
       <div
         className={`
           absolute pointer-events-auto
@@ -178,8 +180,8 @@ export function PreviewModeSection() {
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
-        onMouseEnter={() => setIsHovering(true)}
-        onMouseLeave={() => setIsHovering(false)}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
       >
         <CurrentComponent
           screenshotSrc="/assets/previews/stussy-screenshot.png"
@@ -199,12 +201,9 @@ export function PreviewModeSection() {
             left: keyboardCenterX,
             transform: 'translateX(-50%)',
           }}
-          onMouseEnter={() => setIsHovering(true)}
+          onMouseEnter={handleMouseEnter}
         >
-          <ArrowKeysController
-            onLeft={handlePrevComputer}
-            onRight={handleNextComputer}
-          />
+          <ArrowKeysController onLeft={handlePrevComputer} onRight={handleNextComputer} />
         </div>
       </div>
     </div>

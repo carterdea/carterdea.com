@@ -11,7 +11,6 @@ import { getDeviceTier } from './utils';
 
 const UNMOUNT_DELAY_MS = 300;
 
-// Lazy load heavy components
 const EmberCanvas = lazy(() => import('./EmberCanvas').then((m) => ({ default: m.EmberCanvas })));
 
 function useDelayedFireModeMount(): boolean {
@@ -34,12 +33,10 @@ function FireModeEffects(): React.JSX.Element {
   const tier = getDeviceTier();
   const ignitionPoints = useIgnitionPoints();
 
-  // Initialize hooks for effects
   useScrollVelocity();
   const cleanupChar = useCharAccumulation();
   const cleanupEmberText = useEmberText();
 
-  // Cleanup when component unmounts
   useEffect(() => {
     return () => {
       cleanupChar();
@@ -49,10 +46,7 @@ function FireModeEffects(): React.JSX.Element {
 
   return (
     <>
-      {/* Ambient light overlay - all tiers */}
       <AmbientFireLight />
-
-      {/* Ember particles - all tiers except low */}
       {tier !== 'low' && (
         <Suspense fallback={null}>
           <EmberCanvas ignitionPoints={ignitionPoints} />

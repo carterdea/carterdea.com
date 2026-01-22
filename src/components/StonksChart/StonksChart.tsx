@@ -86,24 +86,18 @@ export const StonksChart = forwardRef<StonksChartHandle, StonksChartProps>(
 
       ctx.clearRect(0, 0, width, height);
 
-      // Calculate how many points represent the expand threshold
-      const totalExpectedPoints = state.climbDuration * 60; // ~60fps
+      const totalExpectedPoints = state.climbDuration * 60;
       const expandPoints = Math.floor(totalExpectedPoints * EXPAND_THRESHOLD);
 
-      // Determine pixels per point based on current phase
       let pixelsPerPoint: number;
       if (state.points.length <= expandPoints) {
-        // Expanding phase: line grows from left to right
         pixelsPerPoint = chartWidth / expandPoints;
       } else {
-        // Zoom out phase: fit all points in chart width
         pixelsPerPoint = chartWidth / state.points.length;
       }
 
-      // Calculate Y range - ensure line never goes below bottom
       const maxPrice = Math.max(...state.points, 1);
       const minPrice = Math.min(...state.points, 0);
-      // Add padding above, but ensure 0 is at the bottom line
       const yMax = maxPrice * 1.1;
       const yMin = Math.min(minPrice, 0);
 
@@ -112,7 +106,6 @@ export const StonksChart = forwardRef<StonksChartHandle, StonksChartProps>(
         return padding + chartHeight - ((price - yMin) / range) * chartHeight;
       };
 
-      // Draw solid bottom line
       const bottomY = height - padding;
       ctx.strokeStyle = COLORS.ZERO_LINE;
       ctx.lineWidth = 1;
@@ -121,9 +114,7 @@ export const StonksChart = forwardRef<StonksChartHandle, StonksChartProps>(
       ctx.lineTo(width - padding, bottomY);
       ctx.stroke();
 
-      // Draw the line
       if (state.points.length > 1) {
-        // Use red during crash/done phases
         const lineColor = state.phase === 'climb' ? COLORS.GREEN : COLORS.RED;
         ctx.strokeStyle = lineColor;
         ctx.lineWidth = 2;
@@ -134,7 +125,6 @@ export const StonksChart = forwardRef<StonksChartHandle, StonksChartProps>(
 
         for (let i = 0; i < state.points.length; i++) {
           const x = padding + i * pixelsPerPoint;
-          // Clamp x to not exceed chart bounds
           if (x > width - padding) break;
           const y = priceToY(state.points[i]);
 
@@ -148,7 +138,6 @@ export const StonksChart = forwardRef<StonksChartHandle, StonksChartProps>(
         ctx.stroke();
       }
 
-      // Draw dot at current position
       const dotIndex = Math.min(
         state.points.length - 1,
         Math.floor((width - padding * 2) / pixelsPerPoint)
@@ -156,24 +145,20 @@ export const StonksChart = forwardRef<StonksChartHandle, StonksChartProps>(
       const dotX = Math.min(padding + dotIndex * pixelsPerPoint, width - padding);
       const dotY = priceToY(state.points[dotIndex] ?? state.currentPrice);
 
-      // Color based on phase
       const dotColor = state.phase === 'climb' ? COLORS.GREEN : COLORS.RED;
       const dotRgba = state.phase === 'climb' ? 'rgba(34, 197, 94' : 'rgba(239, 68, 68';
 
-      // Pulsing animation (always on)
       const pingPhase = (Date.now() % PING_DURATION_MS) / PING_DURATION_MS;
       const normalizedPhase = pingPhase < PING_EASE_THRESHOLD ? pingPhase / PING_EASE_THRESHOLD : 1;
       const eased = easeOutCubic(normalizedPhase);
       const pingScale = 1 + eased;
       const pingOpacity = 1 - eased;
 
-      // Outer ping ring
       ctx.beginPath();
       ctx.arc(dotX, dotY, 6 * pingScale, 0, Math.PI * 2);
       ctx.fillStyle = `${dotRgba}, ${0.75 * pingOpacity})`;
       ctx.fill();
 
-      // Inner dot with glow
       ctx.shadowColor = dotColor;
       ctx.shadowBlur = 8;
       ctx.beginPath();
@@ -193,17 +178,14 @@ export const StonksChart = forwardRef<StonksChartHandle, StonksChartProps>(
 
           const trendPrice = state.targetPeak * easeInQuad(progress);
 
-          // Add noise for organic wobble
           state.noiseVelocity += (Math.random() - 0.5) * 3.0 * deltaTime;
           state.noiseVelocity *= 0.9;
           state.noise += state.noiseVelocity;
           state.noise *= 0.95;
 
-          // Scale noise - more wobble visible at all price levels
           const noiseScale = Math.max(8, trendPrice * 0.12);
           const finalNoise = state.noise * noiseScale;
 
-          // Follow trend with noise, but floor at 50% of trend to prevent bottoming out
           const minPrice = Math.max(0, trendPrice * 0.5);
           state.currentPrice = Math.max(minPrice, trendPrice + finalNoise);
           state.points.push(state.currentPrice);
@@ -216,23 +198,19 @@ export const StonksChart = forwardRef<StonksChartHandle, StonksChartProps>(
         } else if (state.phase === 'crash') {
           state.crashProgress += deltaTime * CRASH_SPEED;
 
-          // Get peak price (first point of crash)
           const crashStartIndex = Math.floor(state.climbDuration * 60);
           const peakPrice =
             state.points[crashStartIndex] ||
             state.points[state.points.length - 1] ||
             state.currentPrice;
 
-          // Main crash curve with organic wobble
           const t = Math.min(state.crashProgress, 1);
           const crashEase = easeInOutQuad(t);
 
-          // Add diminishing wobble (dead cat bounces)
-          const wobbleDecay = 1 - t; // Wobble decreases as crash progresses
-          const wobbleFreq = t * 8; // Speed up wobble over time
+          const wobbleDecay = 1 - t;
+          const wobbleFreq = t * 8;
           const wobble = Math.sin(wobbleFreq * Math.PI) * wobbleDecay * 0.08;
 
-          // Calculate base crash price with wobble
           const crashedPrice = peakPrice * (1 - crashEase);
           state.currentPrice = Math.max(0, crashedPrice + crashedPrice * wobble);
           state.points.push(state.currentPrice);

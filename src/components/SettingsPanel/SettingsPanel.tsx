@@ -1,12 +1,11 @@
 import { Popover } from '@headlessui/react';
-import {
-  BanknotesIcon,
-  CommandLineIcon,
-  ComputerDesktopIcon,
-  FireIcon,
-} from '@heroicons/react/16/solid';
+import BanknotesIcon from '@heroicons/react/16/solid/BanknotesIcon';
+import CommandLineIcon from '@heroicons/react/16/solid/CommandLineIcon';
+import ComputerDesktopIcon from '@heroicons/react/16/solid/ComputerDesktopIcon';
+import FireIcon from '@heroicons/react/16/solid/FireIcon';
+
+import { type SiteMode, useSiteMode } from '../../hooks/useSiteMode';
 import { MorphingOrbGL } from '../MorphingOrbGL';
-import { useSiteMode, type SiteMode } from '../../hooks/useSiteMode';
 
 interface ModeOption {
   id: SiteMode;
@@ -15,24 +14,35 @@ interface ModeOption {
 }
 
 const modes: ModeOption[] = [
-  { id: 'vacation', label: 'Throwback mode', icon: <img src="/assets/images/throwback.svg" alt="" className="size-full" /> },
-  { id: 'coder', label: 'Developer mode', icon: <CommandLineIcon className="size-full text-white" /> },
-  { id: 'preview', label: 'Preview mode', icon: <ComputerDesktopIcon className="size-full text-white" /> },
+  {
+    id: 'vacation',
+    label: 'Throwback mode',
+    icon: <img src="/assets/images/throwback.svg" alt="" className="size-full" />,
+  },
+  {
+    id: 'coder',
+    label: 'Developer mode',
+    icon: <CommandLineIcon className="size-full text-white" />,
+  },
+  {
+    id: 'preview',
+    label: 'Preview mode',
+    icon: <ComputerDesktopIcon className="size-full text-white" />,
+  },
   { id: 'fire', label: 'Fire mode', icon: <FireIcon className="size-full text-white" /> },
   { id: 'money', label: 'Money mode', icon: <BanknotesIcon className="size-full text-white" /> },
-  { id: 'matrix', label: 'Matrix mode', icon: <img src="/assets/images/matrix.svg" alt="" className="size-full" /> },
+  {
+    id: 'matrix',
+    label: 'Matrix mode',
+    icon: <img src="/assets/images/matrix.svg" alt="" className="size-full" />,
+  },
 ];
 
 export function SettingsPanel() {
   const [mode, setMode] = useSiteMode();
 
   const handleModeChange = (newMode: SiteMode) => {
-    // Toggle off if selecting the same mode
-    if (newMode === mode) {
-      setMode(null);
-    } else {
-      setMode(newMode);
-    }
+    setMode(newMode === mode ? null : newMode);
   };
 
   return (

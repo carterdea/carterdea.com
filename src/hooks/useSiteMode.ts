@@ -8,14 +8,18 @@ export type SiteMode = (typeof VALID_MODES)[number];
 const STORAGE_KEY = 'carterdea-site-mode';
 const MODE_CLASS_PREFIX = 'mode-';
 
+let cachedMode: SiteMode | null | undefined;
+
 function isValidMode(value: string): value is SiteMode {
   return VALID_MODES.includes(value as SiteMode);
 }
 
 function getStoredMode(): SiteMode | null {
   if (typeof window === 'undefined') return null;
+  if (cachedMode !== undefined) return cachedMode;
   const stored = localStorage.getItem(STORAGE_KEY);
-  return stored && isValidMode(stored) ? stored : null;
+  cachedMode = stored && isValidMode(stored) ? stored : null;
+  return cachedMode;
 }
 
 function applyModeToBody(mode: SiteMode | null): void {
@@ -47,6 +51,7 @@ export function useSiteMode(): [SiteMode | null, (mode: SiteMode | null) => void
   }, []);
 
   function setMode(newMode: SiteMode | null): void {
+    cachedMode = newMode;
     setModeState(newMode);
     applyModeToBody(newMode);
     emitModeChange(newMode);

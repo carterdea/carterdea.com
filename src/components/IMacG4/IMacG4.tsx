@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import styles from './IMacG4.module.css';
 
 // iMac G4 startup chime
@@ -19,7 +19,7 @@ export default function IMacG4({
   className = '',
   initialPosition = { x: 0, y: 0 },
   enableStartupChime = true,
-  disableDrag = false
+  disableDrag = false,
 }: IMacG4Props) {
   const [screenState, setScreenState] = useState<ScreenState>('on');
   const [position, setPosition] = useState(initialPosition);
@@ -60,26 +60,32 @@ export default function IMacG4({
 
   const isPoweredOn = screenState === 'on' || screenState === 'turningOn';
 
-  const handlePointerDown = useCallback((e: React.PointerEvent) => {
-    if (disableDrag) return;
-    if ((e.target as HTMLElement).closest('button')) return;
+  const handlePointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      if (disableDrag) return;
+      if ((e.target as HTMLElement).closest('button')) return;
 
-    setIsDragging(true);
-    dragOffset.current = {
-      x: e.clientX - position.x,
-      y: e.clientY - position.y
-    };
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
-  }, [position, disableDrag]);
+      setIsDragging(true);
+      dragOffset.current = {
+        x: e.clientX - position.x,
+        y: e.clientY - position.y,
+      };
+      (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    },
+    [position, disableDrag]
+  );
 
-  const handlePointerMove = useCallback((e: React.PointerEvent) => {
-    if (!isDragging) return;
+  const handlePointerMove = useCallback(
+    (e: React.PointerEvent) => {
+      if (!isDragging) return;
 
-    setPosition({
-      x: e.clientX - dragOffset.current.x,
-      y: e.clientY - dragOffset.current.y
-    });
-  }, [isDragging]);
+      setPosition({
+        x: e.clientX - dragOffset.current.x,
+        y: e.clientY - dragOffset.current.y,
+      });
+    },
+    [isDragging]
+  );
 
   const handlePointerUp = useCallback(() => {
     setIsDragging(false);
@@ -105,12 +111,14 @@ export default function IMacG4({
             {/* Black screen border */}
             <div className={styles.screenBorder}>
               {/* Actual screen */}
-              <div className={`
+              <div
+                className={`
                 ${styles.screen}
                 ${screenState === 'off' ? styles.screenOff : ''}
                 ${screenState === 'turningOff' ? styles.turningOff : ''}
                 ${screenState === 'turningOn' ? styles.turningOn : ''}
-              `}>
+              `}
+              >
                 {isPoweredOn && screenshotSrc && (
                   <img
                     src={screenshotSrc}

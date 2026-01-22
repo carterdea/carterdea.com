@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import PowerMacintosh from '../PowerMacintosh/PowerMacintosh';
+
 import IMacG4 from '../IMacG4/IMacG4';
+import PowerMacintosh from '../PowerMacintosh/PowerMacintosh';
 
 const computers = [
   { id: 'power-macintosh', name: 'Power Macintosh', Component: PowerMacintosh },
@@ -24,6 +25,7 @@ export default function ComputerSwitcher({ screenshotSrc }: ComputerSwitcherProp
   return (
     <>
       <button
+        type="button"
         className="switcher-button"
         onClick={handleNext}
         aria-label="Switch computer"
@@ -31,10 +33,7 @@ export default function ComputerSwitcher({ screenshotSrc }: ComputerSwitcherProp
         Next
       </button>
       <div className="preview-container">
-        <CurrentComputer
-          key={current.id}
-          screenshotSrc={screenshotSrc}
-        />
+        <CurrentComputer key={current.id} screenshotSrc={screenshotSrc} />
       </div>
     </>
   );

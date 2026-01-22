@@ -9,7 +9,7 @@ import {
   offsetSphere,
   orbit,
 } from './shapes';
-import type { ColorMode, MorphingOrbSVGProps, Point3D, ProjectedDot, ShapeType } from './types';
+import type { MorphingOrbSVGProps, Point3D, ProjectedDot, ShapeType } from './types';
 
 const DEFAULT_SEQUENCE: ShapeType[] = ['gridSphere', 'curvedArcs', 'fibSphere', 'doubleOrbit'];
 
@@ -264,7 +264,6 @@ export function MorphingOrbSVG({
         }
         case 'shuffled':
           return shuffledPaletteRef.current[index % shuffledPaletteRef.current.length];
-        case 'sequential':
         default:
           return palette[index % palette.length];
       }
@@ -283,6 +282,8 @@ export function MorphingOrbSVG({
       className={className}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      role="img"
+      aria-label="Morphing orb animation"
       style={{
         overflow: 'visible',
         transform: isHovered ? `scale(${hoverScale})` : 'scale(1)',

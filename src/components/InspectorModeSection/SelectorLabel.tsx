@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface SelectorLabelProps {
   selector: string;
@@ -35,9 +35,18 @@ function calculateTooltipPosition(
   };
 }
 
-export function SelectorLabel({ selector, width, height, cursorX, cursorY }: SelectorLabelProps): React.JSX.Element {
+export function SelectorLabel({
+  selector,
+  width,
+  height,
+  cursorX,
+  cursorY,
+}: SelectorLabelProps): React.JSX.Element {
   const tooltipRef = useRef<HTMLDivElement>(null);
-  const [position, setPosition] = useState({ left: cursorX + CURSOR_OFFSET, top: cursorY + CURSOR_OFFSET });
+  const [position, setPosition] = useState({
+    left: cursorX + CURSOR_OFFSET,
+    top: cursorY + CURSOR_OFFSET,
+  });
 
   useEffect(() => {
     if (!tooltipRef.current) return;
@@ -53,7 +62,9 @@ export function SelectorLabel({ selector, width, height, cursorX, cursorY }: Sel
       data-inspector-overlay
     >
       <div className="font-medium">{selector}</div>
-      <div className="text-zinc-500">{Math.round(width)} x {Math.round(height)}</div>
+      <div className="text-zinc-500">
+        {Math.round(width)} x {Math.round(height)}
+      </div>
     </div>
   );
 }

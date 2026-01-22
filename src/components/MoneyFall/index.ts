@@ -1,1 +1,1 @@
-export { MoneyFall, default } from './MoneyFall';
+export { default, MoneyFall } from './MoneyFall';
