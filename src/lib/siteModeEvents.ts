@@ -6,9 +6,7 @@ export function emitModeChange(mode: SiteMode | null) {
   window.dispatchEvent(new CustomEvent(EVENT_NAME, { detail: mode }));
 }
 
-export function subscribeToModeChange(
-  callback: (mode: SiteMode | null) => void
-): () => void {
+export function subscribeToModeChange(callback: (mode: SiteMode | null) => void): () => void {
   const handler = (e: Event) => {
     callback((e as CustomEvent<SiteMode | null>).detail);
   };

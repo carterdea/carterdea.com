@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import styles from './PowerMacintosh.module.css';
 
 // Classic Mac startup chime
@@ -9,16 +9,19 @@ const AppleLogo = () => (
   <svg width="12" height="14" viewBox="0 0 12 14" fill="none" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <mask id="appleMask" maskUnits="userSpaceOnUse" x="0" y="0" width="12" height="14">
-        <path d="M8.63329 0.00133821C7.88426 0.0521986 7.0097 0.530019 6.49851 1.15239C6.03439 1.71587 5.6512 2.55373 5.79985 3.36883C6.61743 3.39426 7.46226 2.9044 7.9528 2.274C8.41114 1.68509 8.75964 0.851243 8.63329 0M8.90995 3.27648C7.6489 3.27648 7.11623 3.87744 6.24167 3.87744C5.33986 3.87744 4.65359 3.27648 3.56348 3.27648C2.49155 3.27648 1.35272 3.92964 0.63094 5.04455L0.617727 5.06597C0.311975 5.547 0.108638 6.17328 0.0371641 6.85411C-0.0255995 7.40822 -0.00908283 8.01319 0.0883658 8.64092C0.19184 9.27499 0.357165 9.8782 0.578087 10.4277C0.841877 11.09 1.15998 11.6911 1.52367 12.2145C2.10175 13.0778 2.86152 13.992 3.83931 14C4.75434 14.0094 5.01283 13.4151 6.25406 13.4084C7.49529 13.4017 7.72983 14.0067 8.64403 13.9973C9.58135 13.9906 10.3535 13.0604 10.9291 12.2145L11.0926 11.9696C11.4052 11.5072 11.6854 10.9906 11.9284 10.4291L12.0002 10.2711C11.1777 9.96061 10.5938 9.3543 10.2784 8.64092C10.0306 8.08145 9.94802 7.45507 10.0463 6.85411C10.1545 6.18757 10.484 5.55182 11.0538 5.0673C11.227 4.92144 11.4071 4.79792 11.5923 4.6979C10.8721 3.79847 9.86214 3.27782 8.90995 3.27782" fill="white"/>
+        <path
+          d="M8.63329 0.00133821C7.88426 0.0521986 7.0097 0.530019 6.49851 1.15239C6.03439 1.71587 5.6512 2.55373 5.79985 3.36883C6.61743 3.39426 7.46226 2.9044 7.9528 2.274C8.41114 1.68509 8.75964 0.851243 8.63329 0M8.90995 3.27648C7.6489 3.27648 7.11623 3.87744 6.24167 3.87744C5.33986 3.87744 4.65359 3.27648 3.56348 3.27648C2.49155 3.27648 1.35272 3.92964 0.63094 5.04455L0.617727 5.06597C0.311975 5.547 0.108638 6.17328 0.0371641 6.85411C-0.0255995 7.40822 -0.00908283 8.01319 0.0883658 8.64092C0.19184 9.27499 0.357165 9.8782 0.578087 10.4277C0.841877 11.09 1.15998 11.6911 1.52367 12.2145C2.10175 13.0778 2.86152 13.992 3.83931 14C4.75434 14.0094 5.01283 13.4151 6.25406 13.4084C7.49529 13.4017 7.72983 14.0067 8.64403 13.9973C9.58135 13.9906 10.3535 13.0604 10.9291 12.2145L11.0926 11.9696C11.4052 11.5072 11.6854 10.9906 11.9284 10.4291L12.0002 10.2711C11.1777 9.96061 10.5938 9.3543 10.2784 8.64092C10.0306 8.08145 9.94802 7.45507 10.0463 6.85411C10.1545 6.18757 10.484 5.55182 11.0538 5.0673C11.227 4.92144 11.4071 4.79792 11.5923 4.6979C10.8721 3.79847 9.86214 3.27782 8.90995 3.27782"
+          fill="white"
+        />
       </mask>
     </defs>
     <g mask="url(#appleMask)">
-      <rect y="0" width="12" height="2.33" fill="#75BD21"/>
-      <rect y="2.33" width="12" height="2.33" fill="#FFC728"/>
-      <rect y="4.66" width="12" height="2.33" fill="#FF661C"/>
-      <rect y="7" width="12" height="2.33" fill="#CF0F2B"/>
-      <rect y="9.33" width="12" height="2.33" fill="#B01CAB"/>
-      <rect y="11.66" width="12" height="2.34" fill="#00A1DE"/>
+      <rect y="0" width="12" height="2.33" fill="#75BD21" />
+      <rect y="2.33" width="12" height="2.33" fill="#FFC728" />
+      <rect y="4.66" width="12" height="2.33" fill="#FF661C" />
+      <rect y="7" width="12" height="2.33" fill="#CF0F2B" />
+      <rect y="9.33" width="12" height="2.33" fill="#B01CAB" />
+      <rect y="11.66" width="12" height="2.34" fill="#00A1DE" />
     </g>
   </svg>
 );
@@ -38,7 +41,7 @@ export default function PowerMacintosh({
   className = '',
   initialPosition = { x: 0, y: 0 },
   enableStartupChime = true,
-  disableDrag = false
+  disableDrag = false,
 }: PowerMacintoshProps) {
   const [screenState, setScreenState] = useState<ScreenState>('on');
   const [position, setPosition] = useState(initialPosition);
@@ -80,27 +83,33 @@ export default function PowerMacintosh({
 
   const isPoweredOn = screenState === 'on' || screenState === 'turningOn';
 
-  const handlePointerDown = useCallback((e: React.PointerEvent) => {
-    // Don't drag if disabled or clicking on the power button
-    if (disableDrag) return;
-    if ((e.target as HTMLElement).closest('button')) return;
+  const handlePointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      // Don't drag if disabled or clicking on the power button
+      if (disableDrag) return;
+      if ((e.target as HTMLElement).closest('button')) return;
 
-    setIsDragging(true);
-    dragOffset.current = {
-      x: e.clientX - position.x,
-      y: e.clientY - position.y
-    };
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
-  }, [position, disableDrag]);
+      setIsDragging(true);
+      dragOffset.current = {
+        x: e.clientX - position.x,
+        y: e.clientY - position.y,
+      };
+      (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    },
+    [position, disableDrag]
+  );
 
-  const handlePointerMove = useCallback((e: React.PointerEvent) => {
-    if (!isDragging) return;
+  const handlePointerMove = useCallback(
+    (e: React.PointerEvent) => {
+      if (!isDragging) return;
 
-    setPosition({
-      x: e.clientX - dragOffset.current.x,
-      y: e.clientY - dragOffset.current.y
-    });
-  }, [isDragging]);
+      setPosition({
+        x: e.clientX - dragOffset.current.x,
+        y: e.clientY - dragOffset.current.y,
+      });
+    },
+    [isDragging]
+  );
 
   const handlePointerUp = useCallback(() => {
     setIsDragging(false);
@@ -128,13 +137,15 @@ export default function PowerMacintosh({
           {/* CRT screen inset */}
           <div className={styles.crtInset}>
             {/* Actual screen content */}
-            <div className={`
+            <div
+              className={`
               ${styles.screen}
               ${screenState === 'off' ? styles.screenOff : ''}
               ${screenState === 'turningOff' ? styles.turningOff : ''}
               ${screenState === 'turningOn' ? styles.turningOn : ''}
               ${screenState === 'on' ? styles.screenFlicker : ''}
-            `}>
+            `}
+            >
               {isPoweredOn && screenshotSrc && (
                 <img
                   src={screenshotSrc}

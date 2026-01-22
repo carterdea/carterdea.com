@@ -2,7 +2,6 @@ import { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 
 import { getDeviceTier } from './utils';
 
-// Ember zone - a hot spot that flickers independently
 interface EmberZone {
   x: number; // Center position as percentage (0-1)
   width: number; // Width as percentage (0-1)
@@ -29,7 +28,6 @@ interface HeadingState {
   zones: EmberZone[];
 }
 
-// Color stops for ember temperature - all warm/hot colors
 const EMBER_COLORS = {
   coolEmber: { r: 180, g: 60, b: 20 }, // Deep red-orange (cooler ember)
   warmEmber: { r: 220, g: 100, b: 30 }, // Orange (warm)
@@ -45,7 +43,6 @@ const FLICKER_BOOST = 1.25;
 const FIRE_TICK_EVENT = 'firemode:tick';
 const useIsomorphicLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
 
-// Interpolate between two colors
 function lerpColor(
   c1: { r: number; g: number; b: number },
   c2: { r: number; g: number; b: number },
@@ -58,9 +55,7 @@ function lerpColor(
   };
 }
 
-// Map intensity (0-1) to ember color - all warm colors
 function intensityToColor(intensity: number): { r: number; g: number; b: number } {
-  // Clamp to valid range
   const i = Math.max(0, Math.min(1, intensity));
 
   if (i <= 0.3) {
@@ -78,11 +73,8 @@ function intensityToColor(intensity: number): { r: number; g: number; b: number 
   }
 }
 
-// Generate ember zones - all hot spots, no ash
 function generateZones(level: 1 | 2 | 3): EmberZone[] {
   const zones: EmberZone[] = [];
-
-  // Zone count based on heading level
   const zoneCounts: Record<1 | 2 | 3, number> = {
     1: 6,
     2: 5,
@@ -93,19 +85,16 @@ function generateZones(level: 1 | 2 | 3): EmberZone[] {
   const baseWidth = 1 / count;
 
   for (let i = 0; i < count; i++) {
-    // Slightly randomized positions with overlap for smooth transitions
     const centerX = (i + 0.5) / count + (Math.random() - 0.5) * 0.08;
-    const width = baseWidth * (1.2 + Math.random() * 0.4); // Overlap zones slightly
+    const width = baseWidth * (1.2 + Math.random() * 0.4);
 
     zones.push({
       x: Math.max(0, centerX - width / 2),
       width: Math.min(width, 1 - Math.max(0, centerX - width / 2)),
-      // Base intensity varies - some zones are naturally hotter
       baseIntensity: 0.5 + Math.random() * 0.3,
-      // Slower breathing + harsher micro-flicker
-      freq1: 0.35 + Math.random() * 0.35, // Breathing (~2-3 sec cycles)
-      freq2: 1.4 + Math.random() * 0.8, // Pulse (~0.45-0.7 sec)
-      freq3: 9.0 + Math.random() * 7.0, // Fast flicker (~0.06-0.11 sec)
+      freq1: 0.35 + Math.random() * 0.35,
+      freq2: 1.4 + Math.random() * 0.8,
+      freq3: 9.0 + Math.random() * 7.0,
       phase1: Math.random() * Math.PI * 2,
       phase2: Math.random() * Math.PI * 2,
       phase3: Math.random() * Math.PI * 2,
@@ -122,27 +111,19 @@ function generateZones(level: 1 | 2 | 3): EmberZone[] {
   return zones;
 }
 
-// Simple pseudo-random for consistent flicker per zone
 function seededRandom(seed: number): number {
   const x = Math.sin(seed * 12.9898) * 43758.5453;
   return x - Math.floor(x);
 }
 
-// Calculate current intensity for a zone - dramatic ember flicker
 function calculateZoneIntensity(zone: EmberZone, time: number): number {
   const dt = zone.lastUpdate === 0 ? 0 : Math.max(0, time - zone.lastUpdate);
   zone.lastUpdate = time;
 
-  // Slow breathing - big swings between dim and bright
   const breathing = Math.sin(time * zone.freq1 + zone.phase1);
-
-  // Medium pulse - adds variation
   const pulse = Math.sin(time * zone.freq2 + zone.phase2);
-
-  // Fast flicker - rapid jitter
   const fastFlicker = Math.sin(time * zone.freq3 + zone.phase3);
 
-  // Stepped random jitter for visible, irregular flicker (not smooth)
   const jitterInterval = 1 / zone.jitterRate;
   if (time - zone.lastFlicker >= jitterInterval) {
     const steps = Math.floor((time - zone.lastFlicker) / jitterInterval);
@@ -151,7 +132,6 @@ function calculateZoneIntensity(zone: EmberZone, time: number): number {
     zone.jitterValue = (seededRandom(jitterSeed) - 0.5) * 2;
   }
 
-  // Random spike events - sudden brightness pops with decay
   const spikeSeed = Math.floor(time * zone.sparkRate) + Math.floor(zone.phase2 * 1000);
   const spikeRand = seededRandom(spikeSeed);
   if (spikeRand > 0.92) {
@@ -162,22 +142,19 @@ function calculateZoneIntensity(zone: EmberZone, time: number): number {
     zone.flickerDecay = Math.max(0, zone.flickerDecay - dt * (3.4 + zone.sparkRate * 0.35));
   }
 
-  // Combine with strong weights for visible effect
   const combined =
     zone.baseIntensity +
-    breathing * 0.14 + // slower, subtler glow
-    pulse * 0.12 + // medium pulse
-    fastFlicker * 0.05 + // light sine jitter
-    zone.jitterValue * zone.flickerAmount * (FLICKER_BOOST * 1.35) + // harsher micro-flicker
-    zone.flickerDecay * 0.85 * FLICKER_BOOST; // sharper spikes
+    breathing * 0.14 +
+    pulse * 0.12 +
+    fastFlicker * 0.05 +
+    zone.jitterValue * zone.flickerAmount * (FLICKER_BOOST * 1.35) +
+    zone.flickerDecay * 0.85 * FLICKER_BOOST;
 
   const clamped = Math.max(0.05, Math.min(1, combined));
   return clamped ** 0.8;
 }
 
-// Build CSS linear-gradient string from zones with smooth blending
 function buildGradientString(zones: EmberZone[], time: number): string {
-  // Sample points across the gradient for smooth interpolation
   const sampleCount = 14;
   const stops: string[] = [];
   const zoneIntensities = zones.map((zone) => calculateZoneIntensity(zone, time));
@@ -185,7 +162,6 @@ function buildGradientString(zones: EmberZone[], time: number): string {
   for (let i = 0; i <= sampleCount; i++) {
     const position = i / sampleCount;
 
-    // Blend intensities from overlapping zones at this position
     let totalIntensity = 0;
     let totalWeight = 0;
     let maxIntensity = 0;
@@ -195,7 +171,6 @@ function buildGradientString(zones: EmberZone[], time: number): string {
       const distance = Math.abs(position - zoneCenter);
       const halfWidth = zone.width / 2;
 
-      // Gaussian-like falloff from zone center
       if (distance < halfWidth * 1.5) {
         const weight = Math.exp((-distance * distance) / (halfWidth * halfWidth * 0.3));
         const zoneIntensity = zoneIntensities[index] ?? zone.baseIntensity;
@@ -205,7 +180,6 @@ function buildGradientString(zones: EmberZone[], time: number): string {
       }
     }
 
-    // Default to warm ember if no zones affect this point
     const avgIntensity = totalWeight > 0 ? totalIntensity / totalWeight : 0.4;
     const blended = avgIntensity * 0.3 + maxIntensity * 0.7;
     const intensity = Math.min(0.88, Math.max(0, blended ** 1.15));
@@ -227,7 +201,6 @@ export function useEmberText(): () => void {
   const lastExternalTickRef = useRef<number>(0);
 
   const cleanup = useCallback(() => {
-    // Remove styles and restore headings
     for (const [element] of headingsRef.current) {
       element.removeAttribute(EMBER_TEXT_ATTR);
       element.classList.remove(EMBER_CLASS);
@@ -252,12 +225,10 @@ export function useEmberText(): () => void {
   useIsomorphicLayoutEffect(() => {
     const tier = getDeviceTier();
 
-    // Skip on low-tier devices
     if (tier === 'low') {
       return cleanup;
     }
 
-    // Check for reduced motion preference
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     allowMotionRef.current = !prefersReducedMotion;
 

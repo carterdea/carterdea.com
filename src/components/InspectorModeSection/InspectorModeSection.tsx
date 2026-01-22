@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useSiteMode } from '../../hooks/useSiteMode';
-import { GridOverlay } from './GridOverlay';
-import { SectionBoundaries } from './SectionBoundaries';
 import { ElementHighlighter } from './ElementHighlighter';
+import { GridOverlay } from './GridOverlay';
+import { getSelectorLabel } from './inspectorUtils';
+import { SectionBoundaries } from './SectionBoundaries';
 import { SelectorLabel } from './SelectorLabel';
 import { useElementUnderCursor } from './useElementUnderCursor';
-import { getSelectorLabel } from './inspectorUtils';
 
 const FADE_IN_DELAY_MS = 50;
 const UNMOUNT_DELAY_MS = 300;
@@ -55,28 +55,25 @@ export function InspectorModeSection(): React.JSX.Element | null {
 
   if (!shouldRender) return null;
 
-  const showElementInspector = !isTouch && elementInfo.element && elementInfo.rect;
-
   const opacityClass = isVisible ? 'opacity-100' : 'opacity-0';
+  const { element, rect } = elementInfo;
+  const showElementInspector = !isTouch && element && rect;
 
   return (
-    <div
-      className={`transition-opacity duration-200 ${opacityClass}`}
-      data-inspector-overlay
-    >
+    <div className={`transition-opacity duration-200 ${opacityClass}`} data-inspector-overlay>
       <GridOverlay />
       <SectionBoundaries />
       {showElementInspector && (
         <>
           <ElementHighlighter
-            rect={elementInfo.rect!}
+            rect={rect}
             padding={elementInfo.padding}
             margin={elementInfo.margin}
           />
           <SelectorLabel
-            selector={getSelectorLabel(elementInfo.element!)}
-            width={elementInfo.rect!.width}
-            height={elementInfo.rect!.height}
+            selector={getSelectorLabel(element)}
+            width={rect.width}
+            height={rect.height}
             cursorX={elementInfo.cursorX}
             cursorY={elementInfo.cursorY}
           />

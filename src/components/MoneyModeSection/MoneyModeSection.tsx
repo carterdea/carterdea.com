@@ -4,7 +4,6 @@ import { useSiteMode } from '../../hooks/useSiteMode';
 const UNMOUNT_DELAY_MS = 300;
 const VISIBILITY_DELAY_MS = 50;
 
-// Lazy load heavy dependencies - only fetched when money mode is enabled
 const MoneyFall = lazy(() =>
   import('../MoneyFall/MoneyFall').then((m) => ({ default: m.MoneyFall }))
 );

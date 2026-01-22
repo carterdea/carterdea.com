@@ -4,8 +4,8 @@ import Button from '../ui/Button';
 import { StonksChart, type StonksChartHandle } from './StonksChart';
 
 const PRICE = {
-  MIN: 100 as number,
-  MAX: 100_000_000_000_000,
+  MIN: 1,
+  MAX: 10_000_000_000_000,
   INTERNAL_MAX: 200,
 };
 

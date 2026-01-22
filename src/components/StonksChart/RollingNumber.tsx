@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface RollingDigitProps {
   digit: string;
@@ -31,15 +31,11 @@ function RollingDigit({ digit, direction }: RollingDigitProps) {
 
   return (
     <span className="rolling-digit-container">
-      <span
-        className={`rolling-digit ${isAnimating ? `rolling-${direction}` : ''}`}
-      >
+      <span className={`rolling-digit ${isAnimating ? `rolling-${direction}` : ''}`}>
         {isAnimating ? prevDigit : displayDigit}
       </span>
       {isAnimating && (
-        <span className={`rolling-digit-incoming rolling-${direction}-incoming`}>
-          {digit}
-        </span>
+        <span className={`rolling-digit-incoming rolling-${direction}-incoming`}>{digit}</span>
       )}
     </span>
   );

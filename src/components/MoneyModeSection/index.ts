@@ -1,1 +1,1 @@
-export { MoneyModeSection, MoneyModeChart } from './MoneyModeSection';
+export { MoneyModeChart, MoneyModeSection } from './MoneyModeSection';

@@ -5,7 +5,10 @@ export interface BoxSpacing {
   left: number;
 }
 
-export function parseBoxSpacing(style: CSSStyleDeclaration, property: 'padding' | 'margin'): BoxSpacing {
+export function parseBoxSpacing(
+  style: CSSStyleDeclaration,
+  property: 'padding' | 'margin'
+): BoxSpacing {
   return {
     top: parseFloat(style.getPropertyValue(`${property}-top`)) || 0,
     right: parseFloat(style.getPropertyValue(`${property}-right`)) || 0,
@@ -15,24 +18,82 @@ export function parseBoxSpacing(style: CSSStyleDeclaration, property: 'padding' 
 }
 
 const SKIP_CLASS_PREFIXES = [
-  'flex', 'grid', 'block', 'inline', 'hidden',
-  'relative', 'absolute', 'fixed', 'sticky',
-  'p-', 'px-', 'py-', 'pt-', 'pr-', 'pb-', 'pl-',
-  'm-', 'mx-', 'my-', 'mt-', 'mr-', 'mb-', 'ml-',
-  'w-', 'h-', 'min-', 'max-',
-  'text-', 'bg-', 'border-',
-  'rounded', 'shadow', 'transition', 'duration-',
-  'opacity-', 'z-', 'overflow-',
-  'gap-', 'space-', 'items-', 'justify-', 'self-',
-  'col-', 'row-', 'order-',
-  'font-', 'leading-', 'tracking-',
-  'cursor-', 'select-', 'pointer-',
-  'animate-', 'transform', 'scale-', 'rotate-', 'translate-',
-  'inset-', 'top-', 'right-', 'bottom-', 'left-',
-  'sr-', 'not-', 'group-', 'peer-',
-  'hover:', 'focus:', 'active:', 'disabled:',
-  'sm:', 'md:', 'lg:', 'xl:', '2xl:',
-  'dark:', 'light:',
+  'flex',
+  'grid',
+  'block',
+  'inline',
+  'hidden',
+  'relative',
+  'absolute',
+  'fixed',
+  'sticky',
+  'p-',
+  'px-',
+  'py-',
+  'pt-',
+  'pr-',
+  'pb-',
+  'pl-',
+  'm-',
+  'mx-',
+  'my-',
+  'mt-',
+  'mr-',
+  'mb-',
+  'ml-',
+  'w-',
+  'h-',
+  'min-',
+  'max-',
+  'text-',
+  'bg-',
+  'border-',
+  'rounded',
+  'shadow',
+  'transition',
+  'duration-',
+  'opacity-',
+  'z-',
+  'overflow-',
+  'gap-',
+  'space-',
+  'items-',
+  'justify-',
+  'self-',
+  'col-',
+  'row-',
+  'order-',
+  'font-',
+  'leading-',
+  'tracking-',
+  'cursor-',
+  'select-',
+  'pointer-',
+  'animate-',
+  'transform',
+  'scale-',
+  'rotate-',
+  'translate-',
+  'inset-',
+  'top-',
+  'right-',
+  'bottom-',
+  'left-',
+  'sr-',
+  'not-',
+  'group-',
+  'peer-',
+  'hover:',
+  'focus:',
+  'active:',
+  'disabled:',
+  'sm:',
+  'md:',
+  'lg:',
+  'xl:',
+  '2xl:',
+  'dark:',
+  'light:',
 ];
 
 interface EasterEggMatcher {
@@ -77,9 +138,7 @@ const EASTER_EGG_MATCHERS: EasterEggMatcher[] = [
 ];
 
 function shouldSkipClass(className: string): boolean {
-  return SKIP_CLASS_PREFIXES.some(
-    (prefix) => className === prefix || className.startsWith(prefix)
-  );
+  return SKIP_CLASS_PREFIXES.some((prefix) => className === prefix || className.startsWith(prefix));
 }
 
 function generateSelector(el: Element): string {

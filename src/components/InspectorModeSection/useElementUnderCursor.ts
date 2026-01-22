@@ -1,5 +1,6 @@
-import { useEffect, useState, useCallback } from 'react';
-import { parseBoxSpacing, type BoxSpacing } from './inspectorUtils';
+import { useCallback, useEffect, useState } from 'react';
+
+import { type BoxSpacing, parseBoxSpacing } from './inspectorUtils';
 
 export interface ElementInfo {
   element: Element | null;
