@@ -62,8 +62,18 @@ export const POST: APIRoute = async ({ request }) => {
     });
   }
 
+  let body;
   try {
-    const body = await request.json();
+    body = await request.json();
+  } catch (err) {
+    console.error('Contact form error: Failed to parse request body', err);
+    return new Response(JSON.stringify({ error: 'Invalid request body' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  try {
     const { name, email, budget, message } = body;
 
     if (!name || name.trim().length === 0) {
