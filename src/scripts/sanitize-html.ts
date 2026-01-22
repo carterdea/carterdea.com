@@ -224,9 +224,9 @@ async function sanitizeHTML(options: SanitizeOptions): Promise<void> {
     }
   }
 
-  // Remove shop-js prefetch links and GSAP preloads
+  // Remove unwanted prefetch/preload links
   const unwantedLinks = document.querySelectorAll(
-    'link[href*="shop-js"], link[href*="gsap"], link[href*="ScrollTrigger"], link[href*="ScrambleTextPlugin"], link[href*="cdn.jsdelivr.net"]'
+    'link[href*="shop-js"], link[href*="gsap"], link[href*="ScrollTrigger"], link[href*="ScrambleTextPlugin"], link[href*="cdn.jsdelivr.net"], link[href*="checkout-web"]'
   );
   for (const link of unwantedLinks) {
     link.remove();
