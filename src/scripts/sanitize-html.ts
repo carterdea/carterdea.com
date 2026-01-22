@@ -148,11 +148,9 @@ const VENDOR_PATTERNS = [
   'fbq(',
 ];
 
-// Essential Shopify scripts to preserve (only search & cart functionality)
+// Essential Shopify scripts to preserve (only core theme functionality)
+// Note: For static preview mode, we keep minimal scripts for basic interactivity
 const ESSENTIAL_PATTERNS = [
-  'theme.js',
-  '/cart', // Match /cart.js but not tapcart.com
-  'cart.js',
   'search.js',
   'predictive-search',
   'drawer.js',
@@ -234,13 +232,33 @@ async function sanitizeHTML(options: SanitizeOptions): Promise<void> {
       matchesPattern(id, VENDOR_PATTERNS);
     const hasShopJs = hasShopJsReference(src, id, content);
 
-    // Remove if: blocked ID, analytics class, vendor script, shop-js, cookie consent script, or text/plain (waiting for consent)
+    // Check for inline sale-sight scripts
+    const hasSaleSight =
+      content.includes('sale-sight') ||
+      content.includes('fetchShopConfig') ||
+      content.includes('fetchActiveDiscounts') ||
+      content.includes('initializeSaleSight');
+
+    // Check for cart.js references
+    const hasCartJs =
+      src.includes('cart.js') ||
+      content.includes('/cart.js') ||
+      content.includes('/cart.json') ||
+      content.includes('getCart');
+
+    // Check for global.js and theme.js (not needed for static preview)
+    const hasGlobalOrTheme = src.includes('global.js') || src.includes('theme.js');
+
+    // Remove if: blocked ID, analytics class, vendor script, shop-js, cookie consent script, sale-sight, cart.js, global.js, theme.js, or text/plain (waiting for consent)
     if (
       isBlockedId ||
       isAnalyticsClass ||
       (isVendor && !isEssential) ||
       hasShopJs ||
       hasCookieConsent ||
+      hasSaleSight ||
+      hasCartJs ||
+      hasGlobalOrTheme ||
       type === 'text/plain'
     ) {
       removed.push(src || id || `inline: ${content.substring(0, 50)}...`);
@@ -270,11 +288,17 @@ async function sanitizeHTML(options: SanitizeOptions): Promise<void> {
     link.remove();
   }
 
-  // Patch theme.js/global.js to stub GeolizrAPI and prevent cart errors
-  const themeScripts = document.querySelectorAll(
-    'script[src*="theme.js"], script[src*="global.js"]'
+  // Remove sale-sight divs and elements
+  const saleSightElements = document.querySelectorAll(
+    '[id*="sale-sight"], [class*="sale-sight"], [data-block-id*="sale-sight"]'
   );
-  if (themeScripts.length > 0) {
+  for (const element of saleSightElements) {
+    element.remove();
+  }
+
+  // Add stub script in head for any remaining dependencies
+  const headForStubs = document.querySelector('head');
+  if (headForStubs) {
     // Create stub script for missing APIs and elements
     const stubScript = document.createElement('script');
     stubScript.textContent = `
@@ -285,6 +309,41 @@ async function sanitizeHTML(options: SanitizeOptions): Promise<void> {
         addEventListener: () => {},
         removeEventListener: () => {}
       };
+
+      // Stub cart-related functions to prevent errors
+      window.Shopify = window.Shopify || {};
+      window.Shopify.getCart = () => Promise.resolve({ items: [], item_count: 0, total_price: 0 });
+
+      // Intercept fetch requests for cart.json
+      const originalFetch = window.fetch;
+      window.fetch = function(url, ...args) {
+        if (typeof url === 'string' && (url.includes('/cart.json') || url.includes('/cart.js'))) {
+          console.log('[Preview Mode] Stubbed cart.json fetch request');
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({ items: [], item_count: 0, total_price: 0 })
+          });
+        }
+        return originalFetch.call(this, url, ...args);
+      };
+
+      // Stub jQuery getJSON when jQuery loads
+      function stubJQueryCart() {
+        if (window.$ && $.getJSON) {
+          const originalGetJSON = $.getJSON;
+          $.getJSON = function(url, ...args) {
+            if (url && (url.includes('/cart.json') || url.includes('/cart.js'))) {
+              console.log('[Preview Mode] Stubbed cart.json $.getJSON request');
+              return Promise.resolve({ items: [], item_count: 0, total_price: 0 });
+            }
+            return originalGetJSON.call(this, url, ...args);
+          };
+        } else {
+          // Retry if jQuery not loaded yet
+          setTimeout(stubJQueryCart, 100);
+        }
+      }
+      stubJQueryCart();
 
       // Stub cart elements to prevent theme.js errors
       document.addEventListener('DOMContentLoaded', () => {
@@ -297,7 +356,8 @@ async function sanitizeHTML(options: SanitizeOptions): Promise<void> {
         }
       });
     `;
-    themeScripts[0].parentNode?.insertBefore(stubScript, themeScripts[0]);
+    // Insert at the beginning of head, before any other scripts
+    headForStubs.insertBefore(stubScript, headForStubs.firstChild);
   }
 
   // Add robots meta tag

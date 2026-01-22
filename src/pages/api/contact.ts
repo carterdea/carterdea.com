@@ -37,6 +37,10 @@ function validateEmail(email: string): boolean {
   return emailRegex.test(email) && email.length <= 254;
 }
 
+export function clearRateLimitForTesting(): void {
+  rateLimitMap.clear();
+}
+
 export const POST: APIRoute = async ({ request }) => {
   // Check origin header for same-origin requests
   const origin = request.headers.get('origin');

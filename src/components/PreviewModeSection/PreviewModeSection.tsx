@@ -15,6 +15,36 @@ const COMPUTERS = [
 type ComputerId = (typeof COMPUTERS)[number]['id'];
 type Position = { x: number; y: number };
 
+interface PreviewState {
+  computer: ComputerId;
+  site: SiteId;
+  position: Position;
+}
+
+function loadPreviewState(): PreviewState | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (!stored) return null;
+    const parsed = JSON.parse(stored);
+    if (parsed.computer && parsed.position) {
+      return {
+        computer: parsed.computer,
+        site: parsed.site ?? 'stussy',
+        position: parsed.position,
+      };
+    }
+  } catch {
+    // Ignore parse errors
+  }
+  return null;
+}
+
+function savePreviewState(state: PreviewState): void {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
 export function PreviewModeSection() {
   const [mode] = useSiteMode();
   const [computer, setComputer] = useState<ComputerId>('power-macintosh');
@@ -26,38 +56,30 @@ export function PreviewModeSection() {
   const [hasMounted, setHasMounted] = useState(false);
   const dragOffset = useRef<Position>({ x: 0, y: 0 });
 
+  // Load saved state on mount
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (parsed.computer && parsed.position) {
-          setComputer(parsed.computer);
-          setPosition(parsed.position);
-          if (parsed.site) {
-            setSite(parsed.site);
-          }
-          setHasMounted(true);
-          return;
-        }
-      }
-    } catch {}
-
-    setPosition({
-      x: window.innerWidth * 0.55,
-      y: window.innerHeight * 0.35,
-    });
+    const saved = loadPreviewState();
+    if (saved) {
+      setComputer(saved.computer);
+      setSite(saved.site);
+      setPosition(saved.position);
+    } else if (typeof window !== 'undefined') {
+      setPosition({
+        x: window.innerWidth * 0.55,
+        y: window.innerHeight * 0.35,
+      });
+    }
     setHasMounted(true);
   }, []);
 
+  // Fade in when preview mode activates
   useEffect(() => {
-    if (mode === 'preview') {
-      const timer = setTimeout(() => setIsVisible(true), 50);
-      return () => clearTimeout(timer);
-    } else {
+    if (mode !== 'preview') {
       setIsVisible(false);
+      return;
     }
+    const timer = setTimeout(() => setIsVisible(true), 50);
+    return () => clearTimeout(timer);
   }, [mode]);
 
   const handlePointerDown = useCallback(
@@ -87,12 +109,9 @@ export function PreviewModeSection() {
   );
 
   const handlePointerUp = useCallback(() => {
-    if (isDragging) {
-      setIsDragging(false);
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify({ computer, site, position }));
-      }
-    }
+    if (!isDragging) return;
+    setIsDragging(false);
+    savePreviewState({ computer, site, position });
   }, [isDragging, computer, site, position]);
 
   const cycleComputer = useCallback(
@@ -101,12 +120,7 @@ export function PreviewModeSection() {
         const currentIndex = COMPUTERS.findIndex((c) => c.id === prev);
         const nextIndex = (currentIndex + direction + COMPUTERS.length) % COMPUTERS.length;
         const newComputer = COMPUTERS[nextIndex].id;
-        if (typeof window !== 'undefined') {
-          localStorage.setItem(
-            STORAGE_KEY,
-            JSON.stringify({ computer: newComputer, site, position })
-          );
-        }
+        savePreviewState({ computer: newComputer, site, position });
         return newComputer;
       });
     },
@@ -119,47 +133,61 @@ export function PreviewModeSection() {
         const currentIndex = siteIds.indexOf(prev);
         const nextIndex = (currentIndex + direction + siteIds.length) % siteIds.length;
         const newSite = siteIds[nextIndex];
-        if (typeof window !== 'undefined') {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify({ computer, site: newSite, position }));
-        }
+        savePreviewState({ computer, site: newSite, position });
         return newSite;
       });
     },
     [computer, position]
   );
 
-  const handlePrevComputer = useCallback(() => cycleComputer(-1), [cycleComputer]);
-  const handleNextComputer = useCallback(() => cycleComputer(1), [cycleComputer]);
-  const handlePrevSite = useCallback(() => cycleSite(-1), [cycleSite]);
-  const handleNextSite = useCallback(() => cycleSite(1), [cycleSite]);
-  const handleMouseEnter = useCallback(() => setIsHovering(true), []);
-  const handleMouseLeave = useCallback(() => setIsHovering(false), []);
+  function handlePrevComputer(): void {
+    cycleComputer(-1);
+  }
+  function handleNextComputer(): void {
+    cycleComputer(1);
+  }
+  function handlePrevSite(): void {
+    cycleSite(-1);
+  }
+  function handleNextSite(): void {
+    cycleSite(1);
+  }
+  function handleMouseEnter(): void {
+    setIsHovering(true);
+  }
+  function handleMouseLeave(): void {
+    setIsHovering(false);
+  }
 
-  // Keyboard navigation
   useEffect(() => {
     if (mode !== 'preview') return;
 
-    const keyHandlers: Record<string, () => void> = {
-      ArrowLeft: handlePrevComputer,
-      ArrowRight: handleNextComputer,
-      ArrowUp: handlePrevSite,
-      ArrowDown: handleNextSite,
-    };
-
     function handleKeyDown(e: KeyboardEvent): void {
-      // Don't capture if user is typing in an input
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
 
-      const handler = keyHandlers[e.key];
-      if (handler) {
-        e.preventDefault();
-        handler();
+      switch (e.key) {
+        case 'ArrowLeft':
+          e.preventDefault();
+          cycleComputer(-1);
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          cycleComputer(1);
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          cycleSite(-1);
+          break;
+        case 'ArrowDown':
+          e.preventDefault();
+          cycleSite(1);
+          break;
       }
     }
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [mode, handlePrevComputer, handleNextComputer, handlePrevSite, handleNextSite]);
+  }, [mode, cycleComputer, cycleSite]);
 
   if (mode !== 'preview' || !hasMounted) return null;
 
@@ -167,7 +195,7 @@ export function PreviewModeSection() {
   const CurrentComponent = currentComputer?.Component ?? PowerMacintosh;
 
   const computerWidth = 428;
-  const computerHeight = 450; // iMac G4 is taller
+  const computerHeight = 450;
   const keyboardOffset = computerHeight + 8;
   const keyboardCenterX = computerWidth / 2;
 

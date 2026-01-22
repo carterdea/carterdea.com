@@ -27,7 +27,6 @@ const ChevronRight = `<svg width="5" height="8" viewBox="0 0 5 8" fill="none" xm
 ---
 
 <div class="info-sections max-w-4xl mx-auto w-full flex flex-col gap-16 md:grid md:grid-cols-3 md:gap-y-20 px-4 md:px-0 py-12 md:py-16">
-  <!-- Technologies -->
   {technologies.length > 0 && (
     <div class="flex flex-col gap-3 md:contents info-section-row" data-delay="0">
       <h3 class="text-sm text-white tracking-[-0.28px] info-section-item">Technologies</h3>
@@ -37,7 +36,6 @@ const ChevronRight = `<svg width="5" height="8" viewBox="0 0 5 8" fill="none" xm
     </div>
   )}
 
-  <!-- Services -->
   {services.length > 0 && (
     <div class="flex flex-col gap-3 md:contents info-section-row" data-delay="50">
       <h3 class="text-sm text-white tracking-[-0.28px] info-section-item">Services</h3>
@@ -47,7 +45,6 @@ const ChevronRight = `<svg width="5" height="8" viewBox="0 0 5 8" fill="none" xm
     </div>
   )}
 
-  <!-- Results -->
   {results.length > 0 && (
     <div class="flex flex-col gap-3 md:contents info-section-row" data-delay="100">
       <h3 class="text-sm text-white tracking-[-0.28px] info-section-item">Results</h3>
@@ -59,7 +56,6 @@ const ChevronRight = `<svg width="5" height="8" viewBox="0 0 5 8" fill="none" xm
     </div>
   )}
 
-  <!-- CTA -->
   {cta && (
     <div class="flex flex-col gap-3 md:contents info-section-row" data-delay="200">
       <h3 class="text-sm text-white tracking-[-0.28px] info-section-item">{cta.title}</h3>
@@ -111,37 +107,35 @@ const ChevronRight = `<svg width="5" height="8" viewBox="0 0 5 8" fill="none" xm
 <script>
   import EmblaCarousel from 'embla-carousel';
 
-  function initInfoSections() {
-    // Testimonials carousel
+  function initTestimonialsCarousel() {
     const viewport = document.querySelector('.testimonials-viewport');
-    if (viewport) {
-      const embla = EmblaCarousel(viewport as HTMLElement, { loop: true });
+    if (!viewport) return;
 
-      const handleClick = (e: Event) => {
-        const target = (e.target as HTMLElement).closest('.testimonial-prev, .testimonial-next');
-        if (!target) return;
+    const embla = EmblaCarousel(viewport as HTMLElement, { loop: true });
 
-        if (target.classList.contains('testimonial-prev')) {
-          embla.scrollPrev();
-        } else {
-          embla.scrollNext();
-        }
-      };
+    const handleClick = (e: Event) => {
+      const target = (e.target as HTMLElement).closest('.testimonial-prev, .testimonial-next');
+      if (!target) return;
 
-      document.addEventListener('click', handleClick);
+      if (target.classList.contains('testimonial-prev')) {
+        embla.scrollPrev();
+      } else {
+        embla.scrollNext();
+      }
+    };
 
-      // Cleanup on page swap
-      document.addEventListener('astro:before-swap', () => {
-        document.removeEventListener('click', handleClick);
-        embla.destroy();
-      }, { once: true });
-    }
+    document.addEventListener('click', handleClick);
 
-    // Trigger info section animations after marquee logos start animating
-    // Logo 4 (index 4) starts at 350 + 4*100 = 750ms
+    document.addEventListener('astro:before-swap', () => {
+      document.removeEventListener('click', handleClick);
+      embla.destroy();
+    }, { once: true });
+  }
+
+  function initInfoSectionAnimations() {
     const triggerDelay = 850;
-
     const rows = document.querySelectorAll('.info-section-row');
+
     rows.forEach((row) => {
       const rowDelay = parseInt(row.getAttribute('data-delay') || '0', 10);
       const items = row.querySelectorAll('.info-section-item');
@@ -153,6 +147,11 @@ const ChevronRight = `<svg width="5" height="8" viewBox="0 0 5 8" fill="none" xm
         });
       }, triggerDelay);
     });
+  }
+
+  function initInfoSections() {
+    initTestimonialsCarousel();
+    initInfoSectionAnimations();
   }
 
   document.addEventListener('astro:page-load', initInfoSections);

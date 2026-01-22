@@ -13,7 +13,6 @@ const { clients = [] } = Astro.props;
 const shuffledClients = [...clients].sort(() => Math.random() - 0.5);
 ---
 
-<!-- Mobile: Swipeable carousel -->
 <section class="logo-marquee animate-fade-in-up relative md:hidden overflow-hidden" style="--delay: 350ms;">
   <div id="mobile-carousel-viewport" class="overflow-hidden px-4 pb-4">
     <div id="mobile-carousel-container" class="flex gap-4">
@@ -92,101 +91,111 @@ const shuffledClients = [...clients].sort(() => Math.random() - 0.5);
 <script>
   import EmblaCarousel from 'embla-carousel';
 
-  function initMarquee() {
+  const MARQUEE_GAP = 74;
+  const MARQUEE_BASE_SPEED = 30;
+  const MARQUEE_SLOW_MULTIPLIER = 0.75;
+
+  function initMobileCarousel() {
     const viewport = document.getElementById('mobile-carousel-viewport');
     const dotsContainer = document.getElementById('mobile-carousel-dots');
     const dots = dotsContainer?.querySelectorAll('[data-dot]');
 
-    if (viewport && dots && dots.length > 0) {
-      const embla = EmblaCarousel(viewport, {
-        containScroll: 'trimSnaps',
-        align: 'start',
+    if (!viewport || !dots || dots.length === 0) return;
+
+    const embla = EmblaCarousel(viewport, {
+      containScroll: 'trimSnaps',
+      align: 'start',
+    });
+
+    const updateDots = () => {
+      const selected = embla.selectedScrollSnap();
+      dots.forEach((dot, index) => {
+        const indicator = dot.querySelector('span');
+        if (indicator) {
+          indicator.classList.toggle('bg-white', index === selected);
+          indicator.classList.toggle('bg-white/20', index !== selected);
+        }
       });
+    };
 
-      const updateDots = () => {
-        const selected = embla.selectedScrollSnap();
-        dots.forEach((dot, index) => {
-          const indicator = dot.querySelector('span');
-          if (indicator) {
-            indicator.classList.toggle('bg-white', index === selected);
-            indicator.classList.toggle('bg-white/20', index !== selected);
-          }
-        });
-      };
+    embla.on('select', updateDots);
 
-      embla.on('select', updateDots);
-
-      dots.forEach((dot) => {
-        dot.addEventListener('click', () => {
-          const index = Number(dot.getAttribute('data-dot'));
-          embla.scrollTo(index);
-        });
+    dots.forEach((dot) => {
+      dot.addEventListener('click', () => {
+        const index = Number(dot.getAttribute('data-dot'));
+        embla.scrollTo(index);
       });
-    }
+    });
+  }
 
+  function initDesktopMarquee() {
     const marqueeTrack = document.getElementById('marquee-track');
     const marqueeContent = marqueeTrack?.querySelector('.marquee-content');
     const desktopSection = marqueeTrack?.closest('section');
 
-    if (marqueeTrack && marqueeContent && desktopSection && window.matchMedia('(min-width: 768px)').matches) {
-      const contentWidth = marqueeContent.getBoundingClientRect().width;
-      const gap = 74;
-      const totalWidth = contentWidth + gap;
-      const baseSpeed = 30; // 30px per second (normal)
-      const slowSpeed = baseSpeed * 0.75; // 25% slower on hover
+    if (!marqueeTrack || !marqueeContent || !desktopSection || !window.matchMedia('(min-width: 768px)').matches) return;
 
-      let animationId: number | null = null;
-      const state = {
-        position: 0,
-        lastTimestamp: null as number | null,
-        currentSpeed: baseSpeed,
-        targetSpeed: baseSpeed,
-      };
+    const contentWidth = marqueeContent.getBoundingClientRect().width;
+    const totalWidth = contentWidth + MARQUEE_GAP;
+    const baseSpeed = MARQUEE_BASE_SPEED;
+    const slowSpeed = baseSpeed * MARQUEE_SLOW_MULTIPLIER;
 
-      const animate = (timestamp: number) => {
-        if (!state.lastTimestamp) state.lastTimestamp = timestamp;
-        const deltaTime = (timestamp - state.lastTimestamp) / 1000;
-        state.lastTimestamp = timestamp;
+    let animationId: number | null = null;
+    const state = {
+      position: 0,
+      lastTimestamp: null as number | null,
+      currentSpeed: baseSpeed,
+      targetSpeed: baseSpeed,
+    };
 
-        const speedDiff = state.targetSpeed - state.currentSpeed;
-        if (Math.abs(speedDiff) > 0.05) {
-          state.currentSpeed += speedDiff * 0.15;
-        } else {
-          state.currentSpeed = state.targetSpeed;
-        }
+    const animate = (timestamp: number) => {
+      if (!state.lastTimestamp) state.lastTimestamp = timestamp;
+      const deltaTime = (timestamp - state.lastTimestamp) / 1000;
+      state.lastTimestamp = timestamp;
 
-        state.position += state.currentSpeed * deltaTime;
-        if (state.position >= totalWidth) {
-          state.position -= totalWidth;
-        }
-
-        marqueeTrack.style.transform = `translateX(${-state.position}px)`;
-        animationId = requestAnimationFrame(animate);
-      };
-
-      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        animationId = requestAnimationFrame(animate);
-
-        const handleMouseEnter = () => { state.targetSpeed = slowSpeed; };
-        const handleMouseLeave = () => { state.targetSpeed = baseSpeed; };
-        desktopSection.addEventListener('mouseenter', handleMouseEnter);
-        desktopSection.addEventListener('mouseleave', handleMouseLeave);
-
-        const handleVisibility = () => {
-          if (document.visibilityState === 'visible') {
-            state.lastTimestamp = null;
-          }
-        };
-        document.addEventListener('visibilitychange', handleVisibility);
-
-        document.addEventListener('astro:before-swap', () => {
-          if (animationId) cancelAnimationFrame(animationId);
-          document.removeEventListener('visibilitychange', handleVisibility);
-          desktopSection.removeEventListener('mouseenter', handleMouseEnter);
-          desktopSection.removeEventListener('mouseleave', handleMouseLeave);
-        }, { once: true });
+      const speedDiff = state.targetSpeed - state.currentSpeed;
+      if (Math.abs(speedDiff) > 0.05) {
+        state.currentSpeed += speedDiff * 0.15;
+      } else {
+        state.currentSpeed = state.targetSpeed;
       }
+
+      state.position += state.currentSpeed * deltaTime;
+      if (state.position >= totalWidth) {
+        state.position -= totalWidth;
+      }
+
+      marqueeTrack.style.transform = `translateX(${-state.position}px)`;
+      animationId = requestAnimationFrame(animate);
+    };
+
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      animationId = requestAnimationFrame(animate);
+
+      const handleMouseEnter = () => { state.targetSpeed = slowSpeed; };
+      const handleMouseLeave = () => { state.targetSpeed = baseSpeed; };
+      desktopSection.addEventListener('mouseenter', handleMouseEnter);
+      desktopSection.addEventListener('mouseleave', handleMouseLeave);
+
+      const handleVisibility = () => {
+        if (document.visibilityState === 'visible') {
+          state.lastTimestamp = null;
+        }
+      };
+      document.addEventListener('visibilitychange', handleVisibility);
+
+      document.addEventListener('astro:before-swap', () => {
+        if (animationId) cancelAnimationFrame(animationId);
+        document.removeEventListener('visibilitychange', handleVisibility);
+        desktopSection.removeEventListener('mouseenter', handleMouseEnter);
+        desktopSection.removeEventListener('mouseleave', handleMouseLeave);
+      }, { once: true });
     }
+  }
+
+  function initMarquee() {
+    initMobileCarousel();
+    initDesktopMarquee();
   }
 
   document.addEventListener('astro:page-load', initMarquee);

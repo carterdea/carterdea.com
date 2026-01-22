@@ -15,6 +15,8 @@ interface KeyProps {
   disabled?: boolean;
 }
 
+const KEY_SIZE = 36;
+
 // SA profile keycap dimensions
 const SA_PROFILE = {
   bevelTop: 3,
@@ -56,17 +58,25 @@ function Key({ direction, onClick, disabled }: KeyProps) {
   return (
     <button
       type="button"
-      onClick={onClick}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick?.();
+      }}
       disabled={disabled}
       aria-label={label}
-      onPointerDown={() => setIsPressed(true)}
-      onPointerUp={() => setIsPressed(false)}
+      onPointerDown={(e) => {
+        e.stopPropagation();
+        setIsPressed(true);
+      }}
+      onPointerUp={(e) => {
+        e.stopPropagation();
+        setIsPressed(false);
+      }}
       onPointerLeave={() => setIsPressed(false)}
       className="relative cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
       style={{
-        width: 36,
-        height: 36,
-        // Clip the key so it sinks INTO the keyboard rather than moving down
+        width: KEY_SIZE,
+        height: KEY_SIZE,
         overflow: 'hidden',
       }}
     >
@@ -80,22 +90,18 @@ function Key({ direction, onClick, disabled }: KeyProps) {
         }}
       />
 
-      {/* Key body with 4-sided bevel - KeyMason technique */}
-      {/* Each border side = one face of the keycap */}
+      {/* Key body with 4-sided bevel */}
       <div
         style={{
           position: 'absolute',
           left: 0,
           right: 0,
           top: pressedOffset,
-          // Fixed height so bottom stays in place, key compresses
-          height: 36 - pressedOffset,
+          height: KEY_SIZE - pressedOffset,
           borderStyle: 'solid',
           borderWidth: `${bevelTop}px ${bevelSide}px ${bevelBottom - pressedOffset}px ${bevelSide}px`,
-          // top, right, bottom, left - light from top-left
           borderColor: `${SA_COLORS.bevelTop} ${SA_COLORS.bevelRight} ${SA_COLORS.bevelBottom} ${SA_COLORS.bevelLeft}`,
           borderRadius: radiusBase,
-          // Fill with the top bevel color so corners blend with top surface
           backgroundColor: SA_COLORS.bevelTop,
           transition: 'all 50ms ease-out',
         }}
@@ -108,8 +114,7 @@ function Key({ direction, onClick, disabled }: KeyProps) {
           left: bevelSide,
           right: bevelSide,
           top: bevelTop + pressedOffset,
-          // Fixed bottom position - key compresses rather than moving
-          height: 36 - bevelTop - bevelBottom,
+          height: KEY_SIZE - bevelTop - bevelBottom,
           background: `linear-gradient(135deg, ${SA_COLORS.topHighlight} 0%, ${SA_COLORS.base} 100%)`,
           borderRadius: radiusTop,
           display: 'flex',
