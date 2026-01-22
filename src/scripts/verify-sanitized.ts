@@ -2,16 +2,24 @@
 
 import { chromium } from '@playwright/test';
 
+import type { PageId, SiteId } from '../config/preview-sites';
+import { parseBaseArgs, requireArgs } from './lib/cli';
+
 interface VerifyOptions {
-  site: 'stussy' | 'new-era';
-  page: 'home' | 'plp' | 'pdp';
+  site: SiteId;
+  page: PageId;
+}
+
+interface ConsoleMessage {
+  type: string;
+  text: string;
 }
 
 async function verifySanitizedHTML(options: VerifyOptions): Promise<void> {
   const { site, page } = options;
   const url = `http://localhost:4321/assets/previews/${site}/${page}.html`;
 
-  console.log(`\n🔍 Verifying ${site} ${page}...`);
+  console.log(`\nVerifying ${site} ${page}...`);
   console.log(`   URL: ${url}`);
 
   const browser = await chromium.launch({ headless: true });
@@ -20,48 +28,38 @@ async function verifySanitizedHTML(options: VerifyOptions): Promise<void> {
   });
   const browserPage = await context.newPage();
 
-  // Collect console messages
-  const consoleMessages: { type: string; text: string }[] = [];
+  const consoleMessages: ConsoleMessage[] = [];
+  const errors: string[] = [];
+
   browserPage.on('console', (msg) => {
-    consoleMessages.push({
-      type: msg.type(),
-      text: msg.text(),
-    });
+    consoleMessages.push({ type: msg.type(), text: msg.text() });
   });
 
-  // Collect errors
-  const errors: string[] = [];
   browserPage.on('pageerror', (error) => {
     errors.push(error.message);
   });
 
   try {
-    // Navigate to sanitized HTML
     await browserPage.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
-
-    // Wait for page to settle
     await browserPage.waitForTimeout(2000);
 
-    // Check for search functionality
+    // Check essential elements
     const searchInput = await browserPage.$(
       'input[type="search"], input[placeholder*="Search"], input[name="q"]'
     );
-    console.log(`   ${searchInput ? '✅' : '❌'} Search input found`);
-
-    // Check for cart functionality
     const cartButton = await browserPage.$(
       '[href*="cart"], [data-cart], .cart-trigger, [aria-label*="cart"], [aria-label*="Cart"], [aria-label*="bag"], [aria-label*="Bag"]'
     );
-    console.log(`   ${cartButton ? '✅' : '❌'} Cart button found`);
-
-    // Check for robots meta tag
     const robotsMeta = await browserPage.$('meta[name="robots"][content*="noindex"]');
-    console.log(`   ${robotsMeta ? '✅' : '❌'} Robots meta tag present`);
+
+    console.log(`   ${searchInput ? 'OK' : 'MISSING'} Search input`);
+    console.log(`   ${cartButton ? 'OK' : 'MISSING'} Cart button`);
+    console.log(`   ${robotsMeta ? 'OK' : 'MISSING'} Robots meta tag`);
 
     // Report console errors
     const consoleErrors = consoleMessages.filter((msg) => msg.type === 'error');
     if (consoleErrors.length > 0) {
-      console.log(`   ⚠️  ${consoleErrors.length} console errors:`);
+      console.log(`   ${consoleErrors.length} console errors:`);
       for (const error of consoleErrors.slice(0, 5)) {
         console.log(`      - ${error.text}`);
       }
@@ -69,12 +67,12 @@ async function verifySanitizedHTML(options: VerifyOptions): Promise<void> {
         console.log(`      ... and ${consoleErrors.length - 5} more`);
       }
     } else {
-      console.log('   ✅ No console errors');
+      console.log('   OK No console errors');
     }
 
     // Report page errors
     if (errors.length > 0) {
-      console.log(`   ⚠️  ${errors.length} page errors:`);
+      console.log(`   ${errors.length} page errors:`);
       for (const error of errors.slice(0, 3)) {
         console.log(`      - ${error}`);
       }
@@ -82,56 +80,24 @@ async function verifySanitizedHTML(options: VerifyOptions): Promise<void> {
         console.log(`      ... and ${errors.length - 3} more`);
       }
     } else {
-      console.log('   ✅ No page errors');
+      console.log('   OK No page errors');
     }
 
-    // Report console warnings (informational only)
+    // Verbose warnings
     const consoleWarnings = consoleMessages.filter((msg) => msg.type === 'warning');
     if (consoleWarnings.length > 0 && process.argv.includes('--verbose')) {
-      console.log(`   ℹ️  ${consoleWarnings.length} console warnings (use --verbose to see)`);
+      console.log(`   ${consoleWarnings.length} console warnings`);
     }
 
     // Overall status
     const hasIssues = errors.length > 0 || consoleErrors.length > 10;
-    if (!hasIssues) {
-      console.log('\n   ✅ Page loaded successfully!\n');
-    } else {
-      console.log('\n   ⚠️  Page loaded with issues (review above)\n');
-    }
-  } catch (error) {
-    console.error(`   ❌ Failed to verify ${site} ${page}:`, error);
-    throw error;
+    console.log(hasIssues ? '\n   Page loaded with issues\n' : '\n   Page loaded successfully\n');
   } finally {
     await browser.close();
   }
 }
 
-// Parse CLI arguments
-function parseArgs(): VerifyOptions {
-  const args = process.argv.slice(2);
-  const options: Partial<VerifyOptions> = {};
-
-  for (let i = 0; i < args.length; i++) {
-    const arg = args[i];
-    const nextArg = args[i + 1];
-
-    if (arg === '--site' && nextArg) {
-      if (nextArg !== 'stussy' && nextArg !== 'new-era') {
-        throw new Error(`Invalid site: ${nextArg}. Must be 'stussy' or 'new-era'`);
-      }
-      options.site = nextArg as 'stussy' | 'new-era';
-      i++;
-    } else if (arg === '--page' && nextArg) {
-      if (nextArg !== 'home' && nextArg !== 'plp' && nextArg !== 'pdp') {
-        throw new Error(`Invalid page: ${nextArg}. Must be 'home', 'plp', or 'pdp'`);
-      }
-      options.page = nextArg as 'home' | 'plp' | 'pdp';
-      i++;
-    }
-  }
-
-  if (!options.site || !options.page) {
-    console.error(`
+const USAGE = `
 Usage: bun run verify:sanitized --site <site> --page <page> [--verbose]
 
 Options:
@@ -144,22 +110,15 @@ Examples:
   bun run verify:sanitized --site new-era --page plp --verbose
 
 Note: Dev server must be running on http://localhost:4321
-`);
-    process.exit(1);
-  }
+`;
 
-  return options as VerifyOptions;
+async function main(): Promise<void> {
+  const args = parseBaseArgs();
+  requireArgs(args, USAGE);
+  await verifySanitizedHTML(args);
 }
 
-// Main execution
-async function main() {
-  try {
-    const options = parseArgs();
-    await verifySanitizedHTML(options);
-  } catch (error) {
-    console.error('Error:', error);
-    process.exit(1);
-  }
-}
-
-main();
+main().catch((error) => {
+  console.error('Error:', error);
+  process.exit(1);
+});

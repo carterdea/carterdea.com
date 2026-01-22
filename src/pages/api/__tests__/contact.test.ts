@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Mock Resend before importing the module
 vi.mock('resend', () => ({
@@ -14,7 +14,7 @@ let ipCounter = 0;
 function createRequest(
   body: unknown,
   headers: Record<string, string> = {},
-  useUniqueIp = false,
+  useUniqueIp = false
 ): Request {
   const ip = useUniqueIp ? `192.168.1.${ipCounter++}` : '192.168.1.1';
   return new Request('http://localhost:4321/api/contact', {
@@ -266,7 +266,7 @@ describe('POST /api/contact', () => {
             message: 'Test message',
           },
           {},
-          false, // Same IP
+          false // Same IP
         );
 
       // Make 5 requests
@@ -287,7 +287,7 @@ describe('POST /api/contact', () => {
             message: 'Test message',
           },
           {},
-          false, // Same IP
+          false // Same IP
         );
 
       // Make 5 successful requests

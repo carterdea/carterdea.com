@@ -142,24 +142,23 @@ export function PreviewModeSection() {
   useEffect(() => {
     if (mode !== 'preview') return;
 
-    const handleKeyDown = (e: KeyboardEvent) => {
+    const keyHandlers: Record<string, () => void> = {
+      ArrowLeft: handlePrevComputer,
+      ArrowRight: handleNextComputer,
+      ArrowUp: handlePrevSite,
+      ArrowDown: handleNextSite,
+    };
+
+    function handleKeyDown(e: KeyboardEvent): void {
       // Don't capture if user is typing in an input
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
 
-      if (e.key === 'ArrowLeft') {
+      const handler = keyHandlers[e.key];
+      if (handler) {
         e.preventDefault();
-        handlePrevComputer();
-      } else if (e.key === 'ArrowRight') {
-        e.preventDefault();
-        handleNextComputer();
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        handlePrevSite();
-      } else if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        handleNextSite();
+        handler();
       }
-    };
+    }
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);

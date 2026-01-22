@@ -2,22 +2,41 @@
 
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
+
 import { JSDOM } from 'jsdom';
 
+import type { PageId, SiteId } from '../config/preview-sites';
+import { parseBaseArgs, requireArgs } from './lib/cli';
+
 interface SanitizeOptions {
-  site: 'stussy' | 'new-era';
-  page: 'home' | 'plp' | 'pdp';
+  site: SiteId;
+  page: PageId;
 }
 
 // Vendor scripts to remove (tracking, analytics, marketing)
 const VENDOR_PATTERNS = [
-  // Explicit vendor domains
-  'gorgias',
-  'klaviyo',
+  // Analytics and tracking
   'googletagmanager',
   'google-analytics',
   'gtag',
   'gtm.js',
+  'doubleclick',
+  'googleadservices',
+  'facebook.net/fbevents',
+  'connect.facebook.net',
+  'analytics.twitter',
+  'ads-twitter',
+  'twitter',
+  'snap',
+  'sc-static.net',
+  'bat.bing.com',
+  'thetradedesk',
+  'adsrvr.org',
+  'elevar',
+  'fullstory',
+  // Marketing tools
+  'gorgias',
+  'klaviyo',
   'osano',
   'rakuten',
   'xgenai',
@@ -25,35 +44,21 @@ const VENDOR_PATTERNS = [
   'yotpo',
   'postscript',
   'rise-ai',
-  'twitter',
-  'snap',
-  'ads-twitter',
-  'sc-static.net', // Snapchat
-  'analytics.twitter',
-  'bat.bing.com', // Microsoft Ads
-  'doubleclick',
-  'googleadservices',
-  'facebook.net/fbevents', // Facebook Pixel
-  'connect.facebook.net', // Facebook SDK
   'revy',
-  'thetradedesk',
-  'adsrvr.org', // The Trade Desk
   'signifyd',
   'pandectes',
   'global-e.com',
-  'getredo.com', // Rise AI
+  'getredo.com',
   'sendlane.com',
   'kyc.red',
-  'elevar', // Elevar conversion tracking
-  'fullstory', // Fullstory analytics
-  // Shopify tracking/analytics (not essential for preview)
+  // Shopify tracking (not essential for preview)
   'trekkie',
   'shop_events_listener',
   'web-pixel',
   'wpm/bfcfee',
   'perf-kit',
-  'shop.app/checkouts', // Shop Pay preloads not needed for preview
-  'shop-js/modules', // Shop Pay modules cause CORS errors in preview
+  'shop.app/checkouts',
+  'shop-js/modules',
   // Geolocation
   'geolizr',
 ];
@@ -74,31 +79,34 @@ const ESSENTIAL_PATTERNS = [
   'consent-tracking-api',
 ];
 
+function matchesPattern(text: string, patterns: string[]): boolean {
+  const lower = text.toLowerCase();
+  return patterns.some((pattern) => lower.includes(pattern.toLowerCase()));
+}
+
+function hasShopJsReference(src: string, id: string, content: string): boolean {
+  return (
+    src.includes('shop-js') ||
+    id.includes('shop-js') ||
+    content.includes('shop-js') ||
+    content.includes("featureAssets['shop-js']")
+  );
+}
+
 async function sanitizeHTML(options: SanitizeOptions): Promise<void> {
   const { site, page } = options;
 
-  console.log(`\n🧹 Sanitizing ${site} ${page}...`);
+  console.log(`\nSanitizing ${site} ${page}...`);
 
-  // Read raw HTML
-  const inputPath = join(
-    process.cwd(),
-    'public',
-    'assets',
-    'previews',
-    site,
-    'raw',
-    `${page}.html`
-  );
-
+  const inputPath = join(process.cwd(), 'public', 'assets', 'previews', site, 'raw', `${page}.html`);
   console.log(`   Reading: ${inputPath}`);
+
   const html = await readFile(inputPath, 'utf-8');
   console.log(`   Input size: ${(html.length / 1024).toFixed(1)}KB`);
 
-  // Parse HTML
   const dom = new JSDOM(html);
   const document = dom.window.document;
 
-  // Track removed scripts
   const removed: string[] = [];
   const preserved: string[] = [];
   const flagged: string[] = [];
@@ -110,49 +118,30 @@ async function sanitizeHTML(options: SanitizeOptions): Promise<void> {
     const id = script.getAttribute('id') || '';
     const content = script.textContent || '';
 
-    // Check if script is essential
-    const isEssential = ESSENTIAL_PATTERNS.some(
-      (pattern) =>
-        src.toLowerCase().includes(pattern.toLowerCase()) ||
-        content.toLowerCase().includes(pattern.toLowerCase())
-    );
-
-    // Check if script is vendor tracking
-    const isVendor = VENDOR_PATTERNS.some(
-      (pattern) =>
-        src.toLowerCase().includes(pattern.toLowerCase()) ||
-        content.toLowerCase().includes(pattern.toLowerCase()) ||
-        id.toLowerCase().includes(pattern.toLowerCase())
-    );
-
-    // Also check for shop-js references in src, id, or content
-    const hasShopJs =
-      src.includes('shop-js') ||
-      id.includes('shop-js') ||
-      content.includes('shop-js') ||
-      content.includes("featureAssets['shop-js']");
+    const isEssential =
+      matchesPattern(src, ESSENTIAL_PATTERNS) || matchesPattern(content, ESSENTIAL_PATTERNS);
+    const isVendor =
+      matchesPattern(src, VENDOR_PATTERNS) ||
+      matchesPattern(content, VENDOR_PATTERNS) ||
+      matchesPattern(id, VENDOR_PATTERNS);
+    const hasShopJs = hasShopJsReference(src, id, content);
 
     if ((isVendor && !isEssential) || hasShopJs) {
       removed.push(src || id || `inline: ${content.substring(0, 50)}...`);
       script.remove();
     } else {
-      // Flag potential third-party scripts that don't match known patterns
+      // Flag unknown third-party scripts
       if (
         src &&
         !src.includes('shopify') &&
         !src.includes('stussy.com') &&
         !src.includes('neweracap.com') &&
-        src.startsWith('http')
+        src.startsWith('http') &&
+        !matchesPattern(src, VENDOR_PATTERNS) &&
+        !isEssential
       ) {
-        // Check if it's not already in vendor patterns
-        const isKnownVendor = VENDOR_PATTERNS.some((pattern) =>
-          src.toLowerCase().includes(pattern.toLowerCase())
-        );
-        if (!isKnownVendor && !isEssential) {
-          flagged.push(src);
-        }
+        flagged.push(src);
       }
-
       preserved.push(src || 'inline script');
     }
   }
@@ -170,92 +159,118 @@ async function sanitizeHTML(options: SanitizeOptions): Promise<void> {
     robotsMeta.setAttribute('name', 'robots');
     robotsMeta.setAttribute('content', 'noindex, nofollow');
     head.insertBefore(robotsMeta, head.firstChild);
-    console.log('   ✅ Added robots meta tag');
+    console.log('   Added robots meta tag');
   }
 
   // Rewrite links
-  let linksRewritten = 0;
+  const linksRewritten = rewriteLinks(document, site, page);
+  console.log(`   Rewritten ${linksRewritten} links`);
 
-  // Logo links → home.html
-  const logoLinks = document.querySelectorAll(
-    'a[href="/"], a[href^="https://www.stussy.com"], a[href^="https://www.neweracap.com"], .header__logo a, [class*="logo"] a'
+  // Serialize and save
+  const sanitizedHTML = dom.serialize();
+  const outputPath = join(process.cwd(), 'public', 'assets', 'previews', site, `${page}.html`);
+
+  await mkdir(dirname(outputPath), { recursive: true });
+  await writeFile(outputPath, sanitizedHTML, 'utf-8');
+
+  console.log(`   Removed ${removed.length} vendor scripts`);
+  console.log(`   Preserved ${preserved.length} essential scripts`);
+  console.log(`   Output size: ${(sanitizedHTML.length / 1024).toFixed(1)}KB`);
+  console.log(
+    `   Size reduction: ${(((html.length - sanitizedHTML.length) / html.length) * 100).toFixed(1)}%`
   );
-  for (const link of logoLinks) {
+  console.log(`   Saved to: ${outputPath}\n`);
+
+  if (flagged.length > 0) {
+    console.log(`   Flagged ${flagged.length} unknown third-party scripts:`);
+    for (const src of flagged) {
+      console.log(`      - ${src}`);
+    }
+    console.log('');
+  }
+
+  if (process.argv.includes('--verbose')) {
+    console.log('   Removed scripts:');
+    for (const src of removed.slice(0, 20)) {
+      console.log(`      - ${src}`);
+    }
+    if (removed.length > 20) {
+      console.log(`      ... and ${removed.length - 20} more`);
+    }
+  }
+}
+
+function rewriteLinks(document: Document, site: SiteId, page: PageId): number {
+  let count = 0;
+  const basePath = `/assets/previews/${site}`;
+
+  // Logo links -> home.html
+  const logoSelectors =
+    'a[href="/"], a[href^="https://www.stussy.com"], a[href^="https://www.neweracap.com"], .header__logo a, [class*="logo"] a';
+  for (const link of document.querySelectorAll(logoSelectors)) {
     const href = link.getAttribute('href');
     if (href && (href === '/' || href.startsWith('http'))) {
-      link.setAttribute('href', `/assets/previews/${site}/home.html`);
-      linksRewritten++;
+      link.setAttribute('href', `${basePath}/home.html`);
+      count++;
     }
   }
 
-  // Navigation links → plp.html
-  const navLinks = document.querySelectorAll(
-    'nav a, .header__nav a, [class*="navigation"] a, [class*="menu"] a'
-  );
-  for (const link of navLinks) {
+  // Navigation links -> plp.html
+  const navSelectors = 'nav a, .header__nav a, [class*="navigation"] a, [class*="menu"] a';
+  for (const link of document.querySelectorAll(navSelectors)) {
     const href = link.getAttribute('href');
     const text = link.textContent?.toLowerCase() || '';
 
-    // Skip cart, search, account links
-    if (
-      text.includes('cart') ||
-      text.includes('bag') ||
-      text.includes('search') ||
-      text.includes('account') ||
-      text.includes('login')
-    ) {
-      continue;
-    }
+    // Skip utility links
+    if (/cart|bag|search|account|login/.test(text)) continue;
 
     if (href && href !== '#' && !href.startsWith('javascript:')) {
-      link.setAttribute('href', `/assets/previews/${site}/plp.html`);
-      linksRewritten++;
+      link.setAttribute('href', `${basePath}/plp.html`);
+      count++;
     }
   }
 
-  // Product links on PLP → pdp.html
+  // Page-specific link rewrites
   if (page === 'plp') {
-    const productLinks = document.querySelectorAll(
+    // Product links on PLP -> pdp.html
+    for (const link of document.querySelectorAll(
       '[class*="product"] a, [class*="card"] a, [data-product] a'
-    );
-    for (const link of productLinks) {
+    )) {
       const href = link.getAttribute('href');
-      if (href && href.includes('/products/')) {
-        link.setAttribute('href', `/assets/previews/${site}/pdp.html`);
-        linksRewritten++;
+      if (href?.includes('/products/')) {
+        link.setAttribute('href', `${basePath}/pdp.html`);
+        count++;
       }
     }
   }
 
-  // Featured product/category links on homepage → plp.html
   if (page === 'home') {
-    const featuredLinks = document.querySelectorAll(
+    // Featured links on homepage -> plp.html
+    for (const link of document.querySelectorAll(
       'a[href*="/collections/"], a[href*="/products/"]'
-    );
-    for (const link of featuredLinks) {
-      link.setAttribute('href', `/assets/previews/${site}/plp.html`);
-      linksRewritten++;
+    )) {
+      link.setAttribute('href', `${basePath}/plp.html`);
+      count++;
     }
   }
 
-  // Breadcrumb links on PDP
   if (page === 'pdp') {
-    const breadcrumbs = document.querySelectorAll('[class*="breadcrumb"] a, .breadcrumb a');
-    for (const link of breadcrumbs) {
+    // Breadcrumb links on PDP
+    for (const link of document.querySelectorAll('[class*="breadcrumb"] a, .breadcrumb a')) {
       const href = link.getAttribute('href');
       const text = link.textContent?.toLowerCase() || '';
 
       if (href === '/' || text.includes('home')) {
-        link.setAttribute('href', `/assets/previews/${site}/home.html`);
-        linksRewritten++;
+        link.setAttribute('href', `${basePath}/home.html`);
+        count++;
       } else if (href?.includes('/collections/')) {
-        link.setAttribute('href', `/assets/previews/${site}/plp.html`);
-        linksRewritten++;
+        link.setAttribute('href', `${basePath}/plp.html`);
+        count++;
       }
     }
   }
 
-  // Disable external/footer/account/checkout links
+  // Disable external/footer/account links
   const disableSelectors = [
     'footer a',
     'a[href*="account"]',
@@ -272,79 +287,16 @@ async function sanitizeHTML(options: SanitizeOptions): Promise<void> {
   ];
 
   for (const selector of disableSelectors) {
-    const links = document.querySelectorAll(selector);
-    for (const link of links) {
+    for (const link of document.querySelectorAll(selector)) {
       link.setAttribute('href', '#');
-      linksRewritten++;
+      count++;
     }
   }
 
-  console.log(`   ✅ Rewritten ${linksRewritten} links`);
-
-  // Serialize HTML
-  const sanitizedHTML = dom.serialize();
-
-  // Write output
-  const outputPath = join(process.cwd(), 'public', 'assets', 'previews', site, `${page}.html`);
-
-  await mkdir(dirname(outputPath), { recursive: true });
-  await writeFile(outputPath, sanitizedHTML, 'utf-8');
-
-  console.log(`   ✅ Removed ${removed.length} vendor scripts`);
-  console.log(`   ✅ Preserved ${preserved.length} essential scripts`);
-  console.log(`   Output size: ${(sanitizedHTML.length / 1024).toFixed(1)}KB`);
-  console.log(
-    `   Size reduction: ${(((html.length - sanitizedHTML.length) / html.length) * 100).toFixed(1)}%`
-  );
-  console.log(`   💾 Saved to: ${outputPath}\n`);
-
-  // Report flagged scripts
-  if (flagged.length > 0) {
-    console.log(`   ⚠️  Flagged ${flagged.length} unknown third-party scripts:`);
-    for (const src of flagged) {
-      console.log(`      - ${src}`);
-    }
-    console.log('');
-  }
-
-  // Detailed report if verbose
-  if (process.argv.includes('--verbose')) {
-    console.log('   Removed scripts:');
-    for (const src of removed.slice(0, 20)) {
-      console.log(`      - ${src}`);
-    }
-    if (removed.length > 20) {
-      console.log(`      ... and ${removed.length - 20} more`);
-    }
-  }
+  return count;
 }
 
-// Parse CLI arguments
-function parseArgs(): SanitizeOptions {
-  const args = process.argv.slice(2);
-  const options: Partial<SanitizeOptions> = {};
-
-  for (let i = 0; i < args.length; i++) {
-    const arg = args[i];
-    const nextArg = args[i + 1];
-
-    if (arg === '--site' && nextArg) {
-      if (nextArg !== 'stussy' && nextArg !== 'new-era') {
-        throw new Error(`Invalid site: ${nextArg}. Must be 'stussy' or 'new-era'`);
-      }
-      options.site = nextArg as 'stussy' | 'new-era';
-      i++;
-    } else if (arg === '--page' && nextArg) {
-      if (nextArg !== 'home' && nextArg !== 'plp' && nextArg !== 'pdp') {
-        throw new Error(`Invalid page: ${nextArg}. Must be 'home', 'plp', or 'pdp'`);
-      }
-      options.page = nextArg as 'home' | 'plp' | 'pdp';
-      i++;
-    }
-  }
-
-  if (!options.site || !options.page) {
-    console.error(`
+const USAGE = `
 Usage: bun run sanitize:html --site <site> --page <page> [--verbose]
 
 Options:
@@ -355,22 +307,15 @@ Options:
 Examples:
   bun run sanitize:html --site stussy --page home
   bun run sanitize:html --site new-era --page plp --verbose
-`);
-    process.exit(1);
-  }
+`;
 
-  return options as SanitizeOptions;
+async function main(): Promise<void> {
+  const args = parseBaseArgs();
+  requireArgs(args, USAGE);
+  await sanitizeHTML(args);
 }
 
-// Main execution
-async function main() {
-  try {
-    const options = parseArgs();
-    await sanitizeHTML(options);
-  } catch (error) {
-    console.error('Error:', error);
-    process.exit(1);
-  }
-}
-
-main();
+main().catch((error) => {
+  console.error('Error:', error);
+  process.exit(1);
+});

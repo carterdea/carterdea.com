@@ -2,24 +2,50 @@
 
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
+
 import { chromium } from '@playwright/test';
 
+import type { PageId, SiteId } from '../config/preview-sites';
+import { getUrlArg, parseBaseArgs, requireArgs } from './lib/cli';
+
 interface CaptureOptions {
-  site: 'stussy' | 'new-era';
-  page: 'home' | 'plp' | 'pdp';
+  site: SiteId;
+  page: PageId;
   url: string;
 }
 
 const VIEWPORT_WIDTH = 1280;
 const VIEWPORT_HEIGHT = 800;
 
+// Selectors for elements to remove during capture
+const UNWANTED_ELEMENT_SELECTORS = [
+  // Cookie consent
+  '#onetrust-consent-sdk',
+  '.osano-cm-dialog',
+  '[data-cookie-banner]',
+  '[id*="cookie"]',
+  '[class*="cookie-banner"]',
+  '[class*="cookie-consent"]',
+  '[aria-label*="cookie"]',
+  '[aria-label*="Cookie"]',
+  // Marketing popups
+  '[id*="postscript"]',
+  '[class*="postscript"]',
+  '#postscript-sms-offer',
+  '.postscript-popup',
+  '[data-popup]',
+  '[data-modal]',
+  '[class*="popup-"]',
+  '[class*="email-popup"]',
+  '[class*="sms-popup"]',
+];
+
 async function captureHTML(options: CaptureOptions): Promise<void> {
   const { site, page, url } = options;
 
-  console.log(`\n📸 Capturing ${site} ${page}...`);
+  console.log(`\nCapturing ${site} ${page}...`);
   console.log(`   URL: ${url}`);
 
-  // Launch browser
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({
     viewport: { width: VIEWPORT_WIDTH, height: VIEWPORT_HEIGHT },
@@ -29,63 +55,26 @@ async function captureHTML(options: CaptureOptions): Promise<void> {
   const browserPage = await context.newPage();
 
   try {
-    // Navigate to page
     console.log('   Navigating to page...');
-    // Use 'load' instead of 'networkidle' as some sites have continuous background requests
     await browserPage.goto(url, { waitUntil: 'load', timeout: 60000 });
 
-    // Wait for Shopify-specific elements to ensure dynamic content is loaded
     console.log('   Waiting for page to fully load...');
-    await browserPage.waitForTimeout(5000); // Additional wait for any lazy-loaded content and JS execution
+    await browserPage.waitForTimeout(5000);
 
-    // Remove cookie consent banners and other unwanted elements
     console.log('   Removing cookie banners and unwanted elements...');
-    await browserPage.evaluate(() => {
-      // Common cookie consent selectors
-      const selectors = [
-        '#onetrust-consent-sdk', // OneTrust
-        '.osano-cm-dialog', // Osano
-        '[data-cookie-banner]',
-        '[id*="cookie"]',
-        '[class*="cookie-banner"]',
-        '[class*="cookie-consent"]',
-        '[aria-label*="cookie"]',
-        '[aria-label*="Cookie"]',
-        // Postscript popup
-        '[id*="postscript"]',
-        '[class*="postscript"]',
-        '#postscript-sms-offer',
-        '.postscript-popup',
-        // Generic popup/modal selectors
-        '[data-popup]',
-        '[data-modal]',
-        '[class*="popup-"]',
-        '[class*="email-popup"]',
-        '[class*="sms-popup"]',
-      ];
-
+    await browserPage.evaluate((selectors) => {
       for (const selector of selectors) {
         const elements = document.querySelectorAll(selector);
         for (const element of elements) {
           element.remove();
         }
       }
-    });
+    }, UNWANTED_ELEMENT_SELECTORS);
 
-    // Extract HTML
     console.log('   Extracting HTML...');
     const html = await browserPage.content();
 
-    // Save to file
-    const outputPath = join(
-      process.cwd(),
-      'public',
-      'assets',
-      'previews',
-      site,
-      'raw',
-      `${page}.html`
-    );
+    const outputPath = join(process.cwd(), 'public', 'assets', 'previews', site, 'raw', `${page}.html`);
 
     console.log(`   Creating output directory...`);
     await mkdir(dirname(outputPath), { recursive: true });
@@ -93,45 +82,14 @@ async function captureHTML(options: CaptureOptions): Promise<void> {
     console.log(`   Writing HTML to ${outputPath}...`);
     await writeFile(outputPath, html, 'utf-8');
 
-    console.log(`   ✅ Captured ${html.length.toLocaleString()} characters`);
-    console.log(`   💾 Saved to: ${outputPath}\n`);
-  } catch (error) {
-    console.error(`   ❌ Failed to capture ${site} ${page}:`, error);
-    throw error;
+    console.log(`   Captured ${html.length.toLocaleString()} characters`);
+    console.log(`   Saved to: ${outputPath}\n`);
   } finally {
     await browser.close();
   }
 }
 
-// Parse CLI arguments
-function parseArgs(): CaptureOptions {
-  const args = process.argv.slice(2);
-  const options: Partial<CaptureOptions> = {};
-
-  for (let i = 0; i < args.length; i++) {
-    const arg = args[i];
-    const nextArg = args[i + 1];
-
-    if (arg === '--site' && nextArg) {
-      if (nextArg !== 'stussy' && nextArg !== 'new-era') {
-        throw new Error(`Invalid site: ${nextArg}. Must be 'stussy' or 'new-era'`);
-      }
-      options.site = nextArg as 'stussy' | 'new-era';
-      i++;
-    } else if (arg === '--page' && nextArg) {
-      if (nextArg !== 'home' && nextArg !== 'plp' && nextArg !== 'pdp') {
-        throw new Error(`Invalid page: ${nextArg}. Must be 'home', 'plp', or 'pdp'`);
-      }
-      options.page = nextArg as 'home' | 'plp' | 'pdp';
-      i++;
-    } else if (arg === '--url' && nextArg) {
-      options.url = nextArg;
-      i++;
-    }
-  }
-
-  if (!options.site || !options.page || !options.url) {
-    console.error(`
+const USAGE = `
 Usage: bun run capture:html --site <site> --page <page> --url <url>
 
 Options:
@@ -142,22 +100,23 @@ Options:
 Examples:
   bun run capture:html --site stussy --page home --url https://www.stussy.com/
   bun run capture:html --site new-era --page plp --url https://www.neweracap.com/collections/fitted-caps
-`);
+`;
+
+async function main(): Promise<void> {
+  const args = parseBaseArgs();
+  const url = getUrlArg();
+
+  if (!url) {
+    console.error(USAGE);
     process.exit(1);
   }
 
-  return options as CaptureOptions;
+  requireArgs(args, USAGE);
+
+  await captureHTML({ site: args.site, page: args.page, url });
 }
 
-// Main execution
-async function main() {
-  try {
-    const options = parseArgs();
-    await captureHTML(options);
-  } catch (error) {
-    console.error('Error:', error);
-    process.exit(1);
-  }
-}
-
-main();
+main().catch((error) => {
+  console.error('Error:', error);
+  process.exit(1);
+});

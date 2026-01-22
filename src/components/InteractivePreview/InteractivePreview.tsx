@@ -1,18 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+
 import styles from './InteractivePreview.module.css';
 
 interface InteractivePreviewProps {
-  /** Path to the sanitized HTML file to load */
   htmlPath: string;
-  /** Width of the viewport the HTML was captured at (default: 1280px) */
   viewportWidth?: number;
-  /** Width of the screen area to scale to */
   screenWidth: number;
-  /** Height of the screen area to scale to */
   screenHeight: number;
-  /** Whether the preview is powered on (lazy loads content) */
   isPoweredOn: boolean;
-  /** Additional CSS classes */
   className?: string;
 }
 
@@ -23,7 +18,7 @@ export default function InteractivePreview({
   screenHeight,
   isPoweredOn,
   className = '',
-}: InteractivePreviewProps) {
+}: InteractivePreviewProps): React.ReactElement | null {
   const [htmlContent, setHtmlContent] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,40 +29,36 @@ export default function InteractivePreview({
   useEffect(() => {
     if (!isPoweredOn || htmlContent) return;
 
-    const loadHTML = async () => {
+    async function loadHTML(): Promise<void> {
       setIsLoading(true);
       setError(null);
 
-      try {
-        const response = await fetch(htmlPath);
-        if (!response.ok) {
-          throw new Error(`Failed to load HTML: ${response.statusText}`);
-        }
-        const html = await response.text();
-        setHtmlContent(html);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load preview');
-        console.error('Error loading preview HTML:', err);
-      } finally {
+      const response = await fetch(htmlPath);
+      if (!response.ok) {
+        setError(`Failed to load HTML: ${response.statusText}`);
         setIsLoading(false);
+        return;
       }
-    };
 
-    loadHTML();
+      const html = await response.text();
+      setHtmlContent(html);
+      setIsLoading(false);
+    }
+
+    loadHTML().catch((err) => {
+      setError(err instanceof Error ? err.message : 'Failed to load preview');
+      console.error('Error loading preview HTML:', err);
+      setIsLoading(false);
+    });
   }, [isPoweredOn, htmlPath, htmlContent]);
 
-  // Calculate scale factor to fit viewport into screen
-  // The HTML is captured at viewportWidth (1280px), scale it down to fit screenWidth
-  const scale = screenWidth / viewportWidth;
-
-  // Handle keyboard shortcuts
+  // ESC to exit interact mode
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // ESC to exit interact mode
+    function handleKeyDown(e: KeyboardEvent): void {
       if (e.key === 'Escape' && isInteractMode) {
         setIsInteractMode(false);
       }
-    };
+    }
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
@@ -79,10 +70,13 @@ export default function InteractivePreview({
     }
   }, [isInteractMode, htmlContent]);
 
-  // Don't render anything if not powered on
   if (!isPoweredOn) {
     return null;
   }
+
+  // Scale factor to fit viewport into screen
+  const scale = screenWidth / viewportWidth;
+  const scaledHeight = screenHeight / scale;
 
   return (
     <div className={`${styles.container} ${className}`}>
@@ -95,27 +89,28 @@ export default function InteractivePreview({
 
       {error && (
         <div className={styles.error}>
-          <p>⚠️ {error}</p>
+          <p>{error}</p>
         </div>
       )}
 
       {htmlContent && (
         <>
-          {/* Clickable overlay to enter interact mode */}
           {!isInteractMode && (
-            <div className={styles.overlay} onClick={handleScreenClick}>
-              <div className={styles.overlayHint}>
-                Click to interact • ESC to exit
-              </div>
-            </div>
+            <button
+              type="button"
+              className={styles.overlay}
+              onClick={handleScreenClick}
+              aria-label="Click to interact with preview"
+            >
+              <span className={styles.overlayHint}>Click to interact - ESC to exit</span>
+            </button>
           )}
 
-          {/* Scaled iframe container */}
           <div
             className={styles.iframeWrapper}
             style={{
               width: `${viewportWidth}px`,
-              height: `${screenHeight / scale}px`,
+              height: `${scaledHeight}px`,
               transform: `scale(${scale})`,
               transformOrigin: 'top left',
             }}
@@ -128,16 +123,13 @@ export default function InteractivePreview({
               title="Interactive Preview"
               style={{
                 width: `${viewportWidth}px`,
-                height: `${screenHeight / scale}px`,
+                height: `${scaledHeight}px`,
               }}
             />
           </div>
 
-          {/* Interact mode indicator */}
           {isInteractMode && (
-            <div className={styles.modeIndicator}>
-              Interactive Mode • Press ESC to exit
-            </div>
+            <div className={styles.modeIndicator}>Interactive Mode - Press ESC to exit</div>
           )}
         </>
       )}

@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import ContactForm from './ContactForm';
 
 // Mock fetch globally
@@ -131,7 +131,7 @@ describe('ContactForm', () => {
               budget: '25-50k',
               message: 'Test message',
             }),
-          }),
+          })
         );
       });
     });
