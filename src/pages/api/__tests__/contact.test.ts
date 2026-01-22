@@ -250,7 +250,7 @@ describe('POST /api/contact', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toBe('Invalid request');
+      expect(data.error).toBe('Invalid request body');
     });
   });
 
