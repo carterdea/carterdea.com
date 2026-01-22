@@ -70,7 +70,10 @@ const VENDOR_PATTERNS = [
   'true-fans-tracking',
   // Shopify tracking (not essential for preview)
   'trekkie',
+  'Monorail',
+  'monorail',
   'shop_events_listener',
+  'ShopifyAnalytics',
   'web-pixel',
   'wpm/bfcfee',
   'wpm/sfcfee',
@@ -140,16 +143,21 @@ const VENDOR_PATTERNS = [
   'portable-wallets',
   'consent-tracking-api',
   'storefront/load_feature',
+  // Back in stock and pixel tracking (inline scripts)
+  'SendlaneBackInStock',
+  'fbq(',
 ];
 
 // Essential Shopify scripts to preserve (only search & cart functionality)
 const ESSENTIAL_PATTERNS = [
   'theme.js',
-  'cart',
-  'search',
+  '/cart', // Match /cart.js but not tapcart.com
+  'cart.js',
+  'search.js',
   'predictive-search',
-  'drawer',
-  'variant',
+  'drawer.js',
+  'variant.js',
+  'variant-picker',
 ];
 
 function matchesPattern(text: string, patterns: string[]): boolean {
@@ -202,9 +210,13 @@ async function sanitizeHTML(options: SanitizeOptions): Promise<void> {
     const src = script.getAttribute('src') || '';
     const id = script.getAttribute('id') || '';
     const content = script.textContent || '';
+    const type = script.getAttribute('type') || '';
+    const className = script.getAttribute('class') || '';
+    const hasCookieConsent = script.hasAttribute('data-cookiefirst-category');
 
-    // Check if script ID is blocked
+    // Check if script ID is blocked or has analytics class
     const isBlockedId = BLOCKED_SCRIPT_IDS.includes(id);
+    const isAnalyticsClass = className.includes('analytics');
 
     const isEssential =
       matchesPattern(src, ESSENTIAL_PATTERNS) || matchesPattern(content, ESSENTIAL_PATTERNS);
@@ -214,7 +226,15 @@ async function sanitizeHTML(options: SanitizeOptions): Promise<void> {
       matchesPattern(id, VENDOR_PATTERNS);
     const hasShopJs = hasShopJsReference(src, id, content);
 
-    if (isBlockedId || (isVendor && !isEssential) || hasShopJs) {
+    // Remove if: blocked ID, analytics class, vendor script, shop-js, cookie consent script, or text/plain (waiting for consent)
+    if (
+      isBlockedId ||
+      isAnalyticsClass ||
+      (isVendor && !isEssential) ||
+      hasShopJs ||
+      hasCookieConsent ||
+      type === 'text/plain'
+    ) {
       removed.push(src || id || `inline: ${content.substring(0, 50)}...`);
       script.remove();
     } else {
@@ -242,18 +262,30 @@ async function sanitizeHTML(options: SanitizeOptions): Promise<void> {
     link.remove();
   }
 
-  // Patch theme.js/global.js to stub GeolizrAPI (causes errors when Geolizr is removed)
+  // Patch theme.js/global.js to stub GeolizrAPI and prevent cart errors
   const themeScripts = document.querySelectorAll('script[src*="theme.js"], script[src*="global.js"]');
   if (themeScripts.length > 0) {
-    // GeolizrAPI is loaded by a removed script, so we need to stub it
+    // Create stub script for missing APIs and elements
     const stubScript = document.createElement('script');
     stubScript.textContent = `
+      // Stub GeolizrAPI (removed with tracking scripts)
       window.GeolizrAPI = {
         init: () => {},
         getCountry: () => "US",
         addEventListener: () => {},
         removeEventListener: () => {}
       };
+
+      // Stub cart elements to prevent theme.js errors
+      document.addEventListener('DOMContentLoaded', () => {
+        if (!document.querySelector('[data-ajax-cart-section-scroll]')) {
+          const stubCart = document.createElement('div');
+          stubCart.setAttribute('data-ajax-cart-section-scroll', '');
+          stubCart.setAttribute('data-product-form', '');
+          stubCart.style.display = 'none';
+          document.body.appendChild(stubCart);
+        }
+      });
     `;
     themeScripts[0].parentNode?.insertBefore(stubScript, themeScripts[0]);
   }
