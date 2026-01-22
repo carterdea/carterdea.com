@@ -9,17 +9,7 @@ interface BouncingOrbProps {
   onCornerHit?: () => void;
 }
 
-interface Position {
-  x: number;
-  y: number;
-}
-
-interface Velocity {
-  x: number;
-  y: number;
-}
-
-interface BounceTime {
+interface Vector2D {
   x: number;
   y: number;
 }
@@ -32,22 +22,33 @@ interface RippleData {
 }
 
 const DEFAULT_SPEED = 5.5;
-const DEFAULT_RANDOMNESS = 0.05; // ±5%
-const CORNER_HIT_THRESHOLD_MS = 100; // 100ms = ~6 frames at 60fps
-const TRAJECTORY_CHECK_INTERVAL = 10; // Check every 10 bounces
-const TRAJECTORY_NUDGE_AMOUNT = 0.03; // 3% velocity adjustment
+const DEFAULT_RANDOMNESS = 0.05;
+const CORNER_HIT_THRESHOLD_MS = 100;
+const TRAJECTORY_CHECK_INTERVAL = 10;
+const TRAJECTORY_NUDGE_AMOUNT = 0.03;
+
+const RESPONSIVE_SIZES: Array<{ breakpoint: number; size: number }> = [
+  { breakpoint: 768, size: 150 },
+  { breakpoint: 1024, size: 200 },
+  { breakpoint: Infinity, size: 300 },
+];
 
 const COLOR_PALETTE = [
-  '#f87171', // red-400
-  '#fb923c', // orange-400
-  '#fbbf24', // amber-400
-  '#a3e635', // lime-400
-  '#4ade80', // green-400
-  '#22d3ee', // cyan-400
-  '#60a5fa', // blue-400
-  '#a78bfa', // violet-400
-  '#e879f9', // fuchsia-400
+  '#f87171',
+  '#fb923c',
+  '#fbbf24',
+  '#a3e635',
+  '#4ade80',
+  '#22d3ee',
+  '#60a5fa',
+  '#a78bfa',
+  '#e879f9',
 ];
+
+function getResponsiveSize(width: number): number {
+  const match = RESPONSIVE_SIZES.find((entry) => width < entry.breakpoint);
+  return match?.size ?? 300;
+}
 
 export function BouncingMorphingOrb({
   size: sizeProp,
@@ -57,44 +58,36 @@ export function BouncingMorphingOrb({
 }: BouncingOrbProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [position, setPosition] = useState<Position>({ x: 100, y: 100 });
+  const [position, setPosition] = useState<Vector2D>({ x: 100, y: 100 });
   const [currentColorIndex, setCurrentColorIndex] = useState(0);
   const [isCornerHit, setIsCornerHit] = useState(false);
   const [ripples, setRipples] = useState<RippleData[]>([]);
   const [size, setSize] = useState(300);
   const rippleIdRef = useRef(0);
 
-  // Responsive sizing
+  const velocityRef = useRef<Vector2D>({
+    x: speed * (Math.random() > 0.5 ? 1 : -1),
+    y: speed * (Math.random() > 0.5 ? 1 : -1),
+  });
+  const positionRef = useRef<Vector2D>(position);
+  const lastBounceTimeRef = useRef<Vector2D>({ x: 0, y: 0 });
+  const bounceCountRef = useRef(0);
+  const animationFrameRef = useRef<number | null>(null);
+
   useEffect(() => {
     if (sizeProp) {
       setSize(sizeProp);
       return;
     }
 
-    const updateSize = () => {
-      const width = window.innerWidth;
-      if (width < 768) {
-        setSize(150);
-      } else if (width < 1024) {
-        setSize(200);
-      } else {
-        setSize(300);
-      }
-    };
+    function updateSize(): void {
+      setSize(getResponsiveSize(window.innerWidth));
+    }
 
     updateSize();
     window.addEventListener('resize', updateSize);
     return () => window.removeEventListener('resize', updateSize);
   }, [sizeProp]);
-
-  const velocityRef = useRef<Velocity>({
-    x: speed * (Math.random() > 0.5 ? 1 : -1),
-    y: speed * (Math.random() > 0.5 ? 1 : -1),
-  });
-  const positionRef = useRef<Position>(position);
-  const lastBounceTimeRef = useRef<BounceTime>({ x: 0, y: 0 });
-  const bounceCountRef = useRef(0);
-  const animationFrameRef = useRef<number | null>(null);
 
   const applyRandomness = useCallback(
     (value: number): number => {
@@ -104,30 +97,41 @@ export function BouncingMorphingOrb({
     [bounceRandomness]
   );
 
-  const checkAndAdjustTrajectory = useCallback(() => {
+  const checkAndAdjustTrajectory = useCallback((): void => {
     const { x: vx, y: vy } = velocityRef.current;
     const ratio = Math.abs(vx / vy);
 
-    const isProblematic =
-      Math.abs(ratio - Math.round(ratio)) < 0.1 ||
-      Math.abs(ratio - 0.5) < 0.05 ||
-      Math.abs(ratio - 2) < 0.1;
+    const nearInteger = Math.abs(ratio - Math.round(ratio)) < 0.1;
+    const nearHalf = Math.abs(ratio - 0.5) < 0.05;
+    const nearDouble = Math.abs(ratio - 2) < 0.1;
 
-    if (isProblematic) {
-      const nudgeX = (Math.random() * 2 - 1) * TRAJECTORY_NUDGE_AMOUNT;
-      const nudgeY = (Math.random() * 2 - 1) * TRAJECTORY_NUDGE_AMOUNT;
+    if (!nearInteger && !nearHalf && !nearDouble) return;
 
-      velocityRef.current.x *= 1 + nudgeX;
-      velocityRef.current.y *= 1 + nudgeY;
+    const nudgeX = (Math.random() * 2 - 1) * TRAJECTORY_NUDGE_AMOUNT;
+    const nudgeY = (Math.random() * 2 - 1) * TRAJECTORY_NUDGE_AMOUNT;
 
-      const currentSpeed = Math.sqrt(vx * vx + vy * vy);
-      const newSpeed = Math.sqrt(
-        velocityRef.current.x ** 2 + velocityRef.current.y ** 2
-      );
-      const speedRatio = currentSpeed / newSpeed;
-      velocityRef.current.x *= speedRatio;
-      velocityRef.current.y *= speedRatio;
-    }
+    velocityRef.current.x *= 1 + nudgeX;
+    velocityRef.current.y *= 1 + nudgeY;
+
+    const currentSpeed = Math.sqrt(vx * vx + vy * vy);
+    const newSpeed = Math.sqrt(velocityRef.current.x ** 2 + velocityRef.current.y ** 2);
+    const speedRatio = currentSpeed / newSpeed;
+    velocityRef.current.x *= speedRatio;
+    velocityRef.current.y *= speedRatio;
+  }, []);
+
+  const cycleColor = useCallback((): void => {
+    setCurrentColorIndex((prev) => (prev + 1) % COLOR_PALETTE.length);
+  }, []);
+
+  const addRipple = useCallback((x: number, y: number, isCornerHit: boolean): void => {
+    const id = rippleIdRef.current++;
+    setRipples((prev) => [...prev, { id, x, y, isCornerHit }]);
+
+    const duration = isCornerHit ? 1100 : 700;
+    setTimeout(() => {
+      setRipples((prev) => prev.filter((r) => r.id !== id));
+    }, duration);
   }, []);
 
   useEffect(() => {
@@ -135,73 +139,76 @@ export function BouncingMorphingOrb({
     audioRef.current.preload = 'auto';
   }, []);
 
-  const cycleColor = useCallback(() => {
-    setCurrentColorIndex((prev) => (prev + 1) % COLOR_PALETTE.length);
-  }, []);
-
-  const addRipple = useCallback((x: number, y: number, isCornerHit: boolean) => {
-    const id = rippleIdRef.current++;
-    setRipples((prev) => [...prev, { id, x, y, isCornerHit }]);
-
-    setTimeout(() => {
-      setRipples((prev) => prev.filter((r) => r.id !== id));
-    }, isCornerHit ? 1100 : 700);
-  }, []);
-
   useEffect(() => {
-    const updatePhysics = () => {
-      const container = containerRef.current;
-      if (!container) {
+    function handleBounce(
+      pos: number,
+      velocity: number,
+      minBound: number,
+      maxBound: number
+    ): { pos: number; velocity: number; bounced: boolean } {
+      if (pos <= minBound) {
+        return {
+          pos: minBound,
+          velocity: Math.abs(applyRandomness(velocity)),
+          bounced: true,
+        };
+      }
+      if (pos >= maxBound) {
+        return {
+          pos: maxBound,
+          velocity: -Math.abs(applyRandomness(velocity)),
+          bounced: true,
+        };
+      }
+      return { pos, velocity, bounced: false };
+    }
+
+    function handleCornerHit(x: number, y: number): void {
+      setIsCornerHit(true);
+      onCornerHit?.();
+      addRipple(x + size / 2, y + size / 2, true);
+
+      if (audioRef.current) {
+        audioRef.current.currentTime = 0;
+        audioRef.current.play().catch(() => {});
+      }
+
+      setTimeout(() => setIsCornerHit(false), 2000);
+    }
+
+    function updatePhysics(): void {
+      if (!containerRef.current) {
         animationFrameRef.current = requestAnimationFrame(updatePhysics);
         return;
       }
 
-      const bounds = container.getBoundingClientRect();
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
+      const now = Date.now();
 
       let { x, y } = positionRef.current;
-      const { x: vx, y: vy } = velocityRef.current;
+      let { x: vx, y: vy } = velocityRef.current;
 
-      // Update position
       x += vx;
       y += vy;
 
-      const now = Date.now();
-      let hitX = false;
-      let hitY = false;
+      const xResult = handleBounce(x, vx, 0, viewportWidth - size);
+      const yResult = handleBounce(y, vy, 0, viewportHeight - size);
 
-      if (x <= 0) {
-        x = 0;
-        velocityRef.current.x = Math.abs(applyRandomness(vx));
+      x = xResult.pos;
+      y = yResult.pos;
+      velocityRef.current.x = xResult.velocity;
+      velocityRef.current.y = yResult.velocity;
+
+      if (xResult.bounced) {
         lastBounceTimeRef.current.x = now;
-        hitX = true;
-        bounceCountRef.current++;
-        cycleColor();
-        addRipple(x + size / 2, y + size / 2, false);
-      } else if (x + size >= viewportWidth) {
-        x = viewportWidth - size;
-        velocityRef.current.x = -Math.abs(applyRandomness(vx));
-        lastBounceTimeRef.current.x = now;
-        hitX = true;
         bounceCountRef.current++;
         cycleColor();
         addRipple(x + size / 2, y + size / 2, false);
       }
 
-      if (y <= 0) {
-        y = 0;
-        velocityRef.current.y = Math.abs(applyRandomness(vy));
+      if (yResult.bounced) {
         lastBounceTimeRef.current.y = now;
-        hitY = true;
-        bounceCountRef.current++;
-        cycleColor();
-        addRipple(x + size / 2, y + size / 2, false);
-      } else if (y + size >= viewportHeight) {
-        y = viewportHeight - size;
-        velocityRef.current.y = -Math.abs(applyRandomness(vy));
-        lastBounceTimeRef.current.y = now;
-        hitY = true;
         bounceCountRef.current++;
         cycleColor();
         addRipple(x + size / 2, y + size / 2, false);
@@ -209,23 +216,14 @@ export function BouncingMorphingOrb({
 
       const timeSinceXBounce = now - lastBounceTimeRef.current.x;
       const timeSinceYBounce = now - lastBounceTimeRef.current.y;
-
-      if (
-        hitX &&
-        hitY &&
+      const isCorner =
+        xResult.bounced &&
+        yResult.bounced &&
         timeSinceXBounce <= CORNER_HIT_THRESHOLD_MS &&
-        timeSinceYBounce <= CORNER_HIT_THRESHOLD_MS
-      ) {
-        setIsCornerHit(true);
-        onCornerHit?.();
-        addRipple(x + size / 2, y + size / 2, true);
+        timeSinceYBounce <= CORNER_HIT_THRESHOLD_MS;
 
-        if (audioRef.current) {
-          audioRef.current.currentTime = 0;
-          audioRef.current.play().catch(() => {});
-        }
-
-        setTimeout(() => setIsCornerHit(false), 2000);
+      if (isCorner) {
+        handleCornerHit(x, y);
       }
 
       if (bounceCountRef.current > 0 && bounceCountRef.current % TRAJECTORY_CHECK_INTERVAL === 0) {
@@ -236,7 +234,7 @@ export function BouncingMorphingOrb({
       setPosition({ x, y });
 
       animationFrameRef.current = requestAnimationFrame(updatePhysics);
-    };
+    }
 
     animationFrameRef.current = requestAnimationFrame(updatePhysics);
 
