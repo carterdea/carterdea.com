@@ -73,6 +73,10 @@ const VENDOR_PATTERNS = [
   'shop_events_listener',
   'web-pixel',
   'wpm/bfcfee',
+  'wpm/sfcfee',
+  'wpm/bfcfee988w5aeb613cpc8e4bc33m6693e112m',
+  'sfcfee988w5aeb613cpc8e4bc33m6693e112m',
+  'bfcfee988w5aeb613cpc8e4bc33m6693e112m',
   'perf-kit',
   'shop.app/checkouts',
   'shop-js/modules',
@@ -82,9 +86,50 @@ const VENDOR_PATTERNS = [
   'checkout-web',
   'shopifycloud/checkout-web',
   '/cdn/shopifycloud/checkout-web',
+  'polyfills.bu5XgDjl',
+  'app.O45uQuey',
+  'locale-en._KlOf2hp',
+  'NumberField.C74HZD_h',
+  'page-OnePage',
+  'AddDiscountButton',
+  'ShopPayOptInDisclaimer',
+  'RememberMeDescriptionText',
+  'useShowShopPayOptin',
+  'StockProblemsLineItemList',
+  'useShopPayButtonClassName',
+  'PaymentButtons',
+  'LocalPickup',
+  'SeparatePaymentsNotice',
+  'useAddressManager',
+  'useShopPayQuery',
+  'VaultedPayment',
+  'ShipmentBreakdown',
+  'MerchandiseModal',
+  'ShopPayVerificationSwitch',
+  'StackedMerchandisePreview',
+  'PayButtonSection',
+  'useSubscribeMessenger',
+  'RuntimeExtension',
+  'AnnouncementRuntimeExtensions',
+  'rendering-extension-targets',
+  'ExtensionsInner',
+  'shopify_pay/accelerated_checkout',
+  'storefront-65b4c6d7',
   // Geolocation
   'geolizr',
   'GeolizrAPI',
+  // Animation libraries (not needed for static preview)
+  'gsap',
+  'ScrollTrigger',
+  'ScrambleTextPlugin',
+  'cdn.jsdelivr.net',
+  // App integrations (not functional in preview)
+  '/apps/sale-sight',
+  '/apps/loggedincustomer',
+  'webauthn-listeners',
+  'xgen-tracking',
+  'gdpr_cookie_consent',
+  'app.v1.0.368',
 ];
 
 // Essential Shopify scripts to preserve (only search & cart functionality)
@@ -164,9 +209,11 @@ async function sanitizeHTML(options: SanitizeOptions): Promise<void> {
     }
   }
 
-  // Remove shop-js prefetch links
-  const shopJsLinks = document.querySelectorAll('link[href*="shop-js"]');
-  for (const link of shopJsLinks) {
+  // Remove shop-js prefetch links and GSAP preloads
+  const unwantedLinks = document.querySelectorAll(
+    'link[href*="shop-js"], link[href*="gsap"], link[href*="ScrollTrigger"], link[href*="ScrambleTextPlugin"], link[href*="cdn.jsdelivr.net"]'
+  );
+  for (const link of unwantedLinks) {
     link.remove();
   }
 
