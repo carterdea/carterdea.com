@@ -94,8 +94,8 @@ export const POST: APIRoute = async ({ request }) => {
 
     // Send email via Resend
     const { error } = await getResend().emails.send({
-      from: 'hello@carterdea.com',
-      to: 'hello@carterdea.com',
+      from: 'hello@form.carterdea.com',
+      to: 'me@carterdea.com',
       replyTo: sanitizedEmail,
       subject: `New inquiry from ${sanitizedName}`,
       text: `Name: ${sanitizedName}
