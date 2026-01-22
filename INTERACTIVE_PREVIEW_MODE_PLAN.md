@@ -259,15 +259,15 @@ public/assets/previews/
 4. Test each file in standalone browser
 
 **Tasks:**
-- [ ] Sanitize Stussy homepage
-- [ ] Sanitize Stussy PLP
-- [ ] Sanitize Stussy PDP
-- [ ] Sanitize New Era homepage
-- [ ] Sanitize New Era PLP
-- [ ] Sanitize New Era PDP
-- [ ] Manual review and cleanup of all 6 files
-- [ ] Verify search functionality in each file
-- [ ] Verify cart functionality in each file
+- [x] Sanitize Stussy homepage
+- [x] Sanitize Stussy PLP
+- [x] Sanitize Stussy PDP
+- [x] Sanitize New Era homepage
+- [x] Sanitize New Era PLP
+- [x] Sanitize New Era PDP
+- [x] Manual review and cleanup of all 6 files
+- [x] Verify search functionality in each file
+- [x] Verify cart functionality in each file
 
 **Acceptance:**
 - 6 sanitized HTML files total (2 sites × 3 pages)
