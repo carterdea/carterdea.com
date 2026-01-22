@@ -312,8 +312,8 @@ public/assets/previews/
 
 **Goal:** Centralize site/page configuration
 
-- [ ] Create `src/config/preview-sites.ts`
-- [ ] Define site structure:
+- [x] Create `src/config/preview-sites.ts`
+- [x] Define site structure:
   ```typescript
   {
     stussy: {
@@ -328,12 +328,12 @@ public/assets/previews/
     'new-era': { ... }
   }
   ```
-- [ ] Export TypeScript types for site/page keys
+- [x] Export TypeScript types for site/page keys
 
 **Acceptance:**
-- Single source of truth for all sites/pages
-- Type-safe site and page references
-- Easy to add new sites in future
+- [x] Single source of truth for all sites/pages
+- [x] Type-safe site and page references
+- [x] Easy to add new sites in future
 
 ---
 
