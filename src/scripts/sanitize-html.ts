@@ -34,6 +34,20 @@ const VENDOR_PATTERNS = [
   'adsrvr.org',
   'elevar',
   'fullstory',
+  'tag_assistant',
+  'aria-listener',
+  'logHelper',
+  '@aria/webjs-sdk',
+  '@bingads-webui',
+  'clarity.ms',
+  'zencastr.com',
+  'dotlottie',
+  'swiper',
+  'xgen.dev',
+  '9gtb.com',
+  'imask',
+  'amplitude.com',
+  'nba.com',
   // Marketing tools
   'gorgias',
   'klaviyo',
@@ -51,6 +65,9 @@ const VENDOR_PATTERNS = [
   'getredo.com',
   'sendlane.com',
   'kyc.red',
+  'consentmo',
+  'redirect-app',
+  'true-fans-tracking',
   // Shopify tracking (not essential for preview)
   'trekkie',
   'shop_events_listener',
@@ -59,24 +76,25 @@ const VENDOR_PATTERNS = [
   'perf-kit',
   'shop.app/checkouts',
   'shop-js/modules',
+  'monorail/unstable',
+  'checkouts/internal/preloads',
+  // Shopify checkout (not needed for preview)
+  'checkout-web',
+  'shopifycloud/checkout-web',
+  '/cdn/shopifycloud/checkout-web',
   // Geolocation
   'geolizr',
+  'GeolizrAPI',
 ];
 
-// Essential Shopify scripts to preserve
+// Essential Shopify scripts to preserve (only search & cart functionality)
 const ESSENTIAL_PATTERNS = [
-  'shopify-features',
   'theme.js',
-  'vendor.js',
   'cart',
   'search',
-  'predictive',
+  'predictive-search',
   'drawer',
   'variant',
-  'storefront/load_feature',
-  'shopify_pay/storefront',
-  'portable-wallets',
-  'consent-tracking-api',
 ];
 
 function matchesPattern(text: string, patterns: string[]): boolean {

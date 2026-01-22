@@ -58,91 +58,18 @@
   font-size: 14px;
 }
 
-/* Overlay for non-interactive mode */
-.overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 5;
-  cursor: pointer;
-  background: transparent;
-  border: none;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-}
-
-.overlay:hover {
-  opacity: 1;
-  background: rgba(0, 0, 0, 0.3);
-}
-
-.overlayHint {
-  background: rgba(0, 0, 0, 0.8);
-  color: white;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 500;
-  pointer-events: none;
-  backdrop-filter: blur(4px);
-}
-
 /* Iframe wrapper for scaling */
 .iframeWrapper {
   position: absolute;
   top: 0;
   left: 0;
   overflow: hidden;
-  /* Transform is set inline based on scale calculation */
 }
 
-/* Iframe styles */
+/* Iframe styles - always interactive */
 .iframe {
   border: none;
   background: white;
   display: block;
-}
-
-/* Non-interactive mode: block pointer events */
-.nonInteractive {
-  pointer-events: none;
-}
-
-/* Interactive mode: allow pointer events */
-.interactive {
   pointer-events: auto;
-}
-
-/* Mode indicator */
-.modeIndicator {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  background: rgba(0, 0, 0, 0.8);
-  color: #4ade80;
-  padding: 6px 12px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 500;
-  z-index: 20;
-  pointer-events: none;
-  backdrop-filter: blur(4px);
-  animation: fadeIn 0.2s ease;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }

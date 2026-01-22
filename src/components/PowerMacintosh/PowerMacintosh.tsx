@@ -40,9 +40,7 @@ interface PowerMacintoshProps {
   initialPosition?: { x: number; y: number };
   enableStartupChime?: boolean;
   disableDrag?: boolean;
-  /** Path to interactive HTML preview (if provided, replaces screenshot) */
   previewHtmlPath?: string;
-  /** Viewport width the HTML was captured at (default: 1280px) */
   previewViewportWidth?: number;
 }
 
