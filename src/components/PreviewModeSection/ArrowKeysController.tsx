@@ -40,8 +40,8 @@ const KEY_CONFIG: Record<
   Direction,
   { label: string; width: number; height: number; path: string }
 > = {
-  up: { label: 'Up', width: 10, height: 6, path: 'M1.5 4.5L5 1.5L8.5 4.5' },
-  down: { label: 'Down', width: 10, height: 6, path: 'M1.5 1.5L5 4.5L8.5 1.5' },
+  up: { label: 'Previous site', width: 10, height: 6, path: 'M1.5 4.5L5 1.5L8.5 4.5' },
+  down: { label: 'Next site', width: 10, height: 6, path: 'M1.5 1.5L5 4.5L8.5 1.5' },
   left: { label: 'Previous computer', width: 6, height: 10, path: 'M4.5 1.5L1.5 5L4.5 8.5' },
   right: { label: 'Next computer', width: 6, height: 10, path: 'M1.5 1.5L4.5 5L1.5 8.5' },
 };

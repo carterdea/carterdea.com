@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import InteractivePreview from '../InteractivePreview';
 import styles from './IMacG4.module.css';
 
 // iMac G4 startup chime
@@ -10,6 +11,8 @@ interface IMacG4Props {
   initialPosition?: { x: number; y: number };
   enableStartupChime?: boolean;
   disableDrag?: boolean;
+  previewHtmlPath?: string;
+  previewViewportWidth?: number;
 }
 
 type ScreenState = 'on' | 'off' | 'turningOn' | 'turningOff';
@@ -20,6 +23,8 @@ export default function IMacG4({
   initialPosition = { x: 0, y: 0 },
   enableStartupChime = true,
   disableDrag = false,
+  previewHtmlPath,
+  previewViewportWidth = 1280,
 }: IMacG4Props) {
   const [screenState, setScreenState] = useState<ScreenState>('on');
   const [position, setPosition] = useState(initialPosition);
@@ -119,13 +124,25 @@ export default function IMacG4({
                 ${screenState === 'turningOn' ? styles.turningOn : ''}
               `}
               >
-                {isPoweredOn && screenshotSrc && (
-                  <img
-                    src={screenshotSrc}
-                    alt="Website preview"
-                    className={styles.screenContent}
-                    draggable={false}
+                {/* Render interactive preview if path provided, otherwise show screenshot */}
+                {previewHtmlPath ? (
+                  <InteractivePreview
+                    htmlPath={previewHtmlPath}
+                    viewportWidth={previewViewportWidth}
+                    screenWidth={344}
+                    screenHeight={214}
+                    isPoweredOn={isPoweredOn}
                   />
+                ) : (
+                  isPoweredOn &&
+                  screenshotSrc && (
+                    <img
+                      src={screenshotSrc}
+                      alt="Website preview"
+                      className={styles.screenContent}
+                      draggable={false}
+                    />
+                  )
                 )}
               </div>
             </div>

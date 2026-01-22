@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import InteractivePreview from '../InteractivePreview';
 import styles from './PowerMacintosh.module.css';
 
 // Classic Mac startup chime
@@ -39,6 +40,8 @@ interface PowerMacintoshProps {
   initialPosition?: { x: number; y: number };
   enableStartupChime?: boolean;
   disableDrag?: boolean;
+  previewHtmlPath?: string;
+  previewViewportWidth?: number;
 }
 
 type ScreenState = 'on' | 'off' | 'turningOn' | 'turningOff';
@@ -49,6 +52,8 @@ export default function PowerMacintosh({
   initialPosition = { x: 0, y: 0 },
   enableStartupChime = true,
   disableDrag = false,
+  previewHtmlPath,
+  previewViewportWidth = 1280,
 }: PowerMacintoshProps) {
   const [screenState, setScreenState] = useState<ScreenState>('on');
   const [position, setPosition] = useState(initialPosition);
@@ -152,13 +157,25 @@ export default function PowerMacintosh({
               ${screenState === 'on' ? styles.screenFlicker : ''}
             `}
             >
-              {isPoweredOn && screenshotSrc && (
-                <img
-                  src={screenshotSrc}
-                  alt="Website preview"
-                  className={styles.screenContent}
-                  draggable={false}
+              {/* Render interactive preview if path provided, otherwise show screenshot */}
+              {previewHtmlPath ? (
+                <InteractivePreview
+                  htmlPath={previewHtmlPath}
+                  viewportWidth={previewViewportWidth}
+                  screenWidth={334}
+                  screenHeight={244}
+                  isPoweredOn={isPoweredOn}
                 />
+              ) : (
+                isPoweredOn &&
+                screenshotSrc && (
+                  <img
+                    src={screenshotSrc}
+                    alt="Website preview"
+                    className={styles.screenContent}
+                    draggable={false}
+                  />
+                )
               )}
               {/* Scanlines overlay - only when powered on */}
               {isPoweredOn && <div className={styles.scanlines} />}

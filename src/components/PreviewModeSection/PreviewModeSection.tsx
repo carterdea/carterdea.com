@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { getPreviewPath, getViewportWidth, type SiteId, siteIds } from '../../config/preview-sites';
 import { useSiteMode } from '../../hooks/useSiteMode';
 import IMacG4 from '../IMacG4/IMacG4';
 import PowerMacintosh from '../PowerMacintosh/PowerMacintosh';
@@ -14,14 +15,10 @@ const COMPUTERS = [
 type ComputerId = (typeof COMPUTERS)[number]['id'];
 type Position = { x: number; y: number };
 
-interface PreviewState {
-  computer: ComputerId;
-  position: Position;
-}
-
 export function PreviewModeSection() {
   const [mode] = useSiteMode();
   const [computer, setComputer] = useState<ComputerId>('power-macintosh');
+  const [site, setSite] = useState<SiteId>('stussy');
   const [position, setPosition] = useState<Position>({ x: 700, y: 280 });
   const [isDragging, setIsDragging] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
@@ -38,6 +35,9 @@ export function PreviewModeSection() {
         if (parsed.computer && parsed.position) {
           setComputer(parsed.computer);
           setPosition(parsed.position);
+          if (parsed.site) {
+            setSite(parsed.site);
+          }
           setHasMounted(true);
           return;
         }
@@ -90,10 +90,10 @@ export function PreviewModeSection() {
     if (isDragging) {
       setIsDragging(false);
       if (typeof window !== 'undefined') {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify({ computer, position }));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ computer, site, position }));
       }
     }
-  }, [isDragging, computer, position]);
+  }, [isDragging, computer, site, position]);
 
   const cycleComputer = useCallback(
     (direction: 1 | -1) => {
@@ -102,16 +102,36 @@ export function PreviewModeSection() {
         const nextIndex = (currentIndex + direction + COMPUTERS.length) % COMPUTERS.length;
         const newComputer = COMPUTERS[nextIndex].id;
         if (typeof window !== 'undefined') {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify({ computer: newComputer, position }));
+          localStorage.setItem(
+            STORAGE_KEY,
+            JSON.stringify({ computer: newComputer, site, position })
+          );
         }
         return newComputer;
       });
     },
-    [position]
+    [site, position]
+  );
+
+  const cycleSite = useCallback(
+    (direction: 1 | -1) => {
+      setSite((prev) => {
+        const currentIndex = siteIds.indexOf(prev);
+        const nextIndex = (currentIndex + direction + siteIds.length) % siteIds.length;
+        const newSite = siteIds[nextIndex];
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify({ computer, site: newSite, position }));
+        }
+        return newSite;
+      });
+    },
+    [computer, position]
   );
 
   const handlePrevComputer = useCallback(() => cycleComputer(-1), [cycleComputer]);
   const handleNextComputer = useCallback(() => cycleComputer(1), [cycleComputer]);
+  const handlePrevSite = useCallback(() => cycleSite(-1), [cycleSite]);
+  const handleNextSite = useCallback(() => cycleSite(1), [cycleSite]);
   const handleMouseEnter = useCallback(() => setIsHovering(true), []);
   const handleMouseLeave = useCallback(() => setIsHovering(false), []);
 
@@ -119,22 +139,27 @@ export function PreviewModeSection() {
   useEffect(() => {
     if (mode !== 'preview') return;
 
-    const handleKeyDown = (e: KeyboardEvent) => {
+    const keyHandlers: Record<string, () => void> = {
+      ArrowLeft: handlePrevComputer,
+      ArrowRight: handleNextComputer,
+      ArrowUp: handlePrevSite,
+      ArrowDown: handleNextSite,
+    };
+
+    function handleKeyDown(e: KeyboardEvent): void {
       // Don't capture if user is typing in an input
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
 
-      if (e.key === 'ArrowLeft') {
+      const handler = keyHandlers[e.key];
+      if (handler) {
         e.preventDefault();
-        handlePrevComputer();
-      } else if (e.key === 'ArrowRight') {
-        e.preventDefault();
-        handleNextComputer();
+        handler();
       }
-    };
+    }
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [mode, handlePrevComputer, handleNextComputer]);
+  }, [mode, handlePrevComputer, handleNextComputer, handlePrevSite, handleNextSite]);
 
   if (mode !== 'preview' || !hasMounted) return null;
 
@@ -172,6 +197,8 @@ export function PreviewModeSection() {
           screenshotSrc="/assets/previews/stussy-screenshot.png"
           initialPosition={{ x: 0, y: 0 }}
           disableDrag
+          previewHtmlPath={getPreviewPath(site, 'home')}
+          previewViewportWidth={getViewportWidth(site)}
         />
 
         <div
@@ -190,7 +217,12 @@ export function PreviewModeSection() {
           }}
           onMouseEnter={handleMouseEnter}
         >
-          <ArrowKeysController onLeft={handlePrevComputer} onRight={handleNextComputer} />
+          <ArrowKeysController
+            onLeft={handlePrevComputer}
+            onRight={handleNextComputer}
+            onUp={handlePrevSite}
+            onDown={handleNextSite}
+          />
         </div>
       </div>
     </div>
