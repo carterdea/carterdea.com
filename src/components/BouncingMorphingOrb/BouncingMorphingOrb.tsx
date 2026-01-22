@@ -192,8 +192,9 @@ export function BouncingMorphingOrb({
       x += vx;
       y += vy;
 
-      const xResult = handleBounce(x, vx, 0, viewportWidth - size);
-      const yResult = handleBounce(y, vy, 0, viewportHeight - size);
+      const padding = size * 0.15;
+      const xResult = handleBounce(x, vx, -padding, viewportWidth - size + padding);
+      const yResult = handleBounce(y, vy, -padding, viewportHeight - size + padding);
 
       x = xResult.pos;
       y = yResult.pos;
