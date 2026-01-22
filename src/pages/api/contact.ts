@@ -62,7 +62,7 @@ export const POST: APIRoute = async ({ request }) => {
     });
   }
 
-  let body;
+  let body: { name?: string; email?: string; budget?: string; message?: string };
   try {
     body = await request.json();
   } catch (err) {
