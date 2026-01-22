@@ -187,7 +187,7 @@ export function BouncingMorphingOrb({
       const now = Date.now();
 
       let { x, y } = positionRef.current;
-      let { x: vx, y: vy } = velocityRef.current;
+      const { x: vx, y: vy } = velocityRef.current;
 
       x += vx;
       y += vy;

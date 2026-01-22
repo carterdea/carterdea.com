@@ -1,2 +1,2 @@
-export { BouncingMorphingOrb } from './BouncingMorphingOrb';
 export type { default } from './BouncingMorphingOrb';
+export { BouncingMorphingOrb } from './BouncingMorphingOrb';
