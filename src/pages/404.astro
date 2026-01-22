@@ -2,13 +2,16 @@
 import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
 import Layout from '../layouts/Layout.astro';
+import { BouncingMorphingOrb } from '../components/BouncingMorphingOrb';
 ---
 
 <Layout title="404 — Carterdea">
   <div class="min-h-screen flex flex-col">
+    <BouncingMorphingOrb client:load />
+
     <Header />
 
-    <main transition:name="page-content" class="flex-1 flex flex-col px-4 md:px-10">
+    <main transition:name="page-content" class="flex-1 flex flex-col px-4 md:px-10 relative z-10">
       <section class="px-0 pt-20 pb-8 md:pt-30 md:pb-18">
         <div class="max-w-sm md:max-w-[50%] md:mx-auto">
           <h1
