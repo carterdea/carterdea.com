@@ -172,6 +172,8 @@ export function PreviewModeSection() {
           screenshotSrc="/assets/previews/stussy-screenshot.png"
           initialPosition={{ x: 0, y: 0 }}
           disableDrag
+          previewHtmlPath="/assets/previews/stussy/home.html"
+          previewViewportWidth={1280}
         />
 
         <div

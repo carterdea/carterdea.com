@@ -288,23 +288,23 @@ public/assets/previews/
 
 **Goal:** Create iframe component with scaling and interaction modes
 
-- [ ] Create `InteractivePreview.tsx` component
-- [ ] Implement iframe with `srcdoc` attribute
-- [ ] Add `sandbox="allow-scripts allow-same-origin"`
-- [ ] CSS transform scaling: 1280px → ~400px
-- [ ] Lazy load HTML content (fetch on demand)
-- [ ] Two interaction modes:
+- [x] Create `InteractivePreview.tsx` component
+- [x] Implement iframe with `srcdoc` attribute
+- [x] Add `sandbox="allow-scripts allow-same-origin"`
+- [x] CSS transform scaling: 1280px → ~400px
+- [x] Lazy load HTML content (fetch on demand)
+- [x] Two interaction modes:
   - **Default:** `pointer-events: none` (allows dragging computer)
   - **Focus mode:** Click screen to enable interaction, ESC to exit
-- [ ] Loading state while fetching HTML
-- [ ] Test with sanitized Stussy homepage
+- [x] Loading state while fetching HTML
+- [x] Test with sanitized Stussy homepage
 
 **Acceptance:**
-- Iframe renders sanitized HTML correctly
-- Scaling fits computer screen (Power Mac & iMac)
-- Can toggle between drag mode and interaction mode
-- No CORS errors
-- Lazy loading works on power-on
+- [x] Iframe renders sanitized HTML correctly
+- [x] Scaling fits computer screen (Power Mac & iMac)
+- [x] Can toggle between drag mode and interaction mode
+- [x] No CORS errors
+- [x] Lazy loading works on power-on
 
 ---
 
