@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import styles from './InteractivePreview.module.css';
 
@@ -11,6 +11,11 @@ interface InteractivePreviewProps {
   className?: string;
 }
 
+interface LoadedContent {
+  path: string;
+  html: string;
+}
+
 export default function InteractivePreview({
   htmlPath,
   viewportWidth = 1280,
@@ -19,43 +24,39 @@ export default function InteractivePreview({
   isPoweredOn,
   className = '',
 }: InteractivePreviewProps): React.ReactElement | null {
-  const [htmlContent, setHtmlContent] = useState<string>('');
+  const [content, setContent] = useState<LoadedContent | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
 
-  // Lazy load HTML content when powered on
   useEffect(() => {
-    if (!isPoweredOn || htmlContent) return;
+    if (!isPoweredOn || content?.path === htmlPath) return;
 
-    async function loadHTML(): Promise<void> {
-      setIsLoading(true);
-      setError(null);
+    setIsLoading(true);
+    setError(null);
 
-      const response = await fetch(htmlPath);
-      if (!response.ok) {
-        setError(`Failed to load HTML: ${response.statusText}`);
+    fetch(htmlPath)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Failed to load HTML: ${response.statusText}`);
+        }
+        return response.text();
+      })
+      .then((html) => {
+        setContent({ path: htmlPath, html });
         setIsLoading(false);
-        return;
-      }
-
-      const html = await response.text();
-      setHtmlContent(html);
-      setIsLoading(false);
-    }
-
-    loadHTML().catch((err) => {
-      setError(err instanceof Error ? err.message : 'Failed to load preview');
-      console.error('Error loading preview HTML:', err);
-      setIsLoading(false);
-    });
-  }, [isPoweredOn, htmlPath, htmlContent]);
+      })
+      .catch((err) => {
+        const message = err instanceof Error ? err.message : 'Failed to load preview';
+        setError(message);
+        console.error('Error loading preview HTML:', err);
+        setIsLoading(false);
+      });
+  }, [isPoweredOn, htmlPath, content?.path]);
 
   if (!isPoweredOn) {
     return null;
   }
 
-  // Scale factor to fit viewport into screen
   const scale = screenWidth / viewportWidth;
   const scaledHeight = screenHeight / scale;
 
@@ -74,7 +75,7 @@ export default function InteractivePreview({
         </div>
       )}
 
-      {htmlContent && (
+      {content && (
         <div
           className={styles.iframeWrapper}
           style={{
@@ -85,9 +86,8 @@ export default function InteractivePreview({
           }}
         >
           <iframe
-            ref={iframeRef}
             className={styles.iframe}
-            srcDoc={htmlContent}
+            srcDoc={content.html}
             sandbox="allow-scripts allow-same-origin"
             title="Interactive Preview"
             style={{
