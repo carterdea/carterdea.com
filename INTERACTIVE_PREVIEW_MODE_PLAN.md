@@ -372,19 +372,19 @@ public/assets/previews/
 
 **Goal:** Prevent search engines from indexing preview assets
 
-- [ ] Update `public/robots.txt`:
+- [x] Update `public/robots.txt`:
   ```txt
   User-agent: *
   Disallow: /assets/previews/
   ```
-- [ ] Verify sitemap excludes `/assets/previews/` paths
-- [ ] Add `<meta name="robots" content="noindex, nofollow">` to all sanitized HTML
+- [x] Verify sitemap excludes `/assets/previews/` paths
+- [x] Add `<meta name="robots" content="noindex, nofollow">` to all sanitized HTML
 - [ ] Test with Google Search Console (if applicable)
 
 **Acceptance:**
-- robots.txt blocks preview directory
-- Sanitized HTML has noindex meta tag
-- No preview pages in sitemap
+- [x] robots.txt blocks preview directory
+- [x] Sanitized HTML has noindex meta tag
+- [x] No preview pages in sitemap
 
 ---
 
