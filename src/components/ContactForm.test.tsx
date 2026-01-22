@@ -1,15 +1,17 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { Mock } from 'vitest';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import ContactForm from './ContactForm';
 
 // Mock fetch globally
-global.fetch = vi.fn();
+const mockFetch = vi.fn() as Mock;
+global.fetch = mockFetch as unknown as typeof fetch;
 
 describe('ContactForm', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (global.fetch as any).mockResolvedValue({
+    mockFetch.mockResolvedValue({
       ok: true,
       json: async () => ({ success: true }),
     });
@@ -170,7 +172,7 @@ describe('ContactForm', () => {
     });
 
     it('should show error message on failed submission', async () => {
-      (global.fetch as any).mockResolvedValueOnce({
+      mockFetch.mockResolvedValueOnce({
         ok: false,
         json: async () => ({ error: 'Failed to send' }),
       });

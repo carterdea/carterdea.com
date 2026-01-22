@@ -9,6 +9,11 @@ vi.mock('resend', () => ({
   },
 }));
 
+// Type for API route context
+interface APIContext {
+  request: Request;
+}
+
 // Helper to create mock request with unique IPs
 let ipCounter = 0;
 function createRequest(
@@ -49,7 +54,7 @@ describe('POST /api/contact', () => {
         message: 'I need help with my project',
       });
 
-      const response = await POST({ request } as any);
+      const response = await POST({ request } as APIContext);
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -65,7 +70,7 @@ describe('POST /api/contact', () => {
         message: 'Test message',
       });
 
-      const response = await POST({ request } as any);
+      const response = await POST({ request } as APIContext);
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -82,7 +87,7 @@ describe('POST /api/contact', () => {
         message: 'Test message',
       });
 
-      const response = await POST({ request } as any);
+      const response = await POST({ request } as APIContext);
       const data = await response.json();
 
       expect(response.status).toBe(400);
@@ -98,7 +103,7 @@ describe('POST /api/contact', () => {
         message: 'Test message',
       });
 
-      const response = await POST({ request } as any);
+      const response = await POST({ request } as APIContext);
       const data = await response.json();
 
       expect(response.status).toBe(400);
@@ -113,7 +118,7 @@ describe('POST /api/contact', () => {
         message: 'Test message',
       });
 
-      const response = await POST({ request } as any);
+      const response = await POST({ request } as APIContext);
       const data = await response.json();
 
       expect(response.status).toBe(400);
@@ -129,7 +134,7 @@ describe('POST /api/contact', () => {
         message: 'Test message',
       });
 
-      const response = await POST({ request } as any);
+      const response = await POST({ request } as APIContext);
       const data = await response.json();
 
       expect(response.status).toBe(400);
@@ -146,7 +151,7 @@ describe('POST /api/contact', () => {
         message: 'Test message',
       });
 
-      const response = await POST({ request } as any);
+      const response = await POST({ request } as APIContext);
       const data = await response.json();
 
       expect(response.status).toBe(400);
@@ -161,7 +166,7 @@ describe('POST /api/contact', () => {
         email: 'test@example.com',
       });
 
-      const response = await POST({ request } as any);
+      const response = await POST({ request } as APIContext);
       const data = await response.json();
 
       expect(response.status).toBe(400);
@@ -177,7 +182,7 @@ describe('POST /api/contact', () => {
         message: '   ',
       });
 
-      const response = await POST({ request } as any);
+      const response = await POST({ request } as APIContext);
       const data = await response.json();
 
       expect(response.status).toBe(400);
@@ -205,7 +210,7 @@ describe('POST /api/contact', () => {
         }),
       });
 
-      const response = await POST({ request } as any);
+      const response = await POST({ request } as APIContext);
       const data = await response.json();
 
       expect(response.status).toBe(403);
@@ -225,7 +230,7 @@ describe('POST /api/contact', () => {
         message: longMessage,
       });
 
-      const response = await POST({ request } as any);
+      const response = await POST({ request } as APIContext);
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -246,7 +251,7 @@ describe('POST /api/contact', () => {
         body: 'not valid json',
       });
 
-      const response = await POST({ request } as any);
+      const response = await POST({ request } as APIContext);
       const data = await response.json();
 
       expect(response.status).toBe(400);
@@ -271,7 +276,7 @@ describe('POST /api/contact', () => {
 
       // Make 5 requests
       for (let i = 0; i < 5; i++) {
-        const response = await POST({ request: makeRequest() } as any);
+        const response = await POST({ request: makeRequest() } as APIContext);
         expect(response.status).toBe(200);
       }
     });
@@ -292,11 +297,11 @@ describe('POST /api/contact', () => {
 
       // Make 5 successful requests
       for (let i = 0; i < 5; i++) {
-        await POST({ request: makeRequest() } as any);
+        await POST({ request: makeRequest() } as APIContext);
       }
 
       // 6th request should be rate limited
-      const response = await POST({ request: makeRequest() } as any);
+      const response = await POST({ request: makeRequest() } as APIContext);
       const data = await response.json();
 
       expect(response.status).toBe(429);
