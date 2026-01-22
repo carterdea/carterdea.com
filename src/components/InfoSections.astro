@@ -59,55 +59,6 @@ const ChevronRight = `<svg width="5" height="8" viewBox="0 0 5 8" fill="none" xm
     </div>
   )}
 
-  <!-- Testimonials - temporarily hidden until real testimonials are collected
-  {testimonials.length > 0 && (
-    <div class="flex flex-col gap-3 md:contents info-section-row" data-delay="150">
-      <div class="flex items-center justify-between md:block info-section-item">
-        <h3 class="text-sm text-white tracking-[-0.28px]">Testimonials</h3>
-        {testimonials.length > 1 && (
-          <div class="flex gap-1 md:hidden">
-            <Button client:load type="button" className="testimonial-prev py-1.5!" aria-label="Previous testimonial">
-              <Fragment set:html={ChevronLeft} />
-            </Button>
-            <Button client:load type="button" className="testimonial-next py-1.5!" aria-label="Next testimonial">
-              <Fragment set:html={ChevronRight} />
-            </Button>
-          </div>
-        )}
-      </div>
-      <div class="md:col-span-2 info-section-item">
-        {testimonials.length > 1 && (
-          <div class="hidden md:flex gap-1 justify-end mb-4">
-            <Button client:load type="button" className="testimonial-prev py-1.5!" aria-label="Previous testimonial">
-              <Fragment set:html={ChevronLeft} />
-            </Button>
-            <Button client:load type="button" className="testimonial-next py-1.5!" aria-label="Next testimonial">
-              <Fragment set:html={ChevronRight} />
-            </Button>
-          </div>
-        )}
-        <div class="testimonials-viewport overflow-hidden" aria-live="polite">
-          <div class="testimonials-container flex gap-8">
-            {testimonials.map((testimonial) => (
-              <div class="testimonial-slide flex-[0_0_100%] min-w-0 border-l border-white pl-4">
-                <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal italic mb-3">
-                  "{testimonial.quote}"
-                </p>
-                <div class="flex items-center gap-2 flex-wrap">
-                  <span class="text-sm text-white/60 tracking-[-0.28px]">
-                    — {testimonial.author}, {testimonial.role}, {testimonial.company}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-      <div class="hidden md:block"></div>
-    </div>
-  )}
-  -->
-
   <!-- CTA -->
   {cta && (
     <div class="flex flex-col gap-3 md:contents info-section-row" data-delay="200">

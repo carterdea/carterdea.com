@@ -26,7 +26,6 @@ export function getDeviceTier(): DeviceTier {
   return 'low';
 }
 
-/** Resize a canvas to match window dimensions with device pixel ratio support */
 export function resizeCanvasToWindow(canvas: HTMLCanvasElement): number {
   const dpr = window.devicePixelRatio || 1;
   canvas.width = window.innerWidth * dpr;
@@ -36,10 +35,8 @@ export function resizeCanvasToWindow(canvas: HTMLCanvasElement): number {
   return dpr;
 }
 
-/** Shared selectors for interactive/trackable elements */
 export const TRACKABLE_TAGS = ['a', 'button', 'h1', 'h2', 'h3', 'h4', 'p', 'span', 'li'] as const;
 
-/** Shared selectors for ignition source elements */
 export const IGNITION_SELECTORS = [
   'a',
   'button',

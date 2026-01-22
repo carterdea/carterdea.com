@@ -6,7 +6,14 @@ const MAC_CHIME_URL = '/assets/sounds/power-macintosh-startup-chime.mp3';
 
 // Rainbow Apple logo - matches Figma export exactly
 const AppleLogo = () => (
-  <svg width="12" height="14" viewBox="0 0 12 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <svg
+    width="12"
+    height="14"
+    viewBox="0 0 12 14"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    aria-hidden="true"
+  >
     <defs>
       <mask id="appleMask" maskUnits="userSpaceOnUse" x="0" y="0" width="12" height="14">
         <path
@@ -49,7 +56,6 @@ export default function PowerMacintosh({
   const dragOffset = useRef({ x: 0, y: 0 });
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Initialize audio element
   useEffect(() => {
     if (enableStartupChime) {
       audioRef.current = new Audio(MAC_CHIME_URL);
@@ -166,6 +172,7 @@ export default function PowerMacintosh({
             <AppleLogo />
           </div>
           <button
+            type="button"
             className={`${styles.powerLed} ${isPoweredOn ? styles.powerOn : ''}`}
             onClick={handlePowerToggle}
             aria-label={isPoweredOn ? 'Turn off' : 'Turn on'}

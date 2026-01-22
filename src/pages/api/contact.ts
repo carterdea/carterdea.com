@@ -37,10 +37,6 @@ function validateEmail(email: string): boolean {
   return emailRegex.test(email) && email.length <= 254;
 }
 
-function sanitize(str: string, maxLength: number): string {
-  return str.trim().slice(0, maxLength);
-}
-
 export const POST: APIRoute = async ({ request }) => {
   // Check origin header for same-origin requests
   const origin = request.headers.get('origin');
@@ -70,33 +66,31 @@ export const POST: APIRoute = async ({ request }) => {
     const body = await request.json();
     const { name, email, budget, message } = body;
 
-    // Validate required fields
-    if (!name || typeof name !== 'string' || name.trim().length === 0) {
+    if (!name || name.trim().length === 0) {
       return new Response(JSON.stringify({ error: 'Name is required' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
       });
     }
 
-    if (!email || typeof email !== 'string' || !validateEmail(email)) {
+    if (!email || !validateEmail(email)) {
       return new Response(JSON.stringify({ error: 'Valid email is required' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
       });
     }
 
-    if (!message || typeof message !== 'string' || message.trim().length === 0) {
+    if (!message || message.trim().length === 0) {
       return new Response(JSON.stringify({ error: 'Message is required' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
       });
     }
 
-    // Sanitize inputs
-    const sanitizedName = sanitize(name, 100);
-    const sanitizedEmail = sanitize(email, 254);
-    const sanitizedBudget = budget ? sanitize(String(budget), 20) : 'Not specified';
-    const sanitizedMessage = sanitize(message, 2000);
+    const sanitizedName = name.trim().slice(0, 100);
+    const sanitizedEmail = email.trim().slice(0, 254);
+    const sanitizedBudget = budget ? String(budget).trim().slice(0, 20) : 'Not specified';
+    const sanitizedMessage = message.trim().slice(0, 2000);
 
     // Send email via Resend
     const { error } = await getResend().emails.send({
