@@ -140,10 +140,13 @@ ${sanitizedMessage}`,
 
     if (result.error) {
       console.error('Resend error:', result.error);
-      return new Response(JSON.stringify({ error: 'Failed to send message', details: result.error }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return new Response(
+        JSON.stringify({ error: 'Failed to send message', details: result.error }),
+        {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
     }
 
     console.log('Email sent successfully, ID:', result.data?.id);
