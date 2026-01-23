@@ -1,6 +1,8 @@
 import type { APIRoute } from 'astro';
 import { Resend } from 'resend';
 
+export const prerender = false;
+
 // Lazy initialization to avoid build-time errors
 let resend: Resend | null = null;
 function getResend(): Resend {
@@ -107,9 +109,15 @@ export const POST: APIRoute = async ({ request }) => {
     const sanitizedMessage = message.trim().slice(0, 2000);
 
     // Send email via Resend
-    const { error } = await getResend().emails.send({
+    console.log('Attempting to send email with config:', {
       from: 'hello@form.carterdea.com',
-      to: 'me@carterdea.com',
+      to: import.meta.env.CONTACT_EMAIL,
+      apiKey: import.meta.env.RESEND_API_KEY ? '✓ API key present' : '✗ API key missing',
+    });
+
+    const result = await getResend().emails.send({
+      from: 'hello@form.carterdea.com',
+      to: import.meta.env.CONTACT_EMAIL,
       replyTo: sanitizedEmail,
       subject: `New inquiry from ${sanitizedName}`,
       text: `Name: ${sanitizedName}
@@ -128,13 +136,17 @@ ${sanitizedMessage}`,
       `.trim(),
     });
 
-    if (error) {
-      console.error('Resend error:', error);
-      return new Response(JSON.stringify({ error: 'Failed to send message' }), {
+    console.log('Resend API result:', result);
+
+    if (result.error) {
+      console.error('Resend error:', result.error);
+      return new Response(JSON.stringify({ error: 'Failed to send message', details: result.error }), {
         status: 500,
         headers: { 'Content-Type': 'application/json' },
       });
     }
+
+    console.log('Email sent successfully, ID:', result.data?.id);
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
