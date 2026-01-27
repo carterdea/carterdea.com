@@ -1,0 +1,92 @@
+---
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+import Layout from '../layouts/Layout.astro';
+import PageNav from '../components/PageNav.astro';
+
+const stack = [
+  {
+    category: 'Languages',
+    technologies: 'TypeScript, JavaScript, Python, Ruby, Rust',
+  },
+  {
+    category: 'Frontend',
+    technologies: 'React, Next.js, Astro, Tailwind CSS, React Native, Expo, Framer Motion',
+  },
+  {
+    category: 'Backend',
+    technologies: 'Node.js, Bun, Express, Nest.js, Ruby on Rails, FastAPI, Django, Based Pydantic, GraphQL, JSON:API, Shopify Hydrogen, PostgreSQL, Redis',
+  },
+  {
+    category: 'AI & ML',
+    technologies: 'Vercel AI SDK, LangChain, LangGraph, OpenAI, Anthropic',
+  },
+  {
+    category: 'CMS',
+    technologies: 'Storyblok, Contentful',
+  },
+  {
+    category: 'Infrastructure',
+    technologies: 'Vercel, Fly.io, AWS, Cloudflare, Figma, Docker, GitHub Actions',
+  },
+  {
+    category: 'Testing',
+    technologies: 'Vitest, Playwright, Puppeteer, Minitest, Jest',
+  },
+  {
+    category: 'Code Quality',
+    technologies: 'Biome, Ultracite, Ruff, RuboCop, Semgrep, Brakeman',
+  },
+];
+---
+
+<Layout title="Tech Stack — Carterdea">
+  <div class="min-h-screen flex flex-col">
+    <Header />
+
+    <main transition:name="page-content" class="flex-1 flex flex-col min-h-0 md:px-10 py-12 md:py-16">
+      <div class="max-w-4xl mx-auto px-4 md:px-0 w-full">
+        <PageNav active="stack" />
+
+        <div class="mb-12 md:mb-16">
+          <h1 class="text-lg text-white leading-normal tracking-[-0.36px] mb-2">Tech Stack</h1>
+          <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal">
+            Technologies we work with most often.
+          </p>
+        </div>
+
+        <div class="flex flex-col gap-12 md:gap-16">
+          {stack.map((section) => (
+            <div class="flex flex-col gap-3 md:grid md:grid-cols-3">
+              <h2 class="text-sm text-white tracking-[-0.28px]">{section.category}</h2>
+              <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal md:col-span-2">
+                {section.technologies}
+              </p>
+            </div>
+          ))}
+
+          <div class="flex flex-col gap-3 md:grid md:grid-cols-3 pt-8 border-t border-white/10">
+            <h2 class="text-sm text-white tracking-[-0.28px]">Our Approach</h2>
+            <div class="md:col-span-2 space-y-4">
+              <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal">
+                We're pragmatic about technology. This stack represents what we reach for most often,
+                but we adapt to project requirements and existing systems when it makes sense.
+              </p>
+              <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal">
+                For type safety and performance, we default to TypeScript with Bun.
+                Content-heavy sites get Astro. Complex applications get React with Next.js.
+                AI-heavy work gets Python when we need specialized libraries that don't exist
+                in the JavaScript ecosystem.
+              </p>
+              <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal">
+                We value developer experience and maintainability as much as end-user performance.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <Footer />
+  </div>
+</Layout>

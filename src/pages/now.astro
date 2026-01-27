@@ -1,0 +1,71 @@
+---
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+import Layout from '../layouts/Layout.astro';
+import PageNav from '../components/PageNav.astro';
+---
+
+<Layout title="What We're Doing Now — Carterdea">
+  <div class="min-h-screen flex flex-col">
+    <Header />
+
+    <main transition:name="page-content" class="flex-1 flex flex-col min-h-0 md:px-10 py-12 md:py-16">
+      <div class="max-w-4xl mx-auto px-4 md:px-0 w-full">
+        <PageNav active="now" />
+
+        <div class="mb-12 md:mb-16">
+          <h1 class="text-lg text-white leading-normal tracking-[-0.36px] mb-2">What We're Doing Now</h1>
+          <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal">
+            Last updated: January 2026
+          </p>
+        </div>
+
+        <div class="flex flex-col gap-12 md:gap-16">
+          <div class="flex flex-col gap-3 md:grid md:grid-cols-3">
+            <h2 class="text-sm text-white tracking-[-0.28px]">Current Projects</h2>
+            <div class="md:col-span-2 space-y-4">
+              <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal">
+                <span class="text-white">Service Ops AI</span> Agentic AI for home service companies
+              </p>
+              <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal">
+                <span class="text-white">Big Band AI</span> Music collaboration platform
+              </p>
+              <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal">
+                <span class="text-white">Secret Client</span> AI-powered user-specific merchandising on Shopify
+              </p>
+              <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal">
+                <span class="text-white">Sale Sight</span> The missing automatic sale price strikethrough app
+              </p>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-3 md:grid md:grid-cols-3">
+            <h2 class="text-sm text-white tracking-[-0.28px]">Learning</h2>
+            <div class="md:col-span-2 space-y-2">
+              <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal">
+                Applied AI, advanced RAG, eval, and agentic coding
+              </p>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-3 md:grid md:grid-cols-3">
+            <h2 class="text-sm text-white tracking-[-0.28px]">Focused On</h2>
+            <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal md:col-span-2">
+              Leadership. Learning how to operate in the changing world around us and how best to leverage the technological capabilities unlocked by AI and giving LLMs agency.
+            </p>
+          </div>
+
+          <div class="flex flex-col gap-3 md:grid md:grid-cols-3 pt-8 border-t border-white/10">
+            <div></div>
+            <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal md:col-span-2">
+              This is a <a href="https://nownownow.com/about" class="underline hover:text-white transition-colors" target="_blank" rel="noopener">now page</a>.
+              It's a snapshot of what I'm focused on at this point in time.
+            </p>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <Footer />
+  </div>
+</Layout>

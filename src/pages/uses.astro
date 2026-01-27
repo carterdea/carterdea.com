@@ -1,0 +1,185 @@
+---
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+import Layout from '../layouts/Layout.astro';
+import PageNav from '../components/PageNav.astro';
+---
+
+<Layout title="What We Use — Carterdea">
+  <div class="min-h-screen flex flex-col">
+    <Header />
+
+    <main transition:name="page-content" class="flex-1 flex flex-col min-h-0 md:px-10 py-12 md:py-16">
+      <div class="max-w-4xl mx-auto px-4 md:px-0 w-full">
+        <PageNav active="uses" />
+
+        <div class="mb-12 md:mb-16">
+          <h1 class="text-lg text-white leading-normal tracking-[-0.36px] mb-2">What We Use</h1>
+          <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal">
+            Tools, software, and hardware that power our work.
+          </p>
+        </div>
+
+        <div class="flex flex-col gap-12 md:gap-16">
+          <div class="flex flex-col gap-3 md:grid md:grid-cols-3">
+            <h2 class="text-sm text-white tracking-[-0.28px]">Development</h2>
+            <div class="md:col-span-2 space-y-4">
+              <div>
+                <p class="text-sm text-white tracking-[-0.28px] leading-normal mb-1">Editor</p>
+                <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal">
+                  Cursor
+                </p>
+              </div>
+              <div>
+                <p class="text-sm text-white tracking-[-0.28px] leading-normal mb-1">Terminal</p>
+                <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal">
+                  <a href="https://ghostty.org" class="underline hover:text-white transition-colors" target="_blank" rel="noopener">Ghostty</a>
+                </p>
+              </div>
+              <div>
+                <p class="text-sm text-white tracking-[-0.28px] leading-normal mb-1">AI Agents</p>
+                <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal">
+                  Claude Code, OpenAI Codex, Cursor
+                </p>
+              </div>
+              <div>
+                <p class="text-sm text-white tracking-[-0.28px] leading-normal mb-1">Languages & Runtimes</p>
+                <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal">
+                  TypeScript, React Router, Next.js, Remix, Bun, UV, Python, Ruby on Rails
+                </p>
+              </div>
+              <div>
+                <p class="text-sm text-white tracking-[-0.28px] leading-normal mb-1">Tooling</p>
+                <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal">
+                  <a href="https://biomejs.dev" class="underline hover:text-white transition-colors" target="_blank" rel="noopener">Biome</a>, <a href="https://ultracite.ai" class="underline hover:text-white transition-colors" target="_blank" rel="noopener">Ultracite</a>, <a href="https://docs.astral.sh/ruff" class="underline hover:text-white transition-colors" target="_blank" rel="noopener">Ruff</a>, RuboCop
+                </p>
+              </div>
+              <div>
+                <p class="text-sm text-white tracking-[-0.28px] leading-normal mb-1">Version Control</p>
+                <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal">
+                  GitHub, Graphite
+                </p>
+              </div>
+              <div>
+                <p class="text-sm text-white tracking-[-0.28px] leading-normal mb-1">CI/CD</p>
+                <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal">
+                  GitHub Actions
+                </p>
+              </div>
+              <div>
+                <p class="text-sm text-white tracking-[-0.28px] leading-normal mb-1">Containerization</p>
+                <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal">
+                  Docker
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-3 md:grid md:grid-cols-3">
+            <h2 class="text-sm text-white tracking-[-0.28px]">Design</h2>
+            <div class="md:col-span-2 space-y-4">
+              <div>
+                <p class="text-sm text-white tracking-[-0.28px] leading-normal mb-1">Design Tools</p>
+                <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal">
+                  Figma
+                </p>
+              </div>
+              <div>
+                <p class="text-sm text-white tracking-[-0.28px] leading-normal mb-1">Prototyping</p>
+                <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal">
+                  Figma, Claude Code
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-3 md:grid md:grid-cols-3">
+            <h2 class="text-sm text-white tracking-[-0.28px]">Productivity</h2>
+            <div class="md:col-span-2 space-y-4">
+              <div>
+                <p class="text-sm text-white tracking-[-0.28px] leading-normal mb-1">Task Management</p>
+                <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal">
+                  Trello
+                </p>
+              </div>
+              <div>
+                <p class="text-sm text-white tracking-[-0.28px] leading-normal mb-1">Notes</p>
+                <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal">
+                  <a href="https://ia.net/writer" class="underline hover:text-white transition-colors" target="_blank" rel="noopener">iA Writer</a>
+                </p>
+              </div>
+              <div>
+                <p class="text-sm text-white tracking-[-0.28px] leading-normal mb-1">Meetings</p>
+                <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal">
+                  <a href="https://granola.ai" class="underline hover:text-white transition-colors" target="_blank" rel="noopener">Granola</a> for notes, Zoom for calls
+                </p>
+              </div>
+              <div>
+                <p class="text-sm text-white tracking-[-0.28px] leading-normal mb-1">Communication</p>
+                <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal">
+                  Slack
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-3 md:grid md:grid-cols-3">
+            <h2 class="text-sm text-white tracking-[-0.28px]">Hardware</h2>
+            <div class="md:col-span-2 space-y-4">
+              <div>
+                <p class="text-sm text-white tracking-[-0.28px] leading-normal mb-1">Computer</p>
+                <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal">
+                  2021 MacBook Pro M1 Max, 2024 M4 Mac Mini
+                </p>
+              </div>
+              <div>
+                <p class="text-sm text-white tracking-[-0.28px] leading-normal mb-1">Keyboard</p>
+                <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal">
+                  <a href="https://www.keychron.com/collections/keychron-q-max-series-keyboard/products/keychron-q6-max-qmk-via-wireless-custom-mechanical-keyboard" class="underline hover:text-white transition-colors" target="_blank" rel="noopener">Keychron Q6 Max</a> with Gateron Jupiter Browns
+                </p>
+              </div>
+              <div>
+                <p class="text-sm text-white tracking-[-0.28px] leading-normal mb-1">Mouse</p>
+                <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal">
+                  <a href="https://www.logitech.com/en-us/shop/p/mx-master-4" class="underline hover:text-white transition-colors" target="_blank" rel="noopener">Logitech MX Master 4</a>
+                </p>
+              </div>
+              <div>
+                <p class="text-sm text-white tracking-[-0.28px] leading-normal mb-1">Audio</p>
+                <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal">
+                  <a href="https://aiaiai.audio/headphones/tma-2-dj" class="underline hover:text-white transition-colors" target="_blank" rel="noopener">AIAIAI TMA-2 DJ</a>, Apple HomePod
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-3 md:grid md:grid-cols-3">
+            <h2 class="text-sm text-white tracking-[-0.28px]">Services</h2>
+            <div class="md:col-span-2 space-y-4">
+              <div>
+                <p class="text-sm text-white tracking-[-0.28px] leading-normal mb-1">Hosting & Infrastructure</p>
+                <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal">
+                  Fly.io, Vercel, Cloudflare, AWS
+                </p>
+              </div>
+              <div>
+                <p class="text-sm text-white tracking-[-0.28px] leading-normal mb-1">Database & Storage</p>
+                <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal">
+                  PostgreSQL, pgvector, Redis, Pinecone
+                </p>
+              </div>
+              <div>
+                <p class="text-sm text-white tracking-[-0.28px] leading-normal mb-1">Analytics & Monitoring</p>
+                <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal">
+                  Sentry, PostHog, LangSmith
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <Footer />
+  </div>
+</Layout>
