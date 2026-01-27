@@ -1,0 +1,74 @@
+---
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+import Layout from '../layouts/Layout.astro';
+import Button from '../components/ui/Button.tsx';
+import PageNav from '../components/PageNav.astro';
+
+const services = [
+  {
+    category: 'Web Application Development',
+    details: 'Custom web applications from concept to deployment, Frontend development with React, Vue, or Astro, Backend APIs with Node.js, Bun, or Python, Database design and optimization, Authentication and authorization systems',
+  },
+  {
+    category: 'API Design & Development',
+    details: 'RESTful and GraphQL API design, API documentation and developer experience, Performance optimization and caching strategies, Rate limiting and security best practices, Third-party API integrations',
+  },
+  {
+    category: 'Product Design',
+    details: 'UI/UX design for web and mobile applications, Design systems and component libraries, Interactive prototypes and user flows, Responsive design for all devices, Accessibility (WCAG) compliance',
+  },
+  {
+    category: 'Performance Optimization',
+    details: 'Frontend performance audits and improvements, Database query optimization, Caching strategies and CDN configuration, Code splitting and lazy loading, Core Web Vitals optimization',
+  },
+  {
+    category: 'Technical Consulting',
+    details: 'Architecture review and recommendations, Technology stack selection, Code review and refactoring guidance, Team training and mentorship, Migration planning and execution',
+  },
+];
+---
+
+<Layout title="Services — Carterdea">
+  <div class="min-h-screen flex flex-col">
+    <Header />
+
+    <main transition:name="page-content" class="flex-1 flex flex-col min-h-0 md:px-10 py-12 md:py-16">
+      <div class="max-w-4xl mx-auto px-4 md:px-0 w-full">
+        <PageNav active="services" />
+
+        <div class="mb-12 md:mb-16">
+          <h1 class="text-lg text-white leading-normal tracking-[-0.36px] mb-2">Services</h1>
+          <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal">
+            Strategic product design and development to bring your ideas to life.
+          </p>
+        </div>
+
+        <div class="flex flex-col gap-12 md:gap-16">
+          {services.map((service) => (
+            <div class="flex flex-col gap-3 md:grid md:grid-cols-3">
+              <h2 class="text-sm text-white tracking-[-0.28px]">{service.category}</h2>
+              <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal md:col-span-2">
+                {service.details}
+              </p>
+            </div>
+          ))}
+
+          <div class="flex flex-col gap-3 md:grid md:grid-cols-3 pt-8 border-t border-white/10">
+            <h2 class="text-sm text-white tracking-[-0.28px]">Get in touch</h2>
+            <div class="md:col-span-2">
+              <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal mb-4">
+                If you'd like to work on something great together, get in touch.
+              </p>
+              <Button client:load as="a" href="/contact">
+                Get in Touch
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <Footer />
+  </div>
+</Layout>

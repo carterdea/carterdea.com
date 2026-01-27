@@ -29,10 +29,12 @@ ${results?.map((r: string) => `- ${r}`).join('\n') ?? ''}
 
 ${clients?.map((c: { name: string; description: string }) => `- **${c.name}**: ${c.description}`).join('\n') ?? ''}
 
-## Contact
+## Links
 
-Website: https://carterdea.com
-Contact: https://carterdea.com/contact
+- [Home](https://carterdea.com)
+- [Services](https://carterdea.com/services)
+- [Work](https://carterdea.com/work)
+- [Contact](https://carterdea.com/contact)
 `;
 
   return new Response(content, {

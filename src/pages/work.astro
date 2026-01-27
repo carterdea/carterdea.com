@@ -1,0 +1,137 @@
+---
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+import Layout from '../layouts/Layout.astro';
+import PageNav from '../components/PageNav.astro';
+
+const projects = [
+  {
+    title: 'Death Wish Coffee',
+    description: 'High-caffeine coffee brand. Shopify development and ongoing support.',
+    stack: 'Shopify Liquid',
+    year: '2026 - Present',
+    link: 'https://www.deathwishcoffee.com',
+  },
+  {
+    title: 'New Era',
+    description: 'Global headwear brand. Built headless Shopify storefront (warehouse.neweracap.com), custom Shopify apps, and maintained main e-commerce site (neweracap.com). 3x revenue growth after CVR optimization and redesign.',
+    stack: 'Liquid, Shopify, Node.js, TypeScript, React Router',
+    year: '2019 - Present',
+    link: 'https://www.neweracap.com',
+  },
+  {
+    title: 'Pure Beauty',
+    description: 'Premium cannabis brand focused on sustainable cultivation. Design-forward Shopify development emphasizing quality sourcing and elevated aesthetics.',
+    stack: 'Shopify Liquid',
+    year: '2025 - Present',
+    link: 'https://purebeautypurebeauty.co',
+  },
+  {
+    title: 'Evan Kinori',
+    description: 'Independent menswear designer. Complete Shopify site redesign and ongoing development.',
+    stack: 'Shopify Liquid',
+    year: '2022 - Present',
+    link: 'https://www.evankinori.com',
+  },
+  {
+    title: 'The House of Noa',
+    description: 'Luxury fashion brand. Shopify website development and ongoing maintenance.',
+    stack: 'Shopify Liquid',
+    year: '2020 - Present',
+    link: 'https://thehouseofnoa.com',
+  },
+  {
+    title: 'Code Climate',
+    description: 'Engineering intelligence platform. Designed dashboard for engineering team performance and PR velocity tracking.',
+    stack: 'Sketch',
+    year: '2020 - 2021',
+    link: 'https://codeclimate.com',
+  },
+  {
+    title: 'AdoptTogether',
+    description: 'The only nonprofit crowdfunding platform for adoptive families. Connects families with supporters through grants and donations, making adoption more accessible and affordable.',
+    stack: 'Ruby on Rails, React',
+    year: '2017 - Present',
+    link: 'https://www.adopttogether.org',
+  },
+  {
+    title: 'DataScience',
+    description: 'Cloud-based data science platform. Designed comprehensive tooling for data scientists including ML model management, training pipelines, and collaboration features. Later acquired by Oracle.',
+    stack: 'Sketch',
+    year: '2017 - 2018',
+    link: 'https://www.oracle.com/data-science/',
+  },
+  {
+    title: 'Spinlister',
+    description: 'Peer-to-peer marketplace for renting action sports equipment—bikes, snowboards, surfboards. The "Airbnb for bikes." Product strategy, design, and full-stack development.',
+    stack: 'Photoshop, Sketch, Ruby on Rails',
+    year: '2013 - 2017',
+    link: 'https://www.spinlister.com',
+  },
+  {
+    title: 'Stussy',
+    description: 'Iconic streetwear brand. UX audit and conversion rate optimization. Product design leadership for critical pages and features. 4x revenue growth after CVR optimization and redesign.',
+    stack: 'Photoshop, Sketch, Shopify Liquid',
+    year: '2011 - 2020',
+    link: 'https://www.stussy.com',
+  },
+];
+---
+
+<Layout title="Work — Carterdea">
+  <div class="min-h-screen flex flex-col">
+    <Header />
+
+    <main transition:name="page-content" class="flex-1 flex flex-col min-h-0 md:px-10 py-12 md:py-16">
+      <div class="max-w-4xl mx-auto px-4 md:px-0 w-full">
+        <PageNav active="work" />
+
+        <div class="mb-12 md:mb-16">
+          <h1 class="text-lg text-white leading-normal tracking-[-0.36px] mb-2">Work</h1>
+          <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal">
+            Selected projects showcasing design and development work.
+          </p>
+        </div>
+
+        <div class="flex flex-col gap-12 md:gap-16">
+          {projects.map((project) => (
+            <div class="flex flex-col gap-3 md:grid md:grid-cols-3">
+              <div class="flex items-baseline gap-2">
+                <h2 class="text-sm text-white tracking-[-0.28px]">
+                  <a href={project.link} target="_blank" rel="noopener" class="hover:text-white/80 transition-colors">
+                    {project.title}
+                  </a>
+                </h2>
+                <span class="text-sm text-white/40 tracking-[-0.28px]">{project.year}</span>
+              </div>
+              <div class="md:col-span-2 space-y-2">
+                <p class="text-sm text-white/60 tracking-[-0.28px] leading-normal">
+                  {project.description}
+                </p>
+                <p class="text-sm text-white/40 tracking-[-0.28px] leading-normal">
+                  {project.stack}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Empty state if no projects */}
+        {projects.length === 0 && (
+          <div class="text-center py-16">
+            <p class="text-sm text-white/60 tracking-[-0.28px]">
+              Projects coming soon. Check back later.
+            </p>
+          </div>
+        )}
+      </div>
+    </main>
+
+    <Footer />
+  </div>
+</Layout>
+
+<script>
+  // Add client-side filtering functionality here if needed
+  // This is a placeholder for future interactivity
+</script>
